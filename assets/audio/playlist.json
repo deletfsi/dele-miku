@@ -1,0 +1,29 @@
+{
+  "title": "【初音未来】MIKU经典歌曲合集",
+  "author": "反克为主",
+  "source": "https://www.bilibili.com/video/BV1Vk4y1z7SV/",
+  "total": 21,
+  "songs": [
+    { "index": 1,  "title": "千本桜",                    "duration": 243, "filename": "001_【初音未来】MIKU经典歌曲合集 p01 千本桜.m4a" },
+    { "index": 2,  "title": "胧月（朦胧月色）",          "duration": 255, "filename": "002_【初音未来】MIKU经典歌曲合集 p02 胧月 (朦胧月色).m4a" },
+    { "index": 3,  "title": "深海少女",                  "duration": 206, "filename": "003_【初音未来】MIKU经典歌曲合集 p03 深海少女.m4a" },
+    { "index": 4,  "title": "私の世界",                  "duration": 279, "filename": "004_【初音未来】MIKU经典歌曲合集 p04 私の世界.m4a" },
+    { "index": 5,  "title": "ツギハギスタッカート（拼凑的断音）", "duration": 249, "filename": "005_【初音未来】MIKU经典歌曲合集 p05 ツギハギスタッカート (拼凑的断音).m4a" },
+    { "index": 6,  "title": "恋愛裁判",                  "duration": 220, "filename": "006_【初音未来】MIKU经典歌曲合集 p06 恋愛裁判.m4a" },
+    { "index": 7,  "title": "愛言葉（爱的言语）",        "duration": 265, "filename": "007_【初音未来】MIKU经典歌曲合集 p07 愛言葉 (爱的言语).m4a" },
+    { "index": 8,  "title": "Hand in Hand",              "duration": 312, "filename": "008_【初音未来】MIKU经典歌曲合集 p08 Hand in Hand.m4a" },
+    { "index": 9,  "title": "愛されなくても君がいる（就算没有爱只要有你就好）", "duration": 273, "filename": "009_【初音未来】MIKU经典歌曲合集 p09 愛されなくても君がいる (就算没有爱 只要有你就好）.m4a" },
+    { "index": 10, "title": "夕日坂（夕阳下的坡道）",    "duration": 381, "filename": "010_【初音未来】MIKU经典歌曲合集 p10 夕日坂 (夕阳下的坡道).m4a" },
+    { "index": 11, "title": "蜘蛛糸モノポリー（蜘蛛丝Monopoly）", "duration": 272, "filename": "011_【初音未来】MIKU经典歌曲合集 p11 蜘蛛糸モノポリー (蜘蛛丝Monopoly).m4a" },
+    { "index": 12, "title": "夢と葉桜（梦与叶樱）",      "duration": 254, "filename": "012_【初音未来】MIKU经典歌曲合集 p12 夢と葉桜 (梦与叶樱）.m4a" },
+    { "index": 13, "title": "君の夢は私の夢（你的梦就是我的梦）", "duration": 232, "filename": "013_【初音未来】MIKU经典歌曲合集 p13 君の夢は私の夢 (你的梦就是我的梦).m4a" },
+    { "index": 14, "title": "君に嘘（对你撒谎）",        "duration": 240, "filename": "014_【初音未来】MIKU经典歌曲合集 p14 君に嘘 (对你撒谎).m4a" },
+    { "index": 15, "title": "ReAct",                     "duration": 288, "filename": "015_【初音未来】MIKU经典歌曲合集 p15 ReAct.m4a" },
+    { "index": 16, "title": "December 26th (Re-present)", "duration": 290, "filename": "016_【初音未来】MIKU经典歌曲合集 p16 December 26th (Re-present).m4a" },
+    { "index": 17, "title": "ジェンガ（积木）",          "duration": 298, "filename": "017_【初音未来】MIKU经典歌曲合集 p17 ジェンガ (积木).m4a" },
+    { "index": 18, "title": "magnet（磁铁）",            "duration": 245, "filename": "018_【初音未来】MIKU经典歌曲合集 p18 magnet (磁铁).m4a" },
+    { "index": 19, "title": "鏡花水月",                  "duration": 357, "filename": "019_【初音未来】MIKU经典歌曲合集 p19 鏡花水月.m4a" },
+    { "index": 20, "title": "天空之城 (TV Version)",     "duration": 202, "filename": "020_【初音未来】MIKU经典歌曲合集 p20 天空之城 (TV Version).m4a" },
+    { "index": 21, "title": "花葬",                      "duration": 243, "filename": "021_【初音未来】MIKU经典歌曲合集 p21 花葬.m4a" }
+  ]
+}

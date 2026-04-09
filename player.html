@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIKU 音乐播放器 | 音频切割工具</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --miku-green: #39C5BB;
+      --miku-green-light: #5DD9D0;
+      --dark: #020617;
+      --gray-900: #0F172A;
+      --gray-800: #1E293B;
+      --gray-600: #475569;
+      --gray-400: #94A3B8;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --blur: blur(20px);
+      --radius-md: 16px;
+      --radius-full: 9999px;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--dark);
+      color: white;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(24px, 5vw, 36px);
+      background: linear-gradient(135deg, var(--miku-green), var(--miku-green-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--gray-400);
+      font-size: 14px;
+    }
+
+    /* 播放列表 */
+    .playlist {
+      background: var(--glass-bg);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 32px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .playlist::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .playlist::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .playlist::-webkit-scrollbar-thumb {
+      background: var(--gray-600);
+      border-radius: 3px;
+    }
+
+    .song-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .song-item:hover {
+      background: rgba(57, 197, 187, 0.1);
+    }
+
+    .song-item.active {
+      background: rgba(57, 197, 187, 0.15);
+      border: 1px solid rgba(57, 197, 187, 0.3);
+    }
+
+    .song-index {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      color: var(--gray-400);
+      min-width: 30px;
+    }
+
+    .song-title {
+      flex: 1;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-duration {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    /* 播放器 */
+    .player {
+      background: var(--glass-bg);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+
+    .now-playing {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .now-playing-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .now-playing-artist {
+      font-size: 14px;
+      color: var(--gray-400);
+    }
+
+    /* 波形/进度区域 */
+    .waveform-container {
+      position: relative;
+      height: 80px;
+      background: var(--gray-900);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    #waveform {
+      width: 100%;
+      height: 100%;
+    }
+
+    .selection-overlay {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: rgba(57, 197, 187, 0.3);
+      pointer-events: none;
+      display: none;
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-bottom: 16px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: white;
+      padding: 12px 24px;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background: rgba(57, 197, 187, 0.2);
+      border-color: var(--miku-green);
+    }
+
+    .btn-play {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--miku-green), #2A9D94);
+      border: none;
+      font-size: 24px;
+    }
+
+    .btn-play:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(57, 197, 187, 0.4);
+    }
+
+    /* 切割工具 */
+    .cutter {
+      background: var(--glass-bg);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+
+    .cutter h2 {
+      font-size: 18px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .cutter-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-group label {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    .input-group input {
+      background: var(--gray-900);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: white;
+      font-size: 14px;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--miku-green);
+    }
+
+    .btn-export {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--miku-green), #2A9D94);
+      border: none;
+    }
+
+    .selection-info {
+      text-align: center;
+      padding: 16px;
+      background: var(--gray-900);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--gray-400);
+    }
+
+    .selection-info strong {
+      color: var(--miku-green);
+    }
+
+    /* 模态框 */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: var(--gray-900);
+      border-radius: var(--radius-md);
+      padding: 32px;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal h3 {
+      margin-bottom: 16px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 600px) {
+      .cutter-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        gap: 12px;
+      }
+
+      .btn-play {
+        width: 56px;
+        height: 56px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎀 MIKU 音乐播放器</h1>
+      <p class="subtitle">选择歌曲 → 播放 → 拖动选择区域 → 导出片段</p>
+    </header>
+
+    <div class="playlist" id="playlist"></div>
+
+    <div class="player">
+      <div class="now-playing">
+        <div class="now-playing-title" id="nowTitle">选择一首歌曲开始</div>
+        <div class="now-playing-artist" id="nowArtist">初音未来</div>
+      </div>
+
+      <div class="waveform-container" id="waveformContainer">
+        <canvas id="waveform"></canvas>
+        <div class="selection-overlay" id="selectionOverlay"></div>
+      </div>
+
+      <div class="time-display">
+        <span id="currentTime">0:00</span>
+        <span id="totalTime">0:00</span>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="prevBtn">⏮</button>
+        <button class="btn btn-play" id="playBtn">▶</button>
+        <button class="btn" id="nextBtn">⏭</button>
+      </div>
+    </div>
+
+    <div class="cutter">
+      <h2>✂️ 音频切割工具</h2>
+      <div class="cutter-controls">
+        <div class="input-group">
+          <label>开始时间 (秒)</label>
+          <input type="number" id="startTime" value="0" min="0" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>结束时间 (秒)</label>
+          <input type="number" id="endTime" value="30" min="0" step="0.1">
+        </div>
+        <button class="btn btn-export" id="exportBtn">导出片段</button>
+      </div>
+      <div class="selection-info">
+        当前选择：<strong id="selectionDuration">30</strong> 秒
+        | 片段时长：<strong id="clipDuration">30</strong> 秒
+      </div>
+    </div>
+  </div>
+
+  <!-- 导出确认模态框 -->
+  <div class="modal" id="exportModal">
+    <div class="modal-content">
+      <h3>导出音频片段</h3>
+      <p id="exportInfo"></p>
+      <div class="modal-buttons">
+        <button class="btn" id="cancelExport">取消</button>
+        <button class="btn btn-export" id="confirmExport">下载 MP3</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 播放列表数据
+    const playlist = [
+      { index: 1, title: "千本桜", duration: 243, filename: "001_【初音未来】MIKU经典歌曲合集 p01 千本桜.m4a" },
+      { index: 2, title: "胧月（朦胧月色）", duration: 255, filename: "002_【初音未来】MIKU经典歌曲合集 p02 胧月 (朦胧月色).m4a" },
+      { index: 3, title: "深海少女", duration: 206, filename: "003_【初音未来】MIKU经典歌曲合集 p03 深海少女.m4a" },
+      { index: 4, title: "私の世界", duration: 279, filename: "004_【初音未来】MIKU经典歌曲合集 p04 私の世界.m4a" },
+      { index: 5, title: "ツギハギスタッカート（拼凑的断音）", duration: 249, filename: "005_【初音未来】MIKU经典歌曲合集 p05 ツギハギスタッカート (拼凑的断音).m4a" },
+      { index: 6, title: "恋愛裁判", duration: 220, filename: "006_【初音未来】MIKU经典歌曲合集 p06 恋愛裁判.m4a" },
+      { index: 7, title: "愛言葉（爱的言语）", duration: 265, filename: "007_【初音未来】MIKU经典歌曲合集 p07 愛言葉 (爱的言语).m4a" },
+      { index: 8, title: "Hand in Hand", duration: 312, filename: "008_【初音未来】MIKU经典歌曲合集 p08 Hand in Hand.m4a" },
+      { index: 9, title: "愛されなくても君がいる（就算没有爱只要有你就好）", duration: 273, filename: "009_【初音未来】MIKU经典歌曲合集 p09 愛されなくても君がいる (就算没有爱 只要有你就好）.m4a" },
+      { index: 10, title: "夕日坂（夕阳下的坡道）", duration: 381, filename: "010_【初音未来】MIKU经典歌曲合集 p10 夕日坂 (夕阳下的坡道).m4a" },
+      { index: 11, title: "蜘蛛糸モノポリー（蜘蛛丝Monopoly）", duration: 272, filename: "011_【初音未来】MIKU经典歌曲合集 p11 蜘蛛糸モノポリー (蜘蛛丝Monopoly).m4a" },
+      { index: 12, title: "夢と葉桜（梦与叶樱）", duration: 254, filename: "012_【初音未来】MIKU经典歌曲合集 p12 夢と葉桜 (梦与叶樱）.m4a" },
+      { index: 13, title: "君の夢は私の夢（你的梦就是我的梦）", duration: 232, filename: "013_【初音未来】MIKU经典歌曲合集 p13 君の夢は私の夢 (你的梦就是我的梦).m4a" },
+      { index: 14, title: "君に嘘（对你撒谎）", duration: 240, filename: "014_【初音未来】MIKU经典歌曲合集 p14 君に嘘 (对你撒谎).m4a" },
+      { index: 15, title: "ReAct", duration: 288, filename: "015_【初音未来】MIKU经典歌曲合集 p15 ReAct.m4a" },
+      { index: 16, title: "December 26th (Re-present)", duration: 290, filename: "016_【初音未来】MIKU经典歌曲合集 p16 December 26th (Re-present).m4a" },
+      { index: 17, title: "ジェンガ（积木）", duration: 298, filename: "017_【初音未来】MIKU经典歌曲合集 p17 ジェンガ (积木).m4a" },
+      { index: 18, title: "magnet（磁铁）", duration: 245, filename: "018_【初音未来】MIKU经典歌曲合集 p18 magnet (磁铁).m4a" },
+      { index: 19, title: "鏡花水月", duration: 357, filename: "019_【初音未来】MIKU经典歌曲合集 p19 鏡花水月.m4a" },
+      { index: 20, title: "天空之城 (TV Version)", duration: 202, filename: "020_【初音未来】MIKU经典歌曲合集 p20 天空之城 (TV Version).m4a" },
+      { index: 21, title: "花葬", duration: 243, filename: "021_【初音未来】MIKU经典歌曲合集 p21 花葬.m4a" }
+    ];
+
+    // 状态
+    let currentIndex = 0;
+    let isPlaying = false;
+    let audioContext = null;
+    let sourceNode = null;
+    let audioBuffer = null;
+    let startOffset = 0;
+    let selectionStart = 0;
+    let selectionEnd = 30;
+    let isDragging = false;
+
+    // DOM元素
+    const playlistEl = document.getElementById('playlist');
+    const nowTitle = document.getElementById('nowTitle');
+    const nowArtist = document.getElementById('nowArtist');
+    const playBtn = document.getElementById('playBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const currentTimeEl = document.getElementById('currentTime');
+    const totalTimeEl = document.getElementById('totalTime');
+    const waveformCanvas = document.getElementById('waveform');
+    const waveformCtx = waveformCanvas.getContext('2d');
+    const selectionOverlay = document.getElementById('selectionOverlay');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    const selectionDuration = document.getElementById('selectionDuration');
+    const clipDuration = document.getElementById('clipDuration');
+    const exportBtn = document.getElementById('exportBtn');
+    const exportModal = document.getElementById('exportModal');
+    const exportInfo = document.getElementById('exportInfo');
+    const cancelExport = document.getElementById('cancelExport');
+    const confirmExport = document.getElementById('confirmExport');
+
+    // 初始化播放列表
+    function initPlaylist() {
+      playlistEl.innerHTML = playlist.map((song, i) => `
+        <div class="song-item ${i === currentIndex ? 'active' : ''}" data-index="${i}">
+          <span class="song-index">${String(song.index).padStart(2, '0')}</span>
+          <span class="song-title">${song.title}</span>
+          <span class="song-duration">${formatTime(song.duration)}</span>
+        </div>
+      `).join('');
+
+      playlistEl.addEventListener('click', (e) => {
+        const item = e.target.closest('.song-item');
+        if (item) {
+          loadSong(parseInt(item.dataset.index));
+        }
+      });
+    }
+
+    // 格式化时间
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // 加载歌曲
+    async function loadSong(index) {
+      currentIndex = index;
+      const song = playlist[index];
+
+      nowTitle.textContent = song.title;
+      nowArtist.textContent = '初音未来';
+
+      document.querySelectorAll('.song-item').forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+      });
+
+      startTimeInput.value = '0';
+      endTimeInput.value = Math.min(30, song.duration).toFixed(1);
+      updateSelection();
+
+      // 加载音频
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      try {
+        const response = await fetch(`playlist/${song.filename}`);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        totalTimeEl.textContent = formatTime(audioBuffer.duration);
+        drawWaveform();
+        stopPlayback();
+      } catch (e) {
+        console.error('加载音频失败:', e);
+        nowTitle.textContent = '音频加载失败';
+      }
+    }
+
+    // 绘制波形
+    function drawWaveform() {
+      if (!audioBuffer) return;
+
+      const width = waveformCanvas.width = waveformCanvas.offsetWidth * 2;
+      const height = waveformCanvas.height = waveformCanvas.offsetHeight * 2;
+
+      waveformCtx.clearRect(0, 0, width, height);
+
+      const data = audioBuffer.getChannelData(0);
+      const step = Math.ceil(data.length / width);
+      const amp = height / 2;
+
+      waveformCtx.beginPath();
+      waveformCtx.moveTo(0, amp);
+
+      for (let i = 0; i < width; i++) {
+        let min = 1.0, max = -1.0;
+        for (let j = 0; j < step; j++) {
+          const datum = data[(i * step) + j];
+          if (datum < min) min = datum;
+          if (datum > max) max = datum;
+        }
+        waveformCtx.lineTo(i, (1 + min) * amp);
+        waveformCtx.lineTo(i, (1 + max) * amp);
+      }
+
+      waveformCtx.strokeStyle = '#39C5BB';
+      waveformCtx.lineWidth = 1;
+      waveformCtx.stroke();
+    }
+
+    // 播放/暂停
+    function togglePlay() {
+      if (!audioBuffer) return;
+
+      if (isPlaying) {
+        stopPlayback();
+      } else {
+        startPlayback();
+      }
+    }
+
+    function startPlayback() {
+      if (!audioBuffer) return;
+
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+
+      sourceNode = audioContext.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.connect(audioContext.destination);
+
+      const offset = startOffset;
+      sourceNode.start(0, offset);
+      sourceNode.onended = () => {
+        if (isPlaying) {
+          stopPlayback();
+        }
+      };
+
+      isPlaying = true;
+      playBtn.textContent = '⏸';
+
+      updateProgress();
+    }
+
+    function stopPlayback() {
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch(e) {}
+        sourceNode.disconnect();
+        sourceNode = null;
+      }
+      isPlaying = false;
+      playBtn.textContent = '▶';
+    }
+
+    function updateProgress() {
+      if (!isPlaying || !audioBuffer) return;
+
+      const currentTime = audioContext.currentTime - (sourceNode ? sourceNode.context.currentTime : 0) + startOffset;
+      const displayTime = Math.min(currentTime, audioBuffer.duration);
+
+      currentTimeEl.textContent = formatTime(displayTime);
+      startOffset = displayTime;
+
+      if (displayTime >= audioBuffer.duration) {
+        stopPlayback();
+        startOffset = 0;
+      }
+
+      if (isPlaying) {
+        requestAnimationFrame(updateProgress);
+      }
+    }
+
+    // 选择区域
+    function updateSelection() {
+      const start = parseFloat(startTimeInput.value) || 0;
+      const end = parseFloat(endTimeInput.value) || 30;
+      selectionStart = Math.max(0, start);
+      selectionEnd = Math.min(audioBuffer ? audioBuffer.duration : end, end);
+
+      if (selectionEnd <= selectionStart) {
+        selectionEnd = selectionStart + 1;
+      }
+
+      const duration = selectionEnd - selectionStart;
+      selectionDuration.textContent = duration.toFixed(1);
+      clipDuration.textContent = duration.toFixed(1);
+
+      // 更新波形上的选择区域
+      if (audioBuffer) {
+        const width = waveformCanvas.offsetWidth;
+        const startX = (selectionStart / audioBuffer.duration) * width;
+        const endX = (selectionEnd / audioBuffer.duration) * width;
+        selectionOverlay.style.left = startX + 'px';
+        selectionOverlay.style.width = (endX - startX) + 'px';
+        selectionOverlay.style.display = 'block';
+      }
+    }
+
+    // 导出片段（需要后端支持，这里仅作演示）
+    function exportClip() {
+      if (!audioBuffer) return;
+
+      const song = playlist[currentIndex];
+      exportInfo.innerHTML = `
+        歌曲：${song.title}<br>
+        开始：${selectionStart.toFixed(1)}秒<br>
+        结束：${selectionEnd.toFixed(1)}秒<br>
+        时长：${(selectionEnd - selectionStart).toFixed(1)}秒
+      `;
+      exportModal.classList.add('active');
+    }
+
+    // 事件监听
+    playBtn.addEventListener('click', togglePlay);
+    prevBtn.addEventListener('click', () => loadSong((currentIndex - 1 + playlist.length) % playlist.length));
+    nextBtn.addEventListener('click', () => loadSong((currentIndex + 1) % playlist.length));
+
+    startTimeInput.addEventListener('change', updateSelection);
+    endTimeInput.addEventListener('change', updateSelection);
+
+    exportBtn.addEventListener('click', exportClip);
+    cancelExport.addEventListener('click', () => exportModal.classList.remove('active'));
+    confirmExport.addEventListener('click', () => {
+      // 注意：前端无法直接裁剪音频，需要后端或 ffmpeg 支持
+      alert('音频裁剪需要后端处理。请在部署时使用 ffmpeg 进行处理。\n\n命令示例：\nffmpeg -i input.m4a -ss 10 -to 40 -acodec copy output.m4a');
+      exportModal.classList.remove('active');
+    });
+
+    // 波形点击跳转
+    waveformCanvas.addEventListener('click', (e) => {
+      if (!audioBuffer || isPlaying) return;
+
+      const rect = waveformCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percent = x / rect.width;
+      startOffset = percent * audioBuffer.duration;
+      currentTimeEl.textContent = formatTime(startOffset);
+    });
+
+    // 初始化
+    initPlaylist();
+    loadSong(0);
+  </script>
+</body>
+</html>

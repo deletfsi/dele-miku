@@ -1,0 +1,613 @@
+/**
+ * 初音未来 - 交互逻辑
+ * 包含：Parallax、粒子系统、打字机效果、画廊滑动、灯箱、21首歌曲选择
+ */
+
+(function() {
+  'use strict';
+
+  // ========================================
+  // 歌曲播放列表
+  // ========================================
+  const PLAYLIST = [
+    { index: 1,  title: "千本桜",                    duration: 243, filename: "playlist/001_【初音未来】MIKU经典歌曲合集 p01 千本桜.m4a" },
+    { index: 2,  title: "胧月（朦胧月色）",          duration: 255, filename: "playlist/002_【初音未来】MIKU经典歌曲合集 p02 胧月 (朦胧月色).m4a" },
+    { index: 3,  title: "深海少女",                  duration: 206, filename: "playlist/003_【初音未来】MIKU经典歌曲合集 p03 深海少女.m4a" },
+    { index: 4,  title: "私の世界",                  duration: 279, filename: "playlist/004_【初音未来】MIKU经典歌曲合集 p04 私の世界.m4a" },
+    { index: 5,  title: "ツギハギスタッカート",      duration: 249, filename: "playlist/005_【初音未来】MIKU经典歌曲合集 p05 ツギハギスタッカート (拼凑的断音).m4a" },
+    { index: 6,  title: "恋愛裁判",                  duration: 220, filename: "playlist/006_【初音未来】MIKU经典歌曲合集 p06 恋愛裁判.m4a" },
+    { index: 7,  title: "愛言葉（爱的言语）",        duration: 265, filename: "playlist/007_【初音未来】MIKU经典歌曲合集 p07 愛言葉 (爱的言语).m4a" },
+    { index: 8,  title: "Hand in Hand",              duration: 312, filename: "playlist/008_【初音未来】MIKU经典歌曲合集 p08 Hand in Hand.m4a" },
+    { index: 9,  title: "就算没有爱只要有你就好",    duration: 273, filename: "playlist/009_【初音未来】MIKU经典歌曲合集 p09 愛されなくても君がいる (就算没有爱 只要有你就好）.m4a" },
+    { index: 10, title: "夕日坂（夕阳下的坡道）",     duration: 381, filename: "playlist/010_【初音未来】MIKU经典歌曲合集 p10 夕日坂 (夕阳下的坡道).m4a" },
+    { index: 11, title: "蜘蛛糸モノポリー",          duration: 272, filename: "playlist/011_【初音未来】MIKU经典歌曲合集 p11 蜘蛛糸モノポリー (蜘蛛丝Monopoly).m4a" },
+    { index: 12, title: "夢と葉桜（梦与叶樱）",      duration: 254, filename: "playlist/012_【初音未来】MIKU经典歌曲合集 p12 夢と葉桜 (梦与叶樱）.m4a" },
+    { index: 13, title: "你的梦就是我的梦",          duration: 232, filename: "playlist/013_【初音未来】MIKU经典歌曲合集 p13 君の夢は私の夢 (你的梦就是我的梦).m4a" },
+    { index: 14, title: "君に嘘（对你撒谎）",        duration: 240, filename: "playlist/014_【初音未来】MIKU经典歌曲合集 p14 君に嘘 (对你撒谎).m4a" },
+    { index: 15, title: "ReAct",                      duration: 288, filename: "playlist/015_【初音未来】MIKU经典歌曲合集 p15 ReAct.m4a" },
+    { index: 16, title: "December 26th",             duration: 290, filename: "playlist/016_【初音未来】MIKU经典歌曲合集 p16 December 26th (Re-present).m4a" },
+    { index: 17, title: "ジェンガ（积木）",          duration: 298, filename: "playlist/017_【初音未来】MIKU经典歌曲合集 p17 ジェンガ (积木).m4a" },
+    { index: 18, title: "magnet（磁铁）",            duration: 245, filename: "playlist/018_【初音未来】MIKU经典歌曲合集 p18 magnet (磁铁).m4a" },
+    { index: 19, title: "鏡花水月",                  duration: 357, filename: "playlist/019_【初音未来】MIKU经典歌曲合集 p19 鏡花水月.m4a" },
+    { index: 20, title: "天空之城 (TV Version)",       duration: 202, filename: "playlist/020_【初音未来】MIKU经典歌曲合集 p20 天空之城 (TV Version).m4a" },
+    { index: 21, title: "花葬",                      duration: 243, filename: "playlist/021_【初音未来】MIKU经典歌曲合集 p21 花葬.m4a" }
+  ];
+
+  // ========================================
+  // 状态
+  // ========================================
+  let currentSongIndex = 0;
+  let isPlaying = false;
+  let audioContext = null;
+  let sourceNode = null;
+  let audioBuffer = null;
+  let startOffset = 0;
+  let audioStartTime = 0;
+
+  // ========================================
+  // DOM 元素
+  // ========================================
+  const $ = (selector) => document.querySelector(selector);
+  const $$ = (selector) => document.querySelectorAll(selector);
+
+  // ========================================
+  // 1. 导航栏
+  // ========================================
+  const navbar = $('#navbar');
+  const navToggle = $('#navToggle');
+  const navMenu = $('#navMenu');
+  const navLinks = $$('.nav-link');
+
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+
+  navToggle.addEventListener('click', () => {
+    navMenu.classList.toggle('active');
+    navToggle.classList.toggle('active');
+  });
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      navMenu.classList.remove('active');
+      navToggle.classList.remove('active');
+    });
+  });
+
+  // 高亮当前 section
+  const sections = $$('section[id]');
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const activeLink = $(`.nav-link[href="#${entry.target.id}"]`);
+        if (activeLink) activeLink.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-50% 0px -50% 0px' });
+  sections.forEach(section => navObserver.observe(section));
+
+  // ========================================
+  // 2. Hero - 景深视差
+  // ========================================
+  const heroBg = $('#heroBg');
+  let ticking = false;
+
+  function updateParallax() {
+    const scrolled = window.scrollY;
+    const heroHeight = $('#hero').offsetHeight;
+    if (scrolled <= heroHeight) {
+      heroBg.style.transform = `translateY(${scrolled * 0.4}px)`;
+    }
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateParallax);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // ========================================
+  // 3. Hero - 音乐播放
+  // ========================================
+  const heroPlay = $('#heroPlay');
+  const playText = $('#playText');
+
+  heroPlay.addEventListener('click', () => {
+    if (isPlaying) {
+      pauseAudio();
+    } else {
+      playCurrentSong();
+    }
+  });
+
+  // ========================================
+  // 4. Profile - 打字机效果
+  // ========================================
+  const profileData = [
+    { label: '年龄', value: '16 岁' },
+    { label: '身高', value: '158cm' },
+    { label: '体重', value: '42kg' },
+    { label: '声源', value: '藤田咲' }
+  ];
+
+  function typeWriter(element, text, callback) {
+    const valueEl = element.querySelector('.data-value');
+    valueEl.classList.add('typing');
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        valueEl.textContent += text.charAt(i);
+        i++;
+        setTimeout(type, 80 + Math.random() * 40);
+      } else {
+        valueEl.classList.remove('typing');
+        if (callback) callback();
+      }
+    }
+    type();
+  }
+
+  const profileObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        let delay = 0;
+        $$('.data-item').forEach((item, index) => {
+          setTimeout(() => typeWriter(item, profileData[index].value), delay);
+          delay += 400;
+        });
+        profileObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  const profileSection = $('#profile');
+  if (profileSection) profileObserver.observe(profileSection);
+
+  // 水波纹效果
+  const profileBadge = $('#profileBadge');
+  const rippleContainer = $('#rippleContainer');
+
+  profileBadge.addEventListener('click', (e) => {
+    const rect = profileBadge.getBoundingClientRect();
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    ripple.style.left = (e.clientX - rect.left) + 'px';
+    ripple.style.top = (e.clientY - rect.top) + 'px';
+    rippleContainer.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 800);
+  });
+
+  // ========================================
+  // 5. Gallery - 横向滑动
+  // ========================================
+  const galleryTrack = $('#galleryTrack');
+  const gallerySkeleton = $('#gallerySkeleton');
+  const galleryPrev = $('#galleryPrev');
+  const galleryNext = $('#galleryNext');
+  const galleryDots = $('#galleryDots');
+
+  const galleryImages = [
+    'assets/images/gallery-1.webp',
+    'assets/images/gallery-2.webp',
+    'assets/images/gallery-3.webp',
+    'assets/images/gallery-4.webp'
+  ];
+
+  let currentSlide = 0;
+  let touchStartX = 0;
+
+  function createGallery() {
+    galleryImages.forEach((src, index) => {
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      item.dataset.index = index;
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = `初音未来 ${index + 1}`;
+      img.loading = 'lazy';
+      item.appendChild(img);
+      galleryTrack.appendChild(item);
+      item.addEventListener('click', () => openLightbox(index));
+    });
+  }
+
+  function createDots() {
+    galleryImages.forEach((_, index) => {
+      const dot = document.createElement('div');
+      dot.className = 'gallery-dot' + (index === 0 ? ' active' : '');
+      dot.dataset.index = index;
+      dot.addEventListener('click', () => goToSlide(index));
+      galleryDots.appendChild(dot);
+    });
+  }
+
+  function goToSlide(index) {
+    currentSlide = index;
+    const items = $$('.gallery-item');
+    if (items[index]) {
+      items[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+    $$('.gallery-dot').forEach((dot, i) => dot.classList.toggle('active', i === index));
+  }
+
+  galleryPrev.addEventListener('click', () => { if (currentSlide > 0) goToSlide(currentSlide - 1); });
+  galleryNext.addEventListener('click', () => { if (currentSlide < galleryImages.length - 1) goToSlide(currentSlide + 1); });
+
+  galleryTrack.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+  galleryTrack.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].screenX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && currentSlide < galleryImages.length - 1) goToSlide(currentSlide + 1);
+      else if (diff < 0 && currentSlide > 0) goToSlide(currentSlide - 1);
+    }
+  }, { passive: true });
+
+  let scrollTimeout;
+  galleryTrack.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const items = $$('.gallery-item');
+      const trackRect = galleryTrack.getBoundingClientRect();
+      const centerX = trackRect.left + trackRect.width / 2;
+      items.forEach((item, index) => {
+        const itemRect = item.getBoundingClientRect();
+        const itemCenterX = itemRect.left + itemRect.width / 2;
+        if (Math.abs(centerX - itemCenterX) < itemRect.width / 2) {
+          currentSlide = index;
+          $$('.gallery-dot').forEach((dot, i) => dot.classList.toggle('active', i === index));
+        }
+      });
+    }, 100);
+  }, { passive: true });
+
+  // ========================================
+  // 6. 灯箱
+  // ========================================
+  const lightbox = $('#lightbox');
+  const lightboxImg = $('#lightboxImg');
+  const lightboxClose = $('#lightboxClose');
+  const lightboxPrev = $('#lightboxPrev');
+  const lightboxNext = $('#lightboxNext');
+  const lightboxCurrent = $('#lightboxCurrent');
+  const lightboxTotal = $('#lightboxTotal');
+
+  let lightboxIndex = 0;
+
+  function openLightbox(index) {
+    lightboxIndex = index;
+    lightboxImg.src = galleryImages[index];
+    lightboxCurrent.textContent = index + 1;
+    lightboxTotal.textContent = galleryImages.length;
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+  lightboxPrev.addEventListener('click', (e) => {
+    e.stopPropagation();
+    lightboxIndex = (lightboxIndex - 1 + galleryImages.length) % galleryImages.length;
+    lightboxImg.src = galleryImages[lightboxIndex];
+    lightboxCurrent.textContent = lightboxIndex + 1;
+  });
+  lightboxNext.addEventListener('click', (e) => {
+    e.stopPropagation();
+    lightboxIndex = (lightboxIndex + 1) % galleryImages.length;
+    lightboxImg.src = galleryImages[lightboxIndex];
+    lightboxCurrent.textContent = lightboxIndex + 1;
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') {
+      lightboxIndex = (lightboxIndex - 1 + galleryImages.length) % galleryImages.length;
+      lightboxImg.src = galleryImages[lightboxIndex];
+      lightboxCurrent.textContent = lightboxIndex + 1;
+    }
+    if (e.key === 'ArrowRight') {
+      lightboxIndex = (lightboxIndex + 1) % galleryImages.length;
+      lightboxImg.src = galleryImages[lightboxIndex];
+      lightboxCurrent.textContent = lightboxIndex + 1;
+    }
+  });
+
+  // ========================================
+  // 7. Canvas 粒子系统
+  // ========================================
+  const canvas = $('#particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let touchTrail = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas, { passive: true });
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 3 + 1;
+      this.speedX = (Math.random() - 0.5) * 0.5;
+      this.speedY = (Math.random() - 0.5) * 0.5;
+      this.opacity = Math.random() * 0.5 + 0.2;
+      this.hue = 170 + Math.random() * 20;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (touchTrail.length > 0) {
+        const latest = touchTrail[touchTrail.length - 1];
+        const dx = latest.x - this.x;
+        const dy = latest.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          const force = (150 - dist) / 150;
+          this.x += dx * force * 0.02;
+          this.y += dy * force * 0.02;
+        }
+      }
+      if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+      if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+      this.speedX *= 0.999;
+      this.speedY *= 0.999;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${this.hue}, 70%, 60%, ${this.opacity})`;
+      ctx.fill();
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = `hsla(${this.hue}, 70%, 60%, ${this.opacity})`;
+    }
+  }
+
+  for (let i = 0; i < 18; i++) particles.push(new Particle());
+
+  function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.update(); p.draw(); });
+    if (touchTrail.length > 20) touchTrail.shift();
+    requestAnimationFrame(animateParticles);
+  }
+  animateParticles();
+
+  document.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    touchTrail.push({ x: touch.clientX, y: touch.clientY });
+  }, { passive: true });
+  document.addEventListener('touchend', () => { touchTrail = []; }, { passive: true });
+
+  // ========================================
+  // 8. 音频播放系统
+  // ========================================
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function initAudioContext() {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  async function loadSong(index) {
+    currentSongIndex = index;
+    const song = PLAYLIST[index];
+
+    initAudioContext();
+
+    try {
+      const response = await fetch(`assets/audio/${song.filename}`);
+      const arrayBuffer = await response.arrayBuffer();
+      audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      startOffset = 0;
+
+      updateUI();
+    } catch (e) {
+      console.error('加载音频失败:', e);
+    }
+  }
+
+  function playCurrentSong() {
+    if (!audioBuffer) return;
+
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    if (sourceNode) {
+      try { sourceNode.stop(); } catch(e) {}
+      sourceNode.disconnect();
+    }
+
+    sourceNode = audioContext.createBufferSource();
+    sourceNode.buffer = audioBuffer;
+    sourceNode.connect(audioContext.destination);
+
+    const offset = startOffset;
+    sourceNode.start(0, offset);
+    sourceNode.onended = () => {
+      if (isPlaying) {
+        // 播放下一首
+        currentSongIndex = (currentSongIndex + 1) % PLAYLIST.length;
+        loadSong(currentSongIndex).then(() => {
+          playCurrentSong();
+        });
+      }
+    };
+
+    isPlaying = true;
+    audioStartTime = audioContext.currentTime - offset;
+    updateUI();
+    updateProgress();
+  }
+
+  function pauseAudio() {
+    if (sourceNode) {
+      startOffset = audioContext.currentTime - audioStartTime;
+      try { sourceNode.stop(); } catch(e) {}
+      sourceNode.disconnect();
+      sourceNode = null;
+    }
+    isPlaying = false;
+    updateUI();
+  }
+
+  function updateUI() {
+    const song = PLAYLIST[currentSongIndex];
+
+    // 更新播放卡片
+    $('#nowTitle').textContent = song.title;
+    $('#timeTotal').textContent = formatTime(song.duration);
+    $('#playIcon').innerHTML = isPlaying
+      ? '<rect x="7" y="5" width="4" height="18" fill="currentColor"/><rect x="17" y="5" width="4" height="18" fill="currentColor"/>'
+      : '<polygon points="9,5 23,14 9,23" fill="currentColor"/>';
+
+    // 更新旋转唱片
+    const disc = $('#nowPlayingDisc');
+    disc.classList.toggle('spinning', isPlaying);
+
+    // 更新播放按钮文字
+    playText.textContent = isPlaying ? '暂停' : '点击聆听';
+
+    // 更新 Hero 按钮状态
+    heroPlay.classList.toggle('playing', isPlaying);
+
+    // 更新歌曲网格
+    $$('.song-card').forEach((card, index) => {
+      card.classList.toggle('playing', index === currentSongIndex);
+    });
+  }
+
+  function updateProgress() {
+    if (!isPlaying || !audioBuffer) return;
+
+    const currentTime = audioContext.currentTime - audioStartTime;
+    const progress = Math.min(currentTime / audioBuffer.duration, 1);
+
+    $('#progressFill').style.width = (progress * 100) + '%';
+    $('#timeCurrent').textContent = formatTime(currentTime);
+
+    if (isPlaying) {
+      requestAnimationFrame(updateProgress);
+    }
+  }
+
+  // 播放按钮
+  $('#playBtn').addEventListener('click', () => {
+    if (isPlaying) pauseAudio();
+    else playCurrentSong();
+  });
+
+  // 上一首/下一首
+  $('#prevBtn').addEventListener('click', () => {
+    const wasPlaying = isPlaying;
+    if (wasPlaying) pauseAudio();
+    currentSongIndex = (currentSongIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+    loadSong(currentSongIndex).then(() => {
+      if (wasPlaying) playCurrentSong();
+    });
+  });
+
+  $('#nextBtn').addEventListener('click', () => {
+    const wasPlaying = isPlaying;
+    if (wasPlaying) pauseAudio();
+    currentSongIndex = (currentSongIndex + 1) % PLAYLIST.length;
+    loadSong(currentSongIndex).then(() => {
+      if (wasPlaying) playCurrentSong();
+    });
+  });
+
+  // 进度条点击
+  $('#progressBar').addEventListener('click', (e) => {
+    if (!audioBuffer) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const wasPlaying = isPlaying;
+    if (wasPlaying) pauseAudio();
+    startOffset = percent * audioBuffer.duration;
+    if (wasPlaying) playCurrentSong();
+  });
+
+  // ========================================
+  // 9. 歌曲网格
+  // ========================================
+  function createSongGrid() {
+    const grid = $('#songGrid');
+    grid.innerHTML = PLAYLIST.map((song, index) => `
+      <div class="song-card ${index === currentSongIndex ? 'playing' : ''}" data-index="${index}">
+        <div class="song-card-header">
+          <div class="song-number">${String(song.index).padStart(2, '0')}</div>
+          <div class="song-card-info">
+            <div class="song-card-title">${song.title}</div>
+            <div class="song-card-artist">初音未来</div>
+          </div>
+        </div>
+        <div class="song-card-footer">
+          <span class="song-card-duration">${formatTime(song.duration)}</span>
+          <div class="song-card-play-icon">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <polygon points="3,2 10,6 3,10" fill="#39C5BB"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // 点击切换歌曲
+    grid.querySelectorAll('.song-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const index = parseInt(card.dataset.index);
+        const wasPlaying = isPlaying;
+        if (wasPlaying) pauseAudio();
+        loadSong(index).then(() => {
+          playCurrentSong();
+        });
+      });
+    });
+  }
+
+  // ========================================
+  // 10. 初始化
+  // ========================================
+  function init() {
+    createGallery();
+    createDots();
+    createSongGrid();
+
+    // 等待图片加载
+    Promise.all(galleryImages.map(src => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve;
+        img.src = src;
+      });
+    })).then(() => {
+      if (gallerySkeleton) gallerySkeleton.style.display = 'none';
+    });
+
+    // 加载默认歌曲（千本桜 = index 0）
+    loadSong(0);
+  }
+
+  init();
+
+})();

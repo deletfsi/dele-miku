@@ -1,0 +1,93 @@
+cd   /mnt/d/0VibeCoding/dele-deerflow
+
+  claude   --dangerously-skip-permissions
+
+
+开启agent teams。   deeerflow 我们本店装好了 ， 装到了 d 盘的 github 里面 ， 然后 docker 我们也有了 本地的，
+  你看看呢 ， 则呢么跑起来 测试下， 比如我想跑一个 “调研 今日 美伊局势“ 到当前文件夹  D:\0VibeCoding\dele-deerflow
+
+
+  cd /mnt/d/Github/deer-flow
+
+  make docker-init  
+  make docker-start   
+
+ 
+
+  1. 停止 DeerFlow（释放资源）
+
+  # 方式一：使用 Makefile（推荐）
+  cd /mnt/d/Github/deer-flow
+  make docker-stop
+
+  # 方式二：直接 docker compose 停止
+  cd /mnt/d/Github/deer-flow
+  docker compose -f docker/docker-compose-dev.yaml down
+
+  # 方式三：停止并删除容器+网络（完全清理）
+  cd /mnt/d/Github/deer-flow
+  docker compose -f docker/docker-compose-dev.yaml down --volumes --remove-orphans
+
+  2. 查看当前状态
+
+  # 查看运行中的容器
+  docker ps
+
+  # 查看所有容器（包括已停止的）
+  docker ps -a
+
+  # 查看 DeerFlow 相关容器
+  docker ps --filter "name=deer-flow"
+
+  3. 清理 Docker 资源
+
+  # 删除已停止的容器
+  docker container prune -f
+
+  # 删除无用镜像（释放磁盘空间）
+  docker image prune -a
+
+  # 完全清理：删除停止的容器、无用镜像、无用网络
+  docker system prune -a --volumes
+
+  4. 重新启动 DeerFlow
+
+  cd /mnt/d/Github/deer-flow
+
+  # 重新启动（保留数据）
+  docker compose -f docker/docker-compose-dev.yaml up -d
+
+  # 完全重启（清理旧容器和网络）
+  docker compose -f docker/docker-compose-dev.yaml down
+  docker compose -f docker/docker-compose-dev.yaml up -d
+
+  5. 查看日志
+
+  # 查看所有容器日志
+  docker compose -f docker/docker-compose-dev.yaml logs
+
+  # 实时查看 gateway 日志
+  docker logs -f deer-flow-gateway
+
+  # 查看最近 100 行日志
+  docker logs --tail 100 deer-flow-gateway
+
+  6. 完整流程示例
+
+  # === 释放资源 ===
+  cd /mnt/d/Github/deer-flow
+  make docker-stop          # 停止容器
+  docker system prune -f   # 清理无用资源（可选，释放磁盘）
+
+  # === 确认已停止 ===
+  docker ps --filter "name=deer-flow"  # 应无输出
+
+  # === 重新启动 ===
+  cd /mnt/d/Github/deer-flow
+  make docker-start        # 启动服务
+
+  # === 确认运行 ===
+  docker ps --filter "name=deer-flow"  # 应显示4个容器运行中
+
+  # === 访问 ===
+  # 浏览器打开 http://localhost:2026
