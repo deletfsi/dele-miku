@@ -138,7 +138,9 @@
     { label: '年龄', value: '16 岁' },
     { label: '身高', value: '158cm' },
     { label: '体重', value: '42kg' },
-    { label: '声源', value: '藤田咲' }
+    { label: '声源', value: '藤田咲' },
+    { label: '生日', value: '8月31日' },
+    { label: '代表色', value: '#39C5BB 苍绿' }
   ];
 
   function typeWriter(element, text, callback) {

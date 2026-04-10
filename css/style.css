@@ -562,6 +562,120 @@ canvas {
   font-style: italic;
 }
 
+.quote-translate {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 12px;
+  letter-spacing: 2px;
+}
+
+/* 时间线 */
+.timeline-section {
+  margin-top: 80px;
+  padding-top: 80px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.timeline {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+  padding-left: 40px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--miku-green), transparent);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 32px;
+  padding-left: 24px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -36px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  background: var(--miku-green);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(57, 197, 187, 0.5);
+}
+
+.timeline-year {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--miku-green);
+  margin-bottom: 4px;
+}
+
+.timeline-content h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.timeline-content p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* 影响力 */
+.impact-section {
+  margin-top: 80px;
+  padding-top: 80px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+}
+
+.impact-card {
+  padding: 32px 24px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+  transition: all 0.3s var(--ease-out);
+}
+
+.impact-card:hover {
+  border-color: rgba(57, 197, 187, 0.3);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+}
+
+.impact-icon {
+  margin-bottom: 16px;
+}
+
+.impact-card h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.impact-card p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
 /* ========================================
    Gallery 区域 - 横向滑动
    ======================================== */
