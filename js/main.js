@@ -473,11 +473,16 @@
     }
   }
 
-  function playCurrentSong() {
+  async function playCurrentSong() {
+    // 如果没有加载音频，先加载
+    if (!audioBuffer) {
+      await loadSong(currentSongIndex);
+    }
+
     if (!audioBuffer) return;
 
     if (audioContext.state === 'suspended') {
-      audioContext.resume();
+      await audioContext.resume();
     }
 
     if (sourceNode) {
