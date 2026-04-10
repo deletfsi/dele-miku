@@ -1178,6 +1178,12 @@
     // 观察 Impact cards
     $('.impact-card').forEach(card => scrollObserver.observe(card));
 
+    // 观察 About cards
+    $('.about-card').forEach((card, index) => {
+      card.style.transitionDelay = `${index * 100}ms`;
+      scrollObserver.observe(card);
+    });
+
     // 观察 Gallery items
     $('.gallery-item').forEach((item, index) => {
       item.style.transitionDelay = `${index * 100}ms`;
@@ -1219,3 +1225,16 @@
   init();
 
 })();
+
+  // 音乐引导提示
+  (function() {
+    const STORAGE_KEY = 'miku_music_prompt_v1';
+    const prompt = $('#musicPrompt');
+    if (!prompt) return;
+    if (localStorage.getItem(STORAGE_KEY)) { prompt.remove(); return; }
+    prompt.addEventListener('click', function() {
+      localStorage.setItem(STORAGE_KEY, 'true');
+      prompt.classList.add('hidden');
+      setTimeout(() => { prompt.remove(); if (!isPlaying) playCurrentSong(); }, 500);
+    });
+  })();

@@ -769,6 +769,207 @@ canvas {
   transform: translateY(0);
 }
 
+/* ========================================
+   About 关于初音区块
+   ======================================== */
+.about-section {
+  padding: 100px 0;
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin-top: 48px;
+}
+
+.about-card {
+  padding: 40px 32px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  transition: all 0.4s var(--ease-out);
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.about-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.about-card:hover {
+  border-color: rgba(57, 197, 187, 0.3);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+}
+
+.about-card-icon {
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.about-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--miku-green);
+  letter-spacing: 2px;
+}
+
+.about-card-content p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.about-list {
+  list-style: none;
+  margin-top: 16px;
+}
+
+.about-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 13px;
+}
+
+.about-list li:last-child {
+  border-bottom: none;
+}
+
+.about-list span {
+  color: var(--text-secondary);
+}
+
+.about-list li::after {
+  content: attr(data-value);
+  color: var(--text-primary);
+}
+
+/* 代表作品标签 */
+.featured-songs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.song-tag {
+  padding: 6px 14px;
+  background: rgba(57, 197, 187, 0.12);
+  border: 1px solid rgba(57, 197, 187, 0.25);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  color: var(--miku-green);
+  transition: all 0.3s var(--ease-out);
+}
+
+.song-tag:hover {
+  background: rgba(57, 197, 187, 0.2);
+  border-color: var(--miku-green);
+  transform: scale(1.05);
+}
+
+/* 数据统计 */
+.impact-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px 8px;
+  background: rgba(57, 197, 187, 0.08);
+  border-radius: var(--radius-md);
+}
+
+.stat-number {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--miku-green);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+/* 关于时间线 */
+.about-timeline {
+  margin-top: 64px;
+  padding: 40px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.timeline-milestone {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.timeline-milestone:last-child {
+  border-bottom: none;
+}
+
+.milestone-year {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--miku-green);
+  min-width: 60px;
+}
+
+.milestone-event {
+  font-size: 14px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-card {
+    padding: 32px 24px;
+  }
+
+  .impact-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .about-timeline {
+    padding: 24px;
+  }
+
+  .timeline-milestone {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
 .gallery-item {
   flex: 0 0 auto;
   width: min(80vw, 400px);
@@ -1880,4 +2081,98 @@ canvas {
     min-width: 48px;
     min-height: 48px;
   }
+}
+
+/* ========================================
+   音乐引导提示 - 赛博微光风格
+   ======================================== */
+.music-prompt {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(57, 197, 187, 0.3);
+  border-radius: 24px;
+  padding: 16px 28px;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  animation: promptFadeIn 0.8s ease-out 1.5s forwards;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 40px rgba(57, 197, 187, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.music-prompt:hover {
+  transform: translateX(-50%) scale(1.03);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 60px rgba(57, 197, 187, 0.2);
+}
+
+.music-prompt.hidden {
+  animation: promptFadeOut 0.5s ease-out forwards;
+}
+
+.prompt-icon {
+  position: relative;
+  animation: iconPulse 2.5s ease-in-out infinite;
+}
+
+.prompt-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(57,197,187,0.25) 0%, transparent 70%);
+  animation: glowExpand 2.5s ease-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes glowExpand {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.3; }
+}
+
+@keyframes promptFadeIn {
+  0% { opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(15px); }
+  100% { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes promptFadeOut {
+  0% { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.9); visibility: hidden; }
+}
+
+.prompt-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.prompt-text span {
+  color: #39C5BB;
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .music-prompt {
+    bottom: 90px;
+    padding: 14px 24px;
+  }
+  .prompt-text { font-size: 12px; }
 }
