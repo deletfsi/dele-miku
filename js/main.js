@@ -100,7 +100,7 @@
   // 2. Hero - 多层景深视差
   // ========================================
   const heroBg = $('#heroBg');
-  const heroGlows = $('.hero-glow');
+  const heroGlows = $$('.hero-glow');
   const heroContent = $('.hero-content');
   let ticking = false;
 
@@ -1173,19 +1173,19 @@
     }, observerOptions);
 
     // 观察 Timeline items
-    $('.timeline-item').forEach(item => scrollObserver.observe(item));
+    $$('.timeline-item').forEach(item => scrollObserver.observe(item));
 
     // 观察 Impact cards
-    $('.impact-card').forEach(card => scrollObserver.observe(card));
+    $$('.impact-card').forEach(card => scrollObserver.observe(card));
 
     // 观察 About cards
-    $('.about-card').forEach((card, index) => {
+    $$('.about-card').forEach((card, index) => {
       card.style.transitionDelay = `${index * 100}ms`;
       scrollObserver.observe(card);
     });
 
     // 观察 Gallery items
-    $('.gallery-item').forEach((item, index) => {
+    $$('.gallery-item').forEach((item, index) => {
       item.style.transitionDelay = `${index * 100}ms`;
       scrollObserver.observe(item);
     });
