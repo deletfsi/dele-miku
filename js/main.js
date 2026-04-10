@@ -136,11 +136,11 @@
   const heroPlay = $('#heroPlay');
   const playText = $('#playText');
 
-  heroPlay.addEventListener('click', () => {
+  heroPlay.addEventListener('click', async () => {
     if (isPlaying) {
       pauseAudio();
     } else {
-      playCurrentSong();
+      await playCurrentSong();
     }
   });
 
@@ -630,17 +630,19 @@
   }
 
   // 播放按钮
-  $('#playBtn').addEventListener('click', () => {
-    if (isPlaying) pauseAudio();
-    else playCurrentSong();
+  $('#playBtn').addEventListener('click', async () => {
+    if (isPlaying) {
+      pauseAudio();
+    } else {
+      await playCurrentSong();
+    }
   });
 
-  // 上一首/下一首
-  $('#prevBtn').addEventListener('click', () => {
+  // 上一首
+  $('#prevBtn').addEventListener('click', async () => {
     const wasPlaying = isPlaying;
-    if (wasPlaying) pauseAudio();
+    pauseAudio();
 
-    // 随机模式：随机选择
     if (playMode === PLAY_MODES.RANDOM) {
       let nextRandom;
       do {
@@ -651,16 +653,15 @@
       currentSongIndex = (currentSongIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
     }
 
-    loadSong(currentSongIndex).then(() => {
-      if (wasPlaying) playCurrentSong();
-    });
+    await loadSong(currentSongIndex);
+    if (wasPlaying) await playCurrentSong();
   });
 
-  $('#nextBtn').addEventListener('click', () => {
+  // 下一首
+  $('#nextBtn').addEventListener('click', async () => {
     const wasPlaying = isPlaying;
-    if (wasPlaying) pauseAudio();
+    pauseAudio();
 
-    // 随机模式：随机选择
     if (playMode === PLAY_MODES.RANDOM) {
       let nextRandom;
       do {
@@ -671,9 +672,8 @@
       currentSongIndex = (currentSongIndex + 1) % PLAYLIST.length;
     }
 
-    loadSong(currentSongIndex).then(() => {
-      if (wasPlaying) playCurrentSong();
-    });
+    await loadSong(currentSongIndex);
+    if (wasPlaying) await playCurrentSong();
   });
 
   // 进度条拖动
@@ -800,13 +800,12 @@
     `).join('');
 
     songDropdownList.querySelectorAll('.song-dropdown-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', async () => {
         const index = parseInt(item.dataset.index);
         const wasPlaying = isPlaying;
-        if (wasPlaying) pauseAudio();
-        loadSong(index).then(() => {
-          if (wasPlaying) playCurrentSong();
-        });
+        pauseAudio();
+        await loadSong(index);
+        if (wasPlaying) await playCurrentSong();
         closeDropdown();
       });
     });
