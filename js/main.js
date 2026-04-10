@@ -1160,12 +1160,12 @@
           entry.target.classList.add('visible');
           // Timeline items 需要逐个显示
           if (entry.target.classList.contains('timeline-item')) {
-            const delay = Array.from($('.timeline-item')).indexOf(entry.target) * 150;
+            const delay = Array.from($$('.timeline-item')).indexOf(entry.target) * 150;
             entry.target.style.transitionDelay = `${delay}ms`;
           }
           // Impact cards 需要错开显示
           if (entry.target.classList.contains('impact-card')) {
-            const delay = Array.from($('.impact-card')).indexOf(entry.target) * 100;
+            const delay = Array.from($$('.impact-card')).indexOf(entry.target) * 100;
             entry.target.style.transitionDelay = `${delay}ms`;
           }
         }
