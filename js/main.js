@@ -97,16 +97,28 @@
   sections.forEach(section => navObserver.observe(section));
 
   // ========================================
-  // 2. Hero - 景深视差
+  // 2. Hero - 多层景深视差
   // ========================================
   const heroBg = $('#heroBg');
+  const heroGlows = $('.hero-glow');
+  const heroContent = $('.hero-content');
   let ticking = false;
 
   function updateParallax() {
     const scrolled = window.scrollY;
     const heroHeight = $('#hero').offsetHeight;
     if (scrolled <= heroHeight) {
-      heroBg.style.transform = `translateY(${scrolled * 0.4}px)`;
+      // 背景层 - 最慢
+      heroBg.style.transform = `translateY(${scrolled * 0.3}px)`;
+      // 光斑层 - 中等速度
+      heroGlows.forEach((glow, i) => {
+        const speed = 0.2 + i * 0.1;
+        glow.style.transform = `translateY(${scrolled * speed}px)`;
+      });
+      // 内容层 - 最快，渐隐
+      const opacity = Math.max(0, 1 - scrolled / heroHeight);
+      heroContent.style.transform = `translateY(${scrolled * 0.15}px)`;
+      heroContent.style.opacity = opacity;
     }
     ticking = false;
   }
@@ -351,11 +363,12 @@
     reset() {
       this.x = Math.random() * canvas.width;
       this.y = Math.random() * canvas.height;
-      this.size = Math.random() * 3 + 1;
-      this.speedX = (Math.random() - 0.5) * 0.5;
-      this.speedY = (Math.random() - 0.5) * 0.5;
-      this.opacity = Math.random() * 0.5 + 0.2;
+      this.size = Math.random() * 3 + 1.5;
+      this.speedX = (Math.random() - 0.5) * 0.6;
+      this.speedY = (Math.random() - 0.5) * 0.6;
+      this.opacity = Math.random() * 0.6 + 0.3;
       this.hue = 170 + Math.random() * 20;
+      this.connected = false;
     }
     update() {
       this.x += this.speedX;
@@ -367,8 +380,8 @@
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 150) {
           const force = (150 - dist) / 150;
-          this.x += dx * force * 0.02;
-          this.y += dy * force * 0.02;
+          this.x += dx * force * 0.03;
+          this.y += dy * force * 0.03;
         }
       }
       if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
@@ -379,18 +392,42 @@
     draw() {
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${this.hue}, 70%, 60%, ${this.opacity})`;
+      ctx.fillStyle = `hsla(${this.hue}, 80%, 65%, ${this.opacity})`;
       ctx.fill();
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = `hsla(${this.hue}, 70%, 60%, ${this.opacity})`;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = `hsla(${this.hue}, 80%, 65%, ${this.opacity})`;
     }
   }
 
-  for (let i = 0; i < 18; i++) particles.push(new Particle());
+  // 增强粒子系统：60-80个粒子
+  const PARTICLE_COUNT = 65;
+  for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+  // 粒子连线绘制
+  function drawConnections() {
+    const connectionDistance = 120;
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < connectionDistance) {
+          const opacity = (1 - dist / connectionDistance) * 0.3;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `hsla(170, 70%, 60%, ${opacity})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+  }
 
   function animateParticles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles.forEach(p => { p.update(); p.draw(); });
+    drawConnections(); // 绘制粒子连线
     if (touchTrail.length > 20) touchTrail.shift();
     requestAnimationFrame(animateParticles);
   }
@@ -982,13 +1019,13 @@
     const viewportHeight = songPickerViewport.offsetHeight;
     const maxScroll = Math.max(0, totalHeight - viewportHeight + PICKER_PADDING * 2);
 
-    // 超出边界时的弹性效果
+    // 超出边界时的弹性效果 - 提升系数到0.5
     if (pickerScrollY < 0) {
       const over = Math.abs(pickerScrollY);
-      pickerScrollY = -over * 0.3;
+      pickerScrollY = -over * 0.5;
     } else if (pickerScrollY > maxScroll) {
       const over = pickerScrollY - maxScroll;
-      pickerScrollY = maxScroll + over * 0.3;
+      pickerScrollY = maxScroll + over * 0.5;
     }
 
     updatePickerPosition(false);
@@ -1109,7 +1146,47 @@
   }
 
   // ========================================
-  // 13. 初始化
+  // 13. 滚动入场动画 Observer
+  // ========================================
+  function initScrollAnimations() {
+    const observerOptions = {
+      threshold: 0.15,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const scrollObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          // Timeline items 需要逐个显示
+          if (entry.target.classList.contains('timeline-item')) {
+            const delay = Array.from($('.timeline-item')).indexOf(entry.target) * 150;
+            entry.target.style.transitionDelay = `${delay}ms`;
+          }
+          // Impact cards 需要错开显示
+          if (entry.target.classList.contains('impact-card')) {
+            const delay = Array.from($('.impact-card')).indexOf(entry.target) * 100;
+            entry.target.style.transitionDelay = `${delay}ms`;
+          }
+        }
+      });
+    }, observerOptions);
+
+    // 观察 Timeline items
+    $('.timeline-item').forEach(item => scrollObserver.observe(item));
+
+    // 观察 Impact cards
+    $('.impact-card').forEach(card => scrollObserver.observe(card));
+
+    // 观察 Gallery items
+    $('.gallery-item').forEach((item, index) => {
+      item.style.transitionDelay = `${index * 100}ms`;
+      scrollObserver.observe(item);
+    });
+  }
+
+  // ========================================
+  // 14. 初始化
   // ========================================
   function init() {
     createGallery();
@@ -1129,11 +1206,14 @@
       if (gallerySkeleton) gallerySkeleton.style.display = 'none';
     });
 
-    // 加载默认歌曲（千本桜 = index 0）
+    // 加载默认歌曲（世界第一的公主殿下 = index 0）
     loadSong(0);
 
     // 初始化后滚动到当前歌曲
     setTimeout(() => scrollPickerToCurrentSong(false), 100);
+
+    // 初始化滚动入场动画
+    initScrollAnimations();
   }
 
   init();
