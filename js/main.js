@@ -1229,7 +1229,7 @@
   // 音乐引导提示
   (function() {
     const STORAGE_KEY = 'miku_music_prompt_v1';
-    const prompt = $('#musicPrompt');
+    const prompt = document.getElementById('musicPrompt');
     if (!prompt) return;
     if (localStorage.getItem(STORAGE_KEY)) { prompt.remove(); return; }
     prompt.addEventListener('click', function() {
