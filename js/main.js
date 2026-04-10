@@ -34,8 +34,14 @@
   ];
 
   // ========================================
-  // 状态
+  // 播放模式
   // ========================================
+  const PLAY_MODES = {
+    SEQUENTIAL: 'sequential',  // 顺序播放
+    LOOP: 'loop',               // 单曲循环
+    RANDOM: 'random'            // 随机播放
+  };
+
   let currentSongIndex = 0;
   let isPlaying = false;
   let audioContext = null;
@@ -43,6 +49,8 @@
   let audioBuffer = null;
   let startOffset = 0;
   let audioStartTime = 0;
+  let playMode = PLAY_MODES.SEQUENTIAL;
+  let isDraggingProgress = false;
 
   // ========================================
   // DOM 元素
@@ -445,11 +453,7 @@
     sourceNode.start(0, offset);
     sourceNode.onended = () => {
       if (isPlaying) {
-        // 播放下一首
-        currentSongIndex = (currentSongIndex + 1) % PLAYLIST.length;
-        loadSong(currentSongIndex).then(() => {
-          playCurrentSong();
-        });
+        handleSongEnd();
       }
     };
 
@@ -457,6 +461,36 @@
     audioStartTime = audioContext.currentTime - offset;
     updateUI();
     updateProgress();
+  }
+
+  function handleSongEnd() {
+    switch (playMode) {
+      case PLAY_MODES.LOOP:
+        // 单曲循环：重新播放当前歌曲
+        loadSong(currentSongIndex).then(() => playCurrentSong());
+        break;
+      case PLAY_MODES.RANDOM:
+        // 随机播放：随机选择下一首（避免重复当前）
+        let nextRandom;
+        do {
+          nextRandom = Math.floor(Math.random() * PLAYLIST.length);
+        } while (nextRandom === currentSongIndex && PLAYLIST.length > 1);
+        loadSong(nextRandom).then(() => playCurrentSong());
+        break;
+      case PLAY_MODES.SEQUENTIAL:
+      default:
+        // 顺序播放：播放下一首，到末尾则停止
+        if (currentSongIndex < PLAYLIST.length - 1) {
+          currentSongIndex++;
+          loadSong(currentSongIndex).then(() => playCurrentSong());
+        } else {
+          // 到末尾，停止播放
+          isPlaying = false;
+          startOffset = 0;
+          updateUI();
+        }
+        break;
+    }
   }
 
   function pauseAudio() {
@@ -475,6 +509,7 @@
 
     // 更新播放卡片
     $('#nowTitle').textContent = song.title;
+    $('#selectorTitle').textContent = song.title;
     $('#timeTotal').textContent = formatTime(song.duration);
     $('#playIcon').innerHTML = isPlaying
       ? '<rect x="7" y="5" width="4" height="18" fill="currentColor"/><rect x="17" y="5" width="4" height="18" fill="currentColor"/>'
@@ -494,19 +529,34 @@
     $$('.song-card').forEach((card, index) => {
       card.classList.toggle('playing', index === currentSongIndex);
     });
+
+    // 更新下拉列表选中状态
+    $$('.song-dropdown-item').forEach((item, index) => {
+      item.classList.toggle('active', index === currentSongIndex);
+    });
   }
 
   function updateProgress() {
-    if (!isPlaying || !audioBuffer) return;
+    if (!isPlaying || !audioBuffer || isDraggingProgress) return;
 
     const currentTime = audioContext.currentTime - audioStartTime;
     const progress = Math.min(currentTime / audioBuffer.duration, 1);
 
     $('#progressFill').style.width = (progress * 100) + '%';
+    updateProgressThumb(progress);
     $('#timeCurrent').textContent = formatTime(currentTime);
 
     if (isPlaying) {
       requestAnimationFrame(updateProgress);
+    }
+  }
+
+  function updateProgressThumb(progress) {
+    const thumb = $('#progressThumb');
+    const bar = $('#progressBar');
+    if (thumb && bar) {
+      const barWidth = bar.offsetWidth;
+      thumb.style.left = (progress * barWidth) + 'px';
     }
   }
 
@@ -520,7 +570,18 @@
   $('#prevBtn').addEventListener('click', () => {
     const wasPlaying = isPlaying;
     if (wasPlaying) pauseAudio();
-    currentSongIndex = (currentSongIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+
+    // 随机模式：随机选择
+    if (playMode === PLAY_MODES.RANDOM) {
+      let nextRandom;
+      do {
+        nextRandom = Math.floor(Math.random() * PLAYLIST.length);
+      } while (nextRandom === currentSongIndex && PLAYLIST.length > 1);
+      currentSongIndex = nextRandom;
+    } else {
+      currentSongIndex = (currentSongIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+    }
+
     loadSong(currentSongIndex).then(() => {
       if (wasPlaying) playCurrentSong();
     });
@@ -529,25 +590,219 @@
   $('#nextBtn').addEventListener('click', () => {
     const wasPlaying = isPlaying;
     if (wasPlaying) pauseAudio();
-    currentSongIndex = (currentSongIndex + 1) % PLAYLIST.length;
+
+    // 随机模式：随机选择
+    if (playMode === PLAY_MODES.RANDOM) {
+      let nextRandom;
+      do {
+        nextRandom = Math.floor(Math.random() * PLAYLIST.length);
+      } while (nextRandom === currentSongIndex && PLAYLIST.length > 1);
+      currentSongIndex = nextRandom;
+    } else {
+      currentSongIndex = (currentSongIndex + 1) % PLAYLIST.length;
+    }
+
     loadSong(currentSongIndex).then(() => {
       if (wasPlaying) playCurrentSong();
     });
   });
 
-  // 进度条点击
-  $('#progressBar').addEventListener('click', (e) => {
+  // 进度条拖动
+  const progressBar = $('#progressBar');
+
+  function handleProgressDrag(e) {
     if (!audioBuffer) return;
+    const rect = progressBar.getBoundingClientRect();
+    let clientX = e.clientX;
+    if (e.touches) clientX = e.touches[0].clientX;
+    let percent = (clientX - rect.left) / rect.width;
+    percent = Math.max(0, Math.min(1, percent));
+
+    $('#progressFill').style.width = (percent * 100) + '%';
+    updateProgressThumb(percent);
+
+    const seekTime = percent * audioBuffer.duration;
+    $('#timeCurrent').textContent = formatTime(seekTime);
+    startOffset = seekTime;
+  }
+
+  function startDrag(e) {
+    if (!audioBuffer) return;
+    isDraggingProgress = true;
+    progressBar.classList.add('dragging');
+    handleProgressDrag(e);
+  }
+
+  function endDrag(e) {
+    if (!isDraggingProgress) return;
+    isDraggingProgress = false;
+    progressBar.classList.remove('dragging');
+
+    if (isPlaying) {
+      // 重新计算 audioStartTime
+      audioStartTime = audioContext.currentTime - startOffset;
+    }
+  }
+
+  progressBar.addEventListener('mousedown', startDrag);
+  progressBar.addEventListener('touchstart', startDrag, { passive: true });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDraggingProgress) handleProgressDrag(e);
+  });
+  document.addEventListener('touchmove', (e) => {
+    if (isDraggingProgress) handleProgressDrag(e);
+  }, { passive: true });
+
+  document.addEventListener('mouseup', endDrag);
+  document.addEventListener('touchend', endDrag);
+
+  // 进度条点击跳转
+  progressBar.addEventListener('click', (e) => {
+    if (isDraggingProgress) return;
+    if (!audioBuffer) return;
+
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
     const wasPlaying = isPlaying;
     if (wasPlaying) pauseAudio();
     startOffset = percent * audioBuffer.duration;
-    if (wasPlaying) playCurrentSong();
+    if (wasPlaying) {
+      playCurrentSong();
+    } else {
+      updateUI();
+    }
   });
 
   // ========================================
-  // 9. 歌曲网格
+  // 9. 播放模式切换
+  // ========================================
+  const playModeBtn = $('#playModeBtn');
+  const playModeLabel = $('#playModeLabel');
+  const playModeIcon = $('#playModeIcon');
+
+  const playModeConfig = {
+    [PLAY_MODES.SEQUENTIAL]: {
+      label: '顺序',
+      icon: '<path d="M4 6 L4 12 M7 5 L7 13 M10 7 L10 11 M13 4 L13 14 M16 6 L16 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+    },
+    [PLAY_MODES.LOOP]: {
+      label: '循环',
+      icon: '<path d="M9 4 L9 14 M4 7 A 6 6 0 1 1 7 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+    },
+    [PLAY_MODES.RANDOM]: {
+      label: '随机',
+      icon: '<path d="M3 5 L3 13 M6 4 L6 14 M9 6 L9 10 M12 3 L12 15 M15 5 L15 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+    }
+  };
+
+  function updatePlayModeUI() {
+    const config = playModeConfig[playMode];
+    playModeLabel.textContent = config.label;
+    playModeIcon.innerHTML = config.icon;
+    playModeBtn.classList.toggle('active', playMode !== PLAY_MODES.SEQUENTIAL);
+  }
+
+  function cyclePlayMode() {
+    const modes = [PLAY_MODES.SEQUENTIAL, PLAY_MODES.LOOP, PLAY_MODES.RANDOM];
+    const currentIndex = modes.indexOf(playMode);
+    playMode = modes[(currentIndex + 1) % modes.length];
+    updatePlayModeUI();
+  }
+
+  playModeBtn.addEventListener('click', cyclePlayMode);
+  updatePlayModeUI();
+
+  // ========================================
+  // 10. 歌曲下拉选择器
+  // ========================================
+  const songSelector = $('#songSelector');
+  const songSelectorBtn = $('#songSelectorBtn');
+  const songDropdown = $('#songDropdown');
+  const songDropdownList = $('#songDropdownList');
+
+  function createDropdownList() {
+    songDropdownList.innerHTML = PLAYLIST.map((song, index) => `
+      <div class="song-dropdown-item ${index === currentSongIndex ? 'active' : ''}" data-index="${index}">
+        <span class="dropdown-item-index">${String(song.index).padStart(2, '0')}</span>
+        <span class="dropdown-item-title">${song.title}</span>
+        <span class="dropdown-item-duration">${formatTime(song.duration)}</span>
+      </div>
+    `).join('');
+
+    songDropdownList.querySelectorAll('.song-dropdown-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const index = parseInt(item.dataset.index);
+        const wasPlaying = isPlaying;
+        if (wasPlaying) pauseAudio();
+        loadSong(index).then(() => {
+          if (wasPlaying) playCurrentSong();
+        });
+        closeDropdown();
+      });
+    });
+  }
+
+  function toggleDropdown() {
+    songDropdown.classList.toggle('active');
+  }
+
+  function closeDropdown() {
+    songDropdown.classList.remove('active');
+  }
+
+  songSelectorBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleDropdown();
+  });
+
+  // 点击外部关闭
+  document.addEventListener('click', (e) => {
+    if (!songSelector.contains(e.target)) {
+      closeDropdown();
+    }
+  });
+
+  // ========================================
+  // 11. Now Playing Card 滑动切换歌曲
+  // ========================================
+  const nowPlayingCard = $('#nowPlayingCard');
+  let cardTouchStartX = 0;
+  let cardTouchStartY = 0;
+  let isSwipingCard = false;
+
+  nowPlayingCard.addEventListener('touchstart', (e) => {
+    cardTouchStartX = e.changedTouches[0].screenX;
+    cardTouchStartY = e.changedTouches[0].screenY;
+    isSwipingCard = false;
+  }, { passive: true });
+
+  nowPlayingCard.addEventListener('touchmove', (e) => {
+    const diffX = e.changedTouches[0].screenX - cardTouchStartX;
+    const diffY = e.changedTouches[0].screenY - cardTouchStartY;
+
+    // 判断是否为水平滑动（水平移动距离大于垂直，且大于30px）
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+      isSwipingCard = true;
+    }
+  }, { passive: true });
+
+  nowPlayingCard.addEventListener('touchend', (e) => {
+    if (!isSwipingCard) return;
+
+    const diffX = e.changedTouches[0].screenX - cardTouchStartX;
+
+    if (diffX < -50) {
+      // 向左滑：下一首
+      $('#nextBtn').click();
+    } else if (diffX > 50) {
+      // 向右滑：上一首
+      $('#prevBtn').click();
+    }
+  }, { passive: true });
+
+  // ========================================
+  // 12. 歌曲网格
   // ========================================
   function createSongGrid() {
     const grid = $('#songGrid');
@@ -585,12 +840,13 @@
   }
 
   // ========================================
-  // 10. 初始化
+  // 13. 初始化
   // ========================================
   function init() {
     createGallery();
     createDots();
     createSongGrid();
+    createDropdownList();
 
     // 等待图片加载
     Promise.all(galleryImages.map(src => {

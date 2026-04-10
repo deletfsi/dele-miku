@@ -193,12 +193,34 @@
             <img src="assets/images/player-cover.webp" alt="" id="nowCoverImg">
           </div>
           <div class="now-playing-info">
-            <div class="now-playing-label">正在播放</div>
+            <div class="now-playing-top">
+              <div class="now-playing-label">正在播放</div>
+              <!-- 歌曲选择下拉 -->
+              <div class="song-selector" id="songSelector">
+                <button class="song-selector-btn" id="songSelectorBtn" aria-label="选择歌曲">
+                  <span id="selectorTitle">千本桜</span>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M3 4.5 L6 7.5 L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <div class="song-dropdown" id="songDropdown">
+                  <div class="song-dropdown-list" id="songDropdownList"></div>
+                </div>
+              </div>
+              <!-- 播放模式 -->
+              <button class="play-mode-btn" id="playModeBtn" aria-label="播放模式">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" id="playModeIcon">
+                  <path d="M4 6 L4 12 M7 5 L7 13 M10 7 L10 11 M13 4 L13 14 M16 6 L16 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span class="play-mode-label" id="playModeLabel">顺序</span>
+              </button>
+            </div>
             <h3 class="now-playing-title" id="nowTitle">千本桜</h3>
             <p class="now-playing-artist">初音未来</p>
             <div class="now-playing-progress">
               <div class="progress-bar" id="progressBar">
                 <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-thumb" id="progressThumb"></div>
               </div>
               <div class="progress-times">
                 <span id="timeCurrent">0:00</span>
