@@ -173,41 +173,45 @@
     type();
   }
 
-  // 观察每个 data-item，滚动到时触发打字机效果
-  const profileObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && !entry.target.classList.contains('typed')) {
-        const item = entry.target;
-        const index = parseInt(item.dataset.delay);
-        if (profileData[index]) {
-          setTimeout(() => {
-            const valueEl = item.querySelector('.data-value');
-            if (valueEl && !valueEl.textContent) {
-              valueEl.classList.add('typing');
-              let i = 0;
-              const text = profileData[index].value;
-              function type() {
-                if (i < text.length) {
-                  valueEl.textContent += text.charAt(i);
-                  i++;
-                  setTimeout(type, 80 + Math.random() * 40);
-                } else {
-                  valueEl.classList.remove('typing');
-                }
-              }
-              type();
+  // 档案数据打字机效果
+  function initProfileData() {
+    const items = $$('.data-item');
+    items.forEach((item, index) => {
+      // 延迟触发，确保元素可见
+      setTimeout(() => {
+        const valueEl = item.querySelector('.data-value');
+        const text = profileData[index]?.value || '';
+        if (valueEl && !valueEl.textContent && text) {
+          valueEl.classList.add('typing');
+          let i = 0;
+          function type() {
+            if (i < text.length) {
+              valueEl.textContent += text.charAt(i);
+              i++;
+              setTimeout(type, 80 + Math.random() * 40);
+            } else {
+              valueEl.classList.remove('typing');
             }
-          }, index * 150);
+          }
+          type();
         }
-        item.classList.add('typed');
-      }
+      }, 500 + index * 200);
     });
-  }, { threshold: 0.2, rootMargin: '0px 0px -50px 0px' });
+  }
 
-  // 观察 profile section 和每个 data-item
+  // 使用 MutationObserver 监听 profile 区域是否进入视口
   const profileSection = $('#profile');
-  if (profileSection) profileObserver.observe(profileSection);
-  $$('.data-item').forEach(item => profileObserver.observe(item));
+  if (profileSection) {
+    const profileObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          initProfileData();
+          profileObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.1 });
+    profileObserver.observe(profileSection);
+  }
 
   // 水波纹效果
   const profileBadge = $('#profileBadge');
