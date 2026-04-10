@@ -10,6 +10,7 @@
   // 歌曲播放列表
   // ========================================
   const PLAYLIST = [
+    { index: 0,  title: "世界第一的公主殿下",        duration: 210, filename: "000_世界第一的公主殿下.m4a" },
     { index: 1,  title: "千本桜",                    duration: 243, filename: "playlist/001_【初音未来】MIKU经典歌曲合集 p01 千本桜.m4a" },
     { index: 2,  title: "胧月（朦胧月色）",          duration: 255, filename: "playlist/002_【初音未来】MIKU经典歌曲合集 p02 胧月 (朦胧月色).m4a" },
     { index: 3,  title: "深海少女",                  duration: 206, filename: "playlist/003_【初音未来】MIKU经典歌曲合集 p03 深海少女.m4a" },
