@@ -294,6 +294,96 @@ canvas {
   50% { opacity: 0.5; transform: scale(1.1); }
 }
 
+/* 闪光粒子效果 */
+.sparkle-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  animation: sparkle 2s ease-in-out infinite;
+  box-shadow: 0 0 6px 2px rgba(57, 197, 187, 0.8);
+}
+
+.sparkle:nth-child(1) { top: 20%; left: 15%; animation-delay: 0s; }
+.sparkle:nth-child(2) { top: 35%; left: 75%; animation-delay: 0.3s; }
+.sparkle:nth-child(3) { top: 60%; left: 25%; animation-delay: 0.6s; }
+.sparkle:nth-child(4) { top: 45%; left: 85%; animation-delay: 0.9s; }
+.sparkle:nth-child(5) { top: 75%; left: 55%; animation-delay: 1.2s; }
+.sparkle:nth-child(6) { top: 15%; left: 45%; animation-delay: 1.5s; }
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* 标题闪光效果 */
+.hero-title {
+  position: relative;
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(57, 197, 187, 0.3),
+                 0 0 40px rgba(57, 197, 187, 0.2),
+                 0 0 60px rgba(57, 197, 187, 0.1);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(57, 197, 187, 0.5),
+                 0 0 60px rgba(57, 197, 187, 0.3),
+                 0 0 90px rgba(57, 197, 187, 0.2);
+  }
+}
+
+/* 播放按钮闪光 */
+.hero-play {
+  position: relative;
+  overflow: visible;
+  transition: all 0.3s ease;
+}
+
+.hero-play::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  background: radial-gradient(circle, rgba(57, 197, 187, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: playPulse 2s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hero-play:hover::before {
+  opacity: 1;
+}
+
+@keyframes playPulse {
+  0%, 100% { transform: scale(0.8); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.6; }
+}
+
+/* 背景动态渐变 */
+.hero-overlay {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(57, 197, 187, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 60%, rgba(90, 220, 210, 0.1) 0%, transparent 40%),
+    linear-gradient(180deg, transparent 0%, var(--bg-primary) 100%);
+  animation: gradientShift 8s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
 /* Miku双马尾抽象图形 */
 .miku-twin-tails {
   position: absolute;
