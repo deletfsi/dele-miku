@@ -536,6 +536,10 @@
     $$('.song-dropdown-item').forEach((item, index) => {
       item.classList.toggle('active', index === currentSongIndex);
     });
+
+    // 更新滑动选择器
+    updatePickerItems();
+    scrollPickerToCurrentSong(true);
   }
 
   function updateProgress() {
@@ -804,41 +808,303 @@
   }, { passive: true });
 
   // ========================================
-  // 12. 歌曲网格
+  // 12. 垂直滑动式歌曲选择器 (网易云风格)
   // ========================================
-  function createSongGrid() {
-    const grid = $('#songGrid');
-    grid.innerHTML = PLAYLIST.map((song, index) => `
-      <div class="song-card ${index === currentSongIndex ? 'playing' : ''}" data-index="${index}">
-        <div class="song-card-header">
-          <div class="song-number">${String(song.index).padStart(2, '0')}</div>
-          <div class="song-card-info">
-            <div class="song-card-title">${song.title}</div>
-            <div class="song-card-artist">初音未来</div>
-          </div>
+  const songPickerViewport = $('#songPickerViewport');
+  const songPickerTrack = $('#songPickerTrack');
+  const ITEM_HEIGHT = 72; // 每项高度
+  const VISIBLE_ITEMS = 3; // 可见项数
+  const PICKER_PADDING = 60; // 上下padding
+
+  let pickerScrollY = 0;
+  let pickerStartY = 0;
+  let pickerStartScrollY = 0;
+  let pickerVelocity = 0;
+  let pickerLastY = 0;
+  let pickerLastTime = 0;
+  let pickerAnimating = false;
+  let pickerTouching = false;
+
+  function createSongPicker() {
+    songPickerTrack.innerHTML = PLAYLIST.map((song, index) => `
+      <div class="song-picker-item ${index === currentSongIndex ? 'active playing' : ''}" data-index="${index}">
+        <div class="picker-item-index">${String(song.index).padStart(2, '0')}</div>
+        <div class="picker-item-info">
+          <div class="picker-item-title">${song.title}</div>
+          <div class="picker-item-artist">初音未来</div>
         </div>
-        <div class="song-card-footer">
-          <span class="song-card-duration">${formatTime(song.duration)}</span>
-          <div class="song-card-play-icon">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <polygon points="3,2 10,6 3,10" fill="#39C5BB"/>
-            </svg>
-          </div>
-        </div>
+        <div class="picker-item-duration">${formatTime(song.duration)}</div>
+        <div class="picker-playing-icon" style="display: ${index === currentSongIndex && isPlaying ? 'flex' : 'none'}"></div>
       </div>
     `).join('');
 
     // 点击切换歌曲
-    grid.querySelectorAll('.song-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const index = parseInt(card.dataset.index);
-        const wasPlaying = isPlaying;
-        if (wasPlaying) pauseAudio();
-        loadSong(index).then(() => {
-          playCurrentSong();
-        });
+    songPickerTrack.querySelectorAll('.song-picker-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const index = parseInt(item.dataset.index);
+        if (index === currentSongIndex) {
+          // 点击当前歌曲则切换播放/暂停
+          if (isPlaying) pauseAudio();
+          else playCurrentSong();
+        } else {
+          const wasPlaying = isPlaying;
+          if (wasPlaying) pauseAudio();
+          loadSong(index).then(() => {
+            playCurrentSong();
+          });
+        }
       });
     });
+
+    // 初始化位置
+    updatePickerPosition(false);
+
+    // 更新歌曲数量显示
+    const songPickerCount = $('#songPickerCount');
+    if (songPickerCount) {
+      songPickerCount.textContent = PLAYLIST.length + '首';
+    }
+  }
+
+  function updatePickerItems() {
+    const items = songPickerTrack.querySelectorAll('.song-picker-item');
+    items.forEach((item, index) => {
+      const isActive = index === currentSongIndex;
+      item.classList.toggle('active', isActive);
+      item.classList.toggle('playing', isActive && isPlaying);
+
+      const playingIcon = item.querySelector('.picker-playing-icon');
+      if (playingIcon) {
+        playingIcon.style.display = isActive && isPlaying ? 'flex' : 'none';
+      }
+    });
+  }
+
+  function updatePickerPosition(animate = true) {
+    const items = songPickerTrack.querySelectorAll('.song-picker-item');
+    const totalHeight = PLAYLIST.length * ITEM_HEIGHT;
+    const viewportHeight = songPickerViewport.offsetHeight;
+    const maxScroll = Math.max(0, totalHeight - viewportHeight + PICKER_PADDING * 2);
+
+    // 限制滚动范围
+    pickerScrollY = Math.max(0, Math.min(maxScroll, pickerScrollY));
+
+    // 计算当前选中项
+    const centerOffset = pickerScrollY + viewportHeight / 2 - ITEM_HEIGHT / 2 - PICKER_PADDING;
+    const currentIndex = Math.round(centerOffset / ITEM_HEIGHT);
+    const clampedIndex = Math.max(0, Math.min(PLAYLIST.length - 1, currentIndex));
+
+    // 更新transform
+    if (!pickerAnimating || !animate) {
+      songPickerTrack.style.transition = animate ? 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)' : 'none';
+      songPickerTrack.style.transform = `translateY(${-pickerScrollY}px)`;
+    }
+
+    // 更新选中状态
+    items.forEach((item, index) => {
+      const distance = Math.abs(index - clampedIndex);
+      const scale = distance === 0 ? 1 : Math.max(0.85, 1 - distance * 0.08);
+      const opacity = distance === 0 ? 1 : Math.max(0.4, 1 - distance * 0.25);
+
+      item.style.transform = `scale(${scale})`;
+      item.style.opacity = opacity;
+      item.classList.toggle('active', index === clampedIndex);
+    });
+
+    // 如果当前索引改变且不是在触摸中，自动滚动到该项
+    if (currentIndex !== clampedIndex && !pickerTouching) {
+      const targetScroll = clampedIndex * ITEM_HEIGHT - viewportHeight / 2 + ITEM_HEIGHT / 2 + PICKER_PADDING;
+      smoothScrollTo(Math.max(0, Math.min(maxScroll, targetScroll)));
+    }
+  }
+
+  function smoothScrollTo(targetY) {
+    pickerAnimating = true;
+    const startY = pickerScrollY;
+    const startTime = performance.now();
+    const duration = 400;
+
+    function easeOutQuart(t) {
+      return 1 - Math.pow(1 - t, 4);
+    }
+
+    function animate(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeOutQuart(progress);
+
+      pickerScrollY = startY + (targetY - startY) * easedProgress;
+      updatePickerPosition(false);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        pickerAnimating = false;
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // 触摸事件处理
+  function handlePickerTouchStart(e) {
+    pickerTouching = true;
+    pickerStartY = e.touches[0].clientY;
+    pickerStartScrollY = pickerScrollY;
+    pickerLastY = pickerStartY;
+    pickerLastTime = performance.now();
+    pickerVelocity = 0;
+
+    songPickerTrack.style.transition = 'none';
+  }
+
+  function handlePickerTouchMove(e) {
+    if (!pickerTouching) return;
+
+    const currentY = e.touches[0].clientY;
+    const deltaY = pickerStartY - currentY;
+    const currentTime = performance.now();
+    const dt = currentTime - pickerLastTime;
+
+    if (dt > 0) {
+      pickerVelocity = (pickerLastY - currentY) / dt * 16; // 转换为"像素/帧"
+    }
+
+    pickerLastY = currentY;
+    pickerLastTime = currentTime;
+
+    pickerScrollY = pickerStartScrollY + deltaY;
+
+    // 添加弹性边界效果
+    const items = songPickerTrack.querySelectorAll('.song-picker-item');
+    const totalHeight = PLAYLIST.length * ITEM_HEIGHT;
+    const viewportHeight = songPickerViewport.offsetHeight;
+    const maxScroll = Math.max(0, totalHeight - viewportHeight + PICKER_PADDING * 2);
+
+    // 超出边界时的弹性效果
+    if (pickerScrollY < 0) {
+      const over = Math.abs(pickerScrollY);
+      pickerScrollY = -over * 0.3;
+    } else if (pickerScrollY > maxScroll) {
+      const over = pickerScrollY - maxScroll;
+      pickerScrollY = maxScroll + over * 0.3;
+    }
+
+    updatePickerPosition(false);
+  }
+
+  function handlePickerTouchEnd(e) {
+    if (!pickerTouching) return;
+    pickerTouching = false;
+
+    // 惯性滚动
+    if (Math.abs(pickerVelocity) > 0.5) {
+      const items = songPickerTrack.querySelectorAll('.song-picker-item');
+      const totalHeight = PLAYLIST.length * ITEM_HEIGHT;
+      const viewportHeight = songPickerViewport.offsetHeight;
+      const maxScroll = Math.max(0, totalHeight - viewportHeight + PICKER_PADDING * 2);
+
+      pickerAnimating = true;
+      const startY = pickerScrollY;
+      const startTime = performance.now();
+      const duration = Math.min(500, Math.abs(pickerVelocity) * 20);
+
+      function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+
+      function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = easeOutQuart(progress);
+
+        pickerScrollY = startY + pickerVelocity * (1 - easedProgress) * 10;
+
+        // 边界吸附
+        if (pickerScrollY < 0) {
+          pickerScrollY = 0;
+        } else if (pickerScrollY > maxScroll) {
+          pickerScrollY = maxScroll;
+        }
+
+        updatePickerPosition(false);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          pickerAnimating = false;
+          pickerVelocity = 0;
+          snapToNearest();
+        }
+      }
+
+      requestAnimationFrame(animate);
+    } else {
+      snapToNearest();
+    }
+  }
+
+  function snapToNearest() {
+    const items = songPickerTrack.querySelectorAll('.song-picker-item');
+    const totalHeight = PLAYLIST.length * ITEM_HEIGHT;
+    const viewportHeight = songPickerViewport.offsetHeight;
+    const maxScroll = Math.max(0, totalHeight - viewportHeight + PICKER_PADDING * 2);
+
+    // 找到最近的项
+    const centerOffset = pickerScrollY + viewportHeight / 2 - ITEM_HEIGHT / 2 - PICKER_PADDING;
+    const nearestIndex = Math.round(centerOffset / ITEM_HEIGHT);
+    const clampedIndex = Math.max(0, Math.min(PLAYLIST.length - 1, nearestIndex));
+
+    const targetScroll = clampedIndex * ITEM_HEIGHT - viewportHeight / 2 + ITEM_HEIGHT / 2 + PICKER_PADDING;
+    const targetClamped = Math.max(0, Math.min(maxScroll, targetScroll));
+
+    smoothScrollTo(targetClamped);
+
+    // 如果切换了歌曲，更新选中项
+    if (clampedIndex !== currentSongIndex) {
+      // 延迟切换以匹配动画
+      setTimeout(() => {
+        const wasPlaying = isPlaying;
+        if (wasPlaying) pauseAudio();
+        loadSong(clampedIndex).then(() => {
+          playCurrentSong();
+        });
+      }, 150);
+    }
+  }
+
+  // 绑定触摸事件
+  songPickerViewport.addEventListener('touchstart', handlePickerTouchStart, { passive: true });
+  songPickerViewport.addEventListener('touchmove', handlePickerTouchMove, { passive: true });
+  songPickerViewport.addEventListener('touchend', handlePickerTouchEnd, { passive: true });
+
+  // 鼠标滚轮支持 (桌面端)
+  songPickerViewport.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const items = songPickerTrack.querySelectorAll('.song-picker-item');
+    const totalHeight = PLAYLIST.length * ITEM_HEIGHT;
+    const viewportHeight = songPickerViewport.offsetHeight;
+    const maxScroll = Math.max(0, totalHeight - viewportHeight + PICKER_PADDING * 2);
+
+    pickerScrollY = Math.max(0, Math.min(maxScroll, pickerScrollY + e.deltaY));
+    updatePickerPosition();
+  }, { passive: false });
+
+  // 更新picker位置（当歌曲切换时）
+  function scrollPickerToCurrentSong(animate = true) {
+    const viewportHeight = songPickerViewport.offsetHeight;
+    const totalHeight = PLAYLIST.length * ITEM_HEIGHT;
+    const maxScroll = Math.max(0, totalHeight - viewportHeight + PICKER_PADDING * 2);
+
+    const targetScroll = currentSongIndex * ITEM_HEIGHT - viewportHeight / 2 + ITEM_HEIGHT / 2 + PICKER_PADDING;
+    const targetClamped = Math.max(0, Math.min(maxScroll, targetScroll));
+
+    if (animate) {
+      smoothScrollTo(targetClamped);
+    } else {
+      pickerScrollY = targetClamped;
+      updatePickerPosition(false);
+    }
   }
 
   // ========================================
@@ -847,7 +1113,7 @@
   function init() {
     createGallery();
     createDots();
-    createSongGrid();
+    createSongPicker();
     createDropdownList();
 
     // 等待图片加载
@@ -864,6 +1130,9 @@
 
     // 加载默认歌曲（千本桜 = index 0）
     loadSong(0);
+
+    // 初始化后滚动到当前歌曲
+    setTimeout(() => scrollPickerToCurrentSong(false), 100);
   }
 
   init();
