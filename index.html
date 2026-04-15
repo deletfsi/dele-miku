@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>初音未来 Hatsune Miku - 世界第一的公主殿下</title>
+    
+    <!-- 引入 Tailwind CSS 进行高效排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        miku: '#39C5BB',
+                        'miku-dark': '#1e6a64',
+                        'miku-glow': 'rgba(57, 197, 187, 0.5)',
+                        dark: '#03070b',
+                        surface: 'rgba(255, 255, 255, 0.03)',
+                        surfaceHover: 'rgba(255, 255, 255, 0.08)',
+                        glass: 'rgba(10, 15, 20, 0.6)'
+                    },
+                    fontFamily: {
+                        sans: ['"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+                        display: ['"Space Grotesk"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 引入 Lenis (平滑滚动) 和 GSAP (高级动画) -->
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+
+        /* 基础重置与隐藏原生滚动条 */
+        body, html { margin: 0; padding: 0; background-color: #03070b; color: #fff; cursor: none; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 0px; }
+
+        /* 自定义鼠标指针 */
+        .cursor-dot, .cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot { width: 6px; height: 6px; background-color: var(--miku, #39C5BB); }
+        .cursor-outline {
+            width: 40px; height: 40px;
+            border: 1px solid rgba(57, 197, 187, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        /* 移动端优化：触摸屏设备隐藏自定义鼠标，恢复原生交互 */
+        @media (pointer: coarse) {
+            body, html { cursor: auto; }
+            .cursor-dot, .cursor-outline { display: none !important; }
+            .hover-target, a, button { cursor: pointer; }
+        }
+        
+        /* 粒子背景画布 */
+        #particles-canvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0; pointer-events: none; opacity: 0.6;
+        }
+
+        /* 页面内容层级 */
+        #main-content { position: relative; z-index: 10; }
+
+        /* 文字发光与遮罩特效 */
+        .text-glow { text-shadow: 0 0 20px rgba(57, 197, 187, 0.6); }
+        .text-outline {
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
+            transition: all 0.5s ease;
+        }
+        .text-outline:hover { -webkit-text-stroke: 1px #39C5BB; color: rgba(57, 197, 187, 0.1); }
+
+        /* 高级玻璃拟物卡片 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s;
+        }
+        /* 仅在非触摸屏设备开启悬浮上移特效，避免移动端点击出现卡顿 */
+        @media (hover: hover) and (pointer: fine) {
+            .glass-card:hover {
+                background: rgba(255, 255, 255, 0.05);
+                border-color: rgba(57, 197, 187, 0.3);
+                transform: translateY(-5px);
+            }
+        }
+
+        /* 音乐播放器 UI */
+        #music-player {
+            background: rgba(10, 15, 20, 0.7);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(57, 197, 187, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(57, 197, 187, 0.1);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            #music-player:hover { transform: scale(1.05); border-color: #39C5BB; }
+        }
+        
+        .record-cover {
+            background-image: url('assets/player.png'); background-size: cover; background-position: center;
+            border: 2px solid #222; box-shadow: 0 0 10px rgba(0,0,0,0.8);
+            animation: spin 8s linear infinite; animation-play-state: paused;
+        }
+        .record-cover.playing { animation-play-state: running; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .visualizer { display: flex; gap: 3px; height: 15px; align-items: flex-end; margin-top: 4px; }
+        .bar { width: 3px; background-color: #39C5BB; height: 20%; border-radius: 2px; transition: height 0.1s; }
+
+        /* 3D 卡片倾斜容器 */
+        .tilt-wrapper { perspective: 1000px; transform-style: preserve-3d; }
+        .tilt-card { transition: transform 0.1s ease; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+
+        /* 画廊横向滚动容器 (响应式适配) */
+        .gallery-wrap { overflow: hidden; height: 100vh; display: flex; align-items: center; }
+        .gallery-track { display: flex; gap: 4vw; padding: 0 10vw; width: max-content; }
+        .gallery-item {
+            width: 85vw; /* 移动端默认宽度 */
+            height: auto; aspect-ratio: 16/9; flex-shrink: 0;
+            position: relative; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border: 1px solid rgba(57, 197, 187, 0.1);
+        }
+        @media (min-width: 768px) {
+            .gallery-item { height: 65vh; width: auto; }
+        }
+        
+        .gallery-item img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .gallery-item:hover img { transform: scale(1.05); }
+            .gallery-item:hover .gallery-overlay { transform: translateY(0); opacity: 1; }
+        }
+        .gallery-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 20px 20px; /* 移动端减小内边距 */
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            transform: translateY(20px); opacity: 0;
+            transition: all 0.4s ease;
+        }
+        /* 移动端自动显示遮罩，不再依赖 hover */
+        @media (pointer: coarse) {
+            .gallery-overlay { transform: translateY(0); opacity: 1; }
+        }
+        @media (min-width: 768px) {
+            .gallery-overlay { padding: 40px 30px; }
+        }
+
+        /* 加载动画 */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #03070b; z-index: 10000;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .loader-line-wrap { width: 200px; height: 2px; background: rgba(255,255,255,0.1); overflow: hidden; margin-top: 40px; }
+        .loader-line { width: 0%; height: 100%; background: #39C5BB; transition: width 0.1s; }
+
+        /* 微信二维码扫描光效 */
+        @keyframes scan {
+            0%, 100% { top: 0%; opacity: 0; }
+            10%, 90% { opacity: 1; }
+            50% { top: 100%; opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 加载画面 -->
+    <div id="loader">
+        <div id="intro-logo-container" class="relative">
+            <img src="assets/0logo.jpg" alt="Manga Bill Logo" id="intro-logo-img" class="w-32 md:w-56 h-auto rounded-xl shadow-[0_0_40px_rgba(57,197,187,0.2)] opacity-0 object-contain">
+            <div id="intro-logo-glow" class="absolute inset-0 bg-miku blur-3xl opacity-0 pointer-events-none"></div>
+        </div>
+        <div class="loader-line-wrap"><div class="loader-line" id="loader-progress"></div></div>
+    </div>
+
+    <!-- 用户友好引导：音乐提示弹窗 (重构：采用覆盖层 Flex 居中，解决 Transform 冲突) -->
+    <div id="audio-prompt-overlay" class="fixed inset-0 z-[200] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500 bg-dark/70 backdrop-blur-sm px-4">
+        <div id="audio-prompt" class="p-6 md:p-10 rounded-3xl text-center flex flex-col items-center shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-miku/40 bg-dark/90 backdrop-blur-2xl w-full max-w-sm md:max-w-md transform scale-95 transition-transform duration-500">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-miku/10 flex items-center justify-center mb-6 border border-miku/30 animate-[pulse_2s_ease-in-out_infinite]">
+                <svg class="w-8 h-8 md:w-10 md:h-10 text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                <svg class="w-8 h-8 md:w-10 md:h-10 text-miku" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl md:text-3xl font-display font-bold text-white mb-3 tracking-widest text-glow">推荐佩戴耳机</h3>
+            <p class="text-gray-300 text-sm mb-8 leading-relaxed">为了获得最佳的沉浸式体验，推荐您戴上耳机，并播放专属背景音乐。</p>
+            <div class="flex flex-col md:flex-row w-full md:w-auto gap-4">
+                <button onclick="startExperience(true)" class="hover-target w-full md:w-auto px-8 py-3 bg-miku text-dark font-bold rounded-full hover:scale-105 transition-all duration-300 hover:shadow-[0_0_20px_#39C5BB] cursor-pointer md:cursor-none">
+                    播放音乐
+                </button>
+                <button onclick="startExperience(false)" class="hover-target w-full md:w-auto px-8 py-3 bg-white/10 text-white font-bold rounded-full border border-white/20 hover:scale-105 transition-all duration-300 hover:bg-white/20 cursor-pointer md:cursor-none">
+                    保持静音
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自定义鼠标 -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- 背景特效 -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- 音乐播放器 (移动端缩放适配) -->
+    <div id="music-player" class="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[100] flex items-center gap-3 p-2 md:p-3 pr-4 md:pr-5 rounded-full cursor-pointer md:cursor-none hover-target" onclick="toggleMusic()">
+        <div class="record-cover w-10 h-10 md:w-12 md:h-12 rounded-full" id="record"></div>
+        <div class="flex-col hidden sm:flex">
+            <span class="text-[10px] md:text-xs text-gray-400 font-display tracking-wider">NOW PLAYING</span>
+            <span class="text-xs md:text-sm font-bold text-white tracking-wide truncate max-w-[120px] md:max-w-none">世界第一的公主殿下</span>
+            <div class="visualizer" id="visualizer">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div>
+            </div>
+        </div>
+        <!-- 兼容性音频标签 -->
+        <audio id="bgm" loop>
+            <source src="assets/bgm.mp3" type="audio/mpeg">
+            <source src="assets/bgm.wav" type="audio/wav">
+        </audio>
+    </div>
+
+    <div id="main-content">
+        <!-- 导航栏 -->
+        <nav class="fixed top-0 w-full p-6 md:p-8 flex justify-between items-center z-50 mix-blend-difference">
+            <div class="flex items-center gap-3 md:gap-4">
+                <img src="assets/0logo.jpg" id="nav-logo" class="w-8 h-8 md:w-12 md:h-12 rounded-md md:rounded-lg object-cover opacity-0 shadow-[0_0_15px_rgba(57,197,187,0.4)]" alt="Manga Bill Logo">
+                <div class="text-lg md:text-xl font-display font-bold tracking-[0.2em] text-white">MANGA<span class="text-miku">BILL</span></div>
+            </div>
+            <div class="text-xs md:text-sm font-display tracking-widest text-gray-300">EST. 2007</div>
+        </nav>
+
+        <!-- 首屏 Hero Section -->
+        <section class="h-screen relative flex items-center justify-center overflow-hidden">
+            <div class="absolute w-full text-center z-0 pointer-events-none" data-speed="0.5">
+                <h1 class="text-[20vw] md:text-[15vw] leading-none font-display font-bold text-outline whitespace-nowrap opacity-30 mt-20 md:mt-0">
+                    HATSUNE<br class="md:hidden">MIKU
+                </h1>
+            </div>
+            
+            <div class="container mx-auto px-6 relative z-10 flex flex-col items-center mt-20">
+                <div class="tilt-wrapper gs-reveal w-full max-w-3xl">
+                    <img src="assets/hero.png" alt="Hatsune Miku Hero" class="tilt-card rounded-2xl w-full h-[45vh] md:h-[60vh] object-cover border border-miku/20" />
+                </div>
+                <div class="mt-8 md:mt-12 text-center gs-reveal-up">
+                    <h2 class="text-4xl md:text-7xl font-bold mb-3 md:mb-4 tracking-tight">初音未来</h2>
+                    <p class="text-base md:text-xl text-miku font-light tracking-widest">从未来传来的最初之声</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 1. 企划源起与核心概念溯源 -->
+        <section class="py-20 md:py-32 relative bg-surface backdrop-blur-sm border-y border-white/5">
+            <div class="container mx-auto px-6 max-w-6xl">
+                <div class="flex flex-col md:flex-row gap-12 md:gap-20 items-center">
+                    <div class="w-full md:w-5/12 tilt-wrapper gs-reveal-left">
+                        <div class="relative w-2/3 md:w-full mx-auto">
+                            <div class="absolute -inset-4 bg-miku/20 blur-2xl rounded-full"></div>
+                            <img src="assets/profile.png" alt="Profile" class="tilt-card relative rounded-full w-full aspect-square object-cover border-2 border-miku/30" />
+                        </div>
+                    </div>
+                    <div class="w-full md:w-7/12 flex flex-col justify-center gs-reveal-right">
+                        <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">ORIGIN // 01</div>
+                        <h3 class="text-3xl md:text-5xl font-bold mb-6 md:mb-8 leading-tight">源起与<span class="text-glow text-miku">核心概念</span></h3>
+                        
+                        <div class="space-y-4 md:space-y-6 text-gray-300 leading-relaxed font-light text-base md:text-lg">
+                            <div class="glass-card p-5 md:p-6 rounded-2xl hover-target">
+                                <h4 class="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-miku"></div>命名哲学与象征</h4>
+                                <p class="text-xs md:text-sm text-gray-400 mt-2">姓氏“初音”意指“初次的声音”与“出发点”；名字“未来”象征着“VOCALOID所代表的将来音乐之无限可能性”。合而观之即“从未来传来的最初之声”。</p>
+                            </div>
+                            <div class="glass-card p-5 md:p-6 rounded-2xl hover-target">
+                                <h4 class="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-miku"></div>寻声之旅：中之人</h4>
+                                <p class="text-xs md:text-sm text-gray-400 mt-2">原声数据由日本声优藤田咲（Fujita Saki）提供。在对比了近500份声优样本后脱颖而出，经过后期调整，诞生了极具标识度的“初音气”电子合成音。</p>
+                            </div>
+                            
+                            <!-- Manga Bill 官方徽章 -->
+                            <div class="mt-6 md:mt-8 inline-flex items-center gap-4 md:gap-5 gs-reveal-up bg-white/5 p-3 md:p-4 rounded-2xl border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors duration-300">
+                                <img src="assets/0badge.jpg" alt="Manga Bill Badge" class="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-miku/50 shadow-[0_0_20px_rgba(57,197,187,0.3)] animate-[spin_12s_linear_infinite] object-cover" />
+                                <div class="text-[10px] md:text-xs text-gray-300 font-display tracking-widest border-l border-miku/30 pl-3 md:pl-4 py-1">
+                                    PRODUCED BY<br><span class="text-miku font-bold text-xs md:text-sm">MANGA BILL</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 视觉形象设定 -->
+        <section class="py-20 md:py-32 relative">
+            <div class="container mx-auto px-6 max-w-7xl">
+                <div class="text-center mb-12 md:mb-20 gs-reveal-up">
+                    <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">DESIGN // 02</div>
+                    <h3 class="text-2xl md:text-5xl font-bold tracking-wider">二次元<span class="text-miku text-glow">美学基因</span></h3>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-10 md:gap-16 relative items-start">
+                    <!-- 左侧：Sticky 悬停展示 -->
+                    <div class="w-full lg:w-1/2 lg:sticky top-24 md:top-32 gs-reveal-left">
+                        <div class="tilt-wrapper relative rounded-2xl p-2 bg-gradient-to-b from-miku/30 to-transparent">
+                            <div class="absolute -inset-4 bg-miku/10 blur-3xl rounded-2xl z-0"></div>
+                            <img src="assets/gallery-1.png" alt="Hatsune Miku Full Body Design" class="tilt-card relative z-10 w-full h-[50vh] md:h-[75vh] object-cover object-top rounded-xl border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)]" />
+                        </div>
+                    </div>
+
+                    <!-- 右侧：文字解说卡片 -->
+                    <div class="w-full lg:w-1/2 space-y-6 md:space-y-8 py-4 md:py-10 gs-reveal-right">
+                        <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
+                            <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">初始公式服与角色基底</h4>
+                            <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">DESIGNER: KEI</div>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-4">
+                                设定的核心理念是“乐器的拟人化”。初音未来的身高设定为158cm，体重42kg，年龄16岁。
+                            </p>
+                            <ul class="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-400">
+                                <li class="flex items-start gap-3"><span class="text-miku mt-1">✦</span><span>**发型与色彩**：标志性的苍绿色超长双马尾，M形刘海。</span></li>
+                                <li class="flex items-start gap-3"><span class="text-miku mt-1">✦</span><span>**服装原型**：灵感高度致敬雅马哈经典全数字合成器DX7。</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
+                            <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">Append 版本的科幻异化</h4>
+                            <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">MODELER: 浅井真纪</div>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">
+                                整体向深度科幻与机能风靠拢。最显著的变化是原本的服装变为了紧身衣，领带直接内嵌于胸前的装甲中；短裙被解构，由腰部的科幻挂饰与延伸出的黑色线缆构成。
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
+                            <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">V3、V4X 到 NT 的演进</h4>
+                            <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">DESIGNER: iXima</div>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">
+                                提升了材质的透明感与光影的层次。在V4X中，发量在视觉上进行了优化缩减，整体身形更加修长，增加了大量金属质感的配饰与高跟鞋元素。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 核心合成引擎与软件版本迭代史 -->
+        <section class="py-20 md:py-32 relative bg-surface border-y border-white/5">
+            <div class="container mx-auto px-6 max-w-5xl">
+                <div class="text-center mb-12 md:mb-20 gs-reveal-up">
+                    <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">TECH // 03</div>
+                    <h3 class="text-2xl md:text-5xl font-bold tracking-wider">核心引擎与<span class="text-miku">版本迭代史</span></h3>
+                </div>
+
+                <div class="relative border-l-2 border-miku/20 ml-2 md:ml-12 space-y-12 md:space-y-16 pb-6 md:pb-10">
+                    <!-- V2 -->
+                    <div class="relative pl-8 md:pl-16 gs-reveal-up hover-target group">
+                        <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-dark border-2 border-miku group-hover:bg-miku group-hover:shadow-[0_0_15px_#39C5BB] transition-all"></div>
+                        <div class="text-miku font-display text-lg md:text-2xl font-bold mb-1 md:mb-2">2007.08</div>
+                        <h4 class="text-base md:text-xl font-bold text-white mb-2 md:mb-3">VOCALOID 2 (V2)：创世之作</h4>
+                        <p class="text-gray-400 text-xs md:text-sm leading-relaxed">首次将合成器拟人化，降低了专业电子音乐制作门槛。</p>
+                    </div>
+                    <!-- 其他节点省略同等格式适配... -->
+                    <div class="relative pl-8 md:pl-16 gs-reveal-up hover-target group">
+                        <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-dark border-2 border-miku group-hover:bg-miku group-hover:shadow-[0_0_15px_#39C5BB] transition-all"></div>
+                        <div class="text-miku font-display text-lg md:text-2xl font-bold mb-1 md:mb-2">2013</div>
+                        <h4 class="text-base md:text-xl font-bold text-white mb-2 md:mb-3">VOCALOID 3 (V3) 与外语声库</h4>
+                        <p class="text-gray-400 text-xs md:text-sm leading-relaxed">首次实现原生支持macOS系统。同期发售了首个英语声库，填补跨语种创作空白。</p>
+                    </div>
+                    <div class="relative pl-8 md:pl-16 gs-reveal-up hover-target group">
+                        <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-miku shadow-[0_0_15px_#39C5BB] transition-all"></div>
+                        <div class="text-miku font-display text-lg md:text-2xl font-bold mb-1 md:mb-2">2026.04</div>
+                        <h4 class="text-base md:text-xl font-bold text-white mb-2 md:mb-3">初音未来 V6：AI技术的终极融合</h4>
+                        <p class="text-gray-400 text-xs md:text-sm leading-relaxed">搭载 VOCALOID:AI。利用深度机器学习技术模拟极度接近人类真实的流畅度和换气感，突破“恐怖谷”效应。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. 画廊展示 (响应式适配，保持 JS 渲染) -->
+        <section class="gallery-wrap bg-dark relative">
+            <div class="container mx-auto px-6 absolute top-10 left-0 w-full z-10 mix-blend-difference pointer-events-none">
+                <h3 class="text-3xl md:text-5xl font-bold text-white">MY ARTWORKS</h3>
+                <p class="text-miku mt-1 md:mt-2 text-xs md:text-base tracking-widest">同人创作图集</p>
+            </div>
+            <div class="gallery-track" id="gallery-track"></div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="pt-16 md:pt-24 pb-8 md:pb-12 border-t border-white/10 relative overflow-hidden bg-dark">
+            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-miku/10 blur-[100px] pointer-events-none"></div>
+            
+            <div class="container mx-auto px-6 relative z-10 flex flex-col items-center">
+                <div class="text-center mb-8 md:mb-12 gs-reveal-up">
+                    <h2 class="text-2xl md:text-4xl font-display font-bold tracking-widest mb-2 md:mb-3 text-outline">CONNECT WITH US</h2>
+                    <p class="text-miku tracking-widest text-xs md:text-sm">扫码关注 Manga Bill 官方微信</p>
+                </div>
+
+                <div class="tilt-wrapper gs-reveal-up mb-16 md:mb-24 z-20">
+                    <div class="tilt-card relative p-[1px] rounded-3xl bg-gradient-to-b from-miku/50 via-transparent to-miku/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer md:cursor-none hover:scale-105 transition-transform duration-500">
+                        <div class="bg-dark/80 backdrop-blur-xl rounded-3xl p-6 md:p-8 flex flex-col items-center border border-white/5">
+                            <div class="w-40 h-40 md:w-48 md:h-48 rounded-2xl overflow-hidden mb-4 md:mb-6 relative group border border-miku/20 bg-white p-2">
+                                <div class="absolute top-0 left-0 w-full h-[2px] bg-miku shadow-[0_0_15px_#39C5BB] animate-[scan_2.5s_ease-in-out_infinite] z-10"></div>
+                                <img src="assets/0wechat.png" alt="WeChat QR Code" class="w-full h-full object-contain">
+                            </div>
+                            <div class="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                <div class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-miku animate-pulse shadow-[0_0_10px_#39C5BB]"></div>
+                                <span class="text-white font-bold tracking-widest text-xs md:text-sm">WeChat Official</span>
+                            </div>
+                            <span class="text-gray-400 text-[10px] md:text-xs">Manga Bill 官方社群</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl md:text-4xl font-display font-bold text-outline mb-4 md:mb-6">THANK YOU</h2>
+                <p class="text-gray-500 text-[10px] md:text-sm tracking-widest text-center">DESIGNED FOR THE WORLD'S #1 PRINCESS BY MANGA BILL</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 【智能画廊配置区】
+        const GALLERY_CONFIG = [
+            { file: 'gallery-2.png', title: '光影之歌', desc: 'Illustration 02' },
+            { file: 'gallery-3.png', title: '虚拟与现实', desc: 'Illustration 03' },
+            { file: 'gallery-4.png', title: '永恒的乐章', desc: 'Illustration 04' },
+            // { file: 'image_0939c8.jpg', title: '葱色回忆', desc: 'Illustration Extra' },
+            // { file: 'image_09adaa.png', title: '未来音轨', desc: 'Illustration 05' }
+        ];
+
+        function renderDynamicGallery() {
+            const track = document.getElementById('gallery-track');
+            GALLERY_CONFIG.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item hover-target';
+                div.innerHTML = `
+                    <img src="assets/${item.file}" alt="${item.title}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100%\\' height=\\'100%\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'#111\\'/><text x=\\'50%\\' y=\\'50%\\' fill=\\'#39C5BB\\' font-family=\\'Arial\\' font-size=\\'16\\' text-anchor=\\'middle\\'>加载失败: ${item.file}</text></svg>'">
+                    <div class="gallery-overlay">
+                        <div class="text-lg md:text-2xl font-bold text-white mb-1">${item.title}</div>
+                        <div class="text-xs md:text-sm text-miku">${item.desc}</div>
+                    </div>
+                `;
+                track.appendChild(div);
+            });
+        }
+
+        window.addEventListener('load', () => {
+            renderDynamicGallery();
+
+            let progress = 0;
+            const loaderProgress = document.getElementById('loader-progress');
+            const loader = document.getElementById('loader');
+            const introLogoImg = document.getElementById('intro-logo-img');
+            const introLogoGlow = document.getElementById('intro-logo-glow');
+            const navLogo = document.getElementById('nav-logo');
+
+            gsap.to(introLogoImg, { opacity: 1, duration: 1, ease: "power2.out" });
+            gsap.to(introLogoGlow, { opacity: 0.6, duration: 1.5, yoyo: true, repeat: -1, ease: "sine.inOut" });
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if(progress > 100) progress = 100;
+                loaderProgress.style.width = `${progress}%`;
+                
+                if(progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        gsap.killTweensOf(introLogoGlow);
+                        gsap.to(introLogoGlow, { opacity: 0, duration: 0.3 });
+                        gsap.to('.loader-line-wrap', { opacity: 0, duration: 0.3 });
+
+                        const targetRect = navLogo.getBoundingClientRect();
+                        const startRect = introLogoImg.getBoundingClientRect();
+
+                        const scale = targetRect.width / startRect.width;
+                        const targetX = targetRect.left - startRect.left;
+                        const targetY = targetRect.top - startRect.top;
+
+                        gsap.to(loader, { backgroundColor: 'rgba(3,7,11,0)', duration: 1.2, ease: "power2.inOut" });
+
+                        gsap.to(introLogoImg, {
+                            x: targetX,
+                            y: targetY,
+                            scale: scale,
+                            transformOrigin: "top left",
+                            duration: 1.2,
+                            ease: "expo.inOut",
+                            onComplete: () => {
+                                gsap.set(navLogo, { opacity: 1 });
+                                gsap.set(loader, { display: 'none' }); 
+                                initAnimations();
+
+                                // 显示弹窗 (重构后的逻辑，剥离了 Transform 冲突)
+                                setTimeout(() => {
+                                    const overlay = document.getElementById('audio-prompt-overlay');
+                                    overlay.classList.remove('opacity-0', 'pointer-events-none');
+                                    
+                                    const prompt = document.getElementById('audio-prompt');
+                                    prompt.classList.remove('scale-95');
+                                    prompt.classList.add('scale-100');
+                                }, 300);
+                            }
+                        });
+
+                    }, 600);
+                }
+            }, 50);
+        });
+
+        function startExperience(playMusic) {
+            const overlay = document.getElementById('audio-prompt-overlay');
+            const prompt = document.getElementById('audio-prompt');
+            
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            prompt.classList.remove('scale-100');
+            prompt.classList.add('scale-95');
+            
+            if(playMusic && !isPlaying) {
+                toggleMusic();
+            }
+        }
+
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smooth: true
+        });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+        gsap.registerPlugin(ScrollTrigger);
+
+        function initAnimations() {
+            // 响应式检测：如果是移动端竖屏，可能需要禁用某些消耗性能的视差
+            const isMobile = window.innerWidth < 768;
+
+            gsap.utils.toArray('.gs-reveal-up').forEach(elem => {
+                gsap.fromTo(elem, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out", scrollTrigger: { trigger: elem, start: "top 85%" } });
+            });
+            gsap.utils.toArray('.gs-reveal-left').forEach(elem => {
+                gsap.fromTo(elem, { x: isMobile ? 0 : -50, opacity: 0 }, { x: 0, opacity: 1, duration: 1, ease: "power3.out", scrollTrigger: { trigger: elem, start: "top 85%" } });
+            });
+            gsap.utils.toArray('.gs-reveal-right').forEach(elem => {
+                gsap.fromTo(elem, { x: isMobile ? 0 : 50, opacity: 0 }, { x: 0, opacity: 1, duration: 1, ease: "power3.out", scrollTrigger: { trigger: elem, start: "top 85%" } });
+            });
+
+            if (!isMobile) {
+                gsap.utils.toArray('[data-speed]').forEach(elem => {
+                    const speed = elem.getAttribute('data-speed');
+                    gsap.to(elem, { y: () => (ScrollTrigger.maxScroll(window) * speed), ease: "none", scrollTrigger: { trigger: "body", start: "top top", end: "bottom bottom", scrub: true } });
+                });
+            }
+
+            const track = document.getElementById('gallery-track');
+            if (track) {
+                const getScrollAmount = () => -(track.scrollWidth - window.innerWidth);
+                gsap.to(track, {
+                    x: getScrollAmount,
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: ".gallery-wrap",
+                        start: "top top",
+                        end: () => `+=${track.scrollWidth - window.innerWidth}`,
+                        pin: true,
+                        animation: true,
+                        scrub: 1,
+                        invalidateOnRefresh: true
+                    }
+                });
+            }
+            bindCursorEvents();
+        }
+
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorOutline = document.getElementById('cursor-outline');
+        
+        // 仅在非触摸设备上执行鼠标光标动画，以节省移动端性能
+        if (window.matchMedia("(pointer: fine)").matches) {
+            window.addEventListener('mousemove', (e) => {
+                gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                gsap.to(cursorOutline, { x: e.clientX, y: e.clientY, duration: 0.5, ease: "power2.out" });
+            });
+        }
+
+        function bindCursorEvents() {
+            if (window.matchMedia("(pointer: fine)").matches) {
+                document.querySelectorAll('a, button, .hover-target, .glass-card, .tilt-card').forEach(el => {
+                    el.addEventListener('mouseenter', () => { gsap.to(cursorOutline, { scale: 1.5, backgroundColor: 'rgba(57, 197, 187, 0.1)' }); });
+                    el.addEventListener('mouseleave', () => { gsap.to(cursorOutline, { scale: 1, backgroundColor: 'transparent' }); });
+                });
+            }
+        }
+
+        // 3D 倾斜特效也限制在非触摸设备上
+        if (window.matchMedia("(pointer: fine)").matches) {
+            document.querySelectorAll('.tilt-wrapper').forEach(wrapper => {
+                const card = wrapper.querySelector('.tilt-card');
+                wrapper.addEventListener('mousemove', e => {
+                    const rect = wrapper.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -10; 
+                    const rotateY = ((x - centerX) / centerX) * 10;
+                    gsap.to(card, { rotationX: rotateX, rotationY: rotateY, transformPerspective: 1000, ease: "power2.out", duration: 0.5 });
+                });
+                wrapper.addEventListener('mouseleave', () => {
+                    gsap.to(card, { rotationX: 0, rotationY: 0, ease: "power2.out", duration: 0.8 });
+                });
+            });
+        }
+
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width; this.y = Math.random() * height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 0.5 - 0.25; this.speedY = -Math.random() * 0.5 - 0.1;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX; this.y += this.speedY;
+                if(this.y < 0) { this.y = height; this.x = Math.random() * width; }
+            }
+            draw() {
+                ctx.fillStyle = `rgba(57, 197, 187, ${this.opacity})`;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        // 移动端减少粒子数量以提升性能
+        const particleCount = window.innerWidth < 768 ? 40 : 100;
+        for(let i=0; i<particleCount; i++) particles.push(new Particle());
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        const bgm = document.getElementById('bgm');
+        const record = document.getElementById('record');
+        const bars = document.querySelectorAll('.bar');
+        let isPlaying = false; let visualizerInterval; let playPromise;
+
+        function toggleMusic() {
+            if(isPlaying) {
+                isPlaying = false;
+                record.classList.remove('playing');
+                clearInterval(visualizerInterval);
+                bars.forEach(bar => bar.style.height = '20%');
+                if (playPromise !== undefined) { playPromise.then(() => { bgm.pause(); }).catch(e => console.error(e)); } 
+                else { bgm.pause(); }
+            } else {
+                isPlaying = true;
+                record.classList.add('playing');
+                visualizerInterval = setInterval(() => {
+                    bars.forEach(bar => { bar.style.height = `${Math.random() * 80 + 20}%`; });
+                }, 150);
+                playPromise = bgm.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        isPlaying = false; record.classList.remove('playing');
+                        clearInterval(visualizerInterval); bars.forEach(bar => bar.style.height = '20%');
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
