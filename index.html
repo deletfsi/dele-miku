@@ -1,850 +1,2232 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="初音未来 Hatsune Miku - 世界上第一位使用全息投影技术举办演唱会的虚拟偶像。2007年8月31日发售，用歌声连接每一个梦想。">
-  <meta name="theme-color" content="#39C5BB">
-  <title>初音未来 | Hatsune Miku</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>初音未来 Hatsune Miku - 世界第一的公主殿下</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="image" href="assets/0logo-512.webp" type="image/webp">
+    <link rel="preload" as="image" href="assets/hero-mobile.webp" type="image/webp" media="(max-width: 767px)">
+    <link rel="preload" as="image" href="assets/hero.webp" type="image/webp" media="(min-width: 768px)">
+    <link rel="stylesheet" href="assets/tailwind.generated.css">
 
-  <!-- 内联 SVG 图标 -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎀</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
 
-  <!-- 预连接字体 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+        /* -------------------------------------- */
+        /* UNVEIL 级开幕核心样式 (阶段 0 - 初始状态) */
+        /* -------------------------------------- */
+        body, html { 
+            margin: 0; padding: 0; 
+            background-color: rgb(193,230,198); /* 初始绿色背景 */
+            color: #fff; cursor: none; overflow-x: hidden; 
+            transition: background-color 0.4s ease; /* 阶段 4 背景色过渡 */
+        }
+        ::-webkit-scrollbar { width: 0px; }
 
-  <link rel="stylesheet" href="css/style.css">
+        /* 白色加载层与遮罩 */
+        #unveil-loader {
+            position: fixed; inset: 0; z-index: 9999;
+            background-color: #fafafa;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #unveil-mask {
+            position: fixed; inset: 0; z-index: 9998;
+            background-color: #fafafa; pointer-events: none;
+        }
+
+        /* 顶部导航隐藏状态 (待 GSAP 驱动 slide up) */
+        .unveil-nav-item { opacity: 0; transform: translateY(75%); }
+        header { opacity: 0; }
+
+        /* -------------------------------------- */
+        /* 全局通用样式 */
+        /* -------------------------------------- */
+        .cursor-dot, .cursor-outline {
+            position: fixed; top: 0; left: 0; transform: translate(-50%, -50%);
+            border-radius: 50%; z-index: 10000; pointer-events: none;
+        }
+        .cursor-dot { width: 6px; height: 6px; background-color: var(--miku, #39C5BB); }
+        .cursor-outline {
+            width: 40px; height: 40px; border: 1px solid rgba(57, 197, 187, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        @media (pointer: coarse) {
+            body, html { cursor: auto; }
+            .cursor-dot, .cursor-outline { display: none !important; }
+            .hover-target, a, button { cursor: pointer; }
+        }
+        
+        #particles-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; opacity: 0.6; }
+        #main-content { position: relative; z-index: 10; }
+
+        .text-glow { text-shadow: 0 0 20px rgba(57, 197, 187, 0.6); }
+        .text-outline { color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2); transition: all 0.5s ease; }
+        .text-outline:hover { -webkit-text-stroke: 1px #39C5BB; color: rgba(57, 197, 187, 0.1); }
+
+        /* 玻璃卡片 (保留用于原版块) */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05); transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .glass-card:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(57, 197, 187, 0.3); transform: translateY(-5px); }
+        }
+
+        /* 音乐播放器 UI */
+        #music-player {
+            background: rgba(10, 15, 20, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(57, 197, 187, 0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(57, 197, 187, 0.1);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
+        }
+        @media (hover: hover) and (pointer: fine) { #music-player:hover { transform: scale(1.05); border-color: #39C5BB; } }
+        .record-cover {
+            background-image: url('assets/player-cover.webp'); background-size: cover; background-position: center;
+            border: 2px solid #222; box-shadow: 0 0 10px rgba(0,0,0,0.8); animation: spin 8s linear infinite; animation-play-state: paused;
+        }
+        .record-cover.playing { animation-play-state: running; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .visualizer { display: flex; gap: 3px; height: 15px; align-items: flex-end; margin-top: 4px; }
+        .bar { width: 3px; background-color: #39C5BB; height: 20%; border-radius: 2px; transition: height 0.1s; }
+
+        .tilt-wrapper { perspective: 1000px; transform-style: preserve-3d; }
+        .tilt-card { transition: transform 0.1s ease; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+
+        /* 画廊横向滚动容器 (原版块) */
+        .gallery-wrap { overflow: hidden; height: 100vh; display: flex; align-items: center; }
+        .gallery-track { display: flex; gap: 4vw; padding: 0 10vw; width: max-content; }
+        .gallery-item {
+            width: 85vw; height: auto; aspect-ratio: 16/9; flex-shrink: 0;
+            position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border: 1px solid rgba(57, 197, 187, 0.1);
+        }
+        @media (min-width: 768px) { .gallery-item { height: 65vh; width: auto; } }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1); }
+        @media (hover: hover) and (pointer: fine) {
+            .gallery-item:hover img { transform: scale(1.05); }
+            .gallery-item:hover .gallery-overlay { transform: translateY(0); opacity: 1; }
+        }
+        .gallery-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 20px; 
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            transform: translateY(20px); opacity: 0; transition: all 0.4s ease;
+        }
+        @media (pointer: coarse) { .gallery-overlay { transform: translateY(0); opacity: 1; } }
+        @media (min-width: 768px) { .gallery-overlay { padding: 40px 30px; } }
+
+        @keyframes scan { 0%, 100% { top: 0%; opacity: 0; } 10%, 90% { opacity: 1; } 50% { top: 100%; opacity: 1; } }
+
+        /* Dress Archive: UNVEIL-inspired project wall */
+        .archive-section {
+            min-height: 240vh;
+            background: #fafafa;
+            color: #050505;
+            padding: clamp(88px, 10vw, 150px) clamp(14px, 3vw, 44px) clamp(72px, 10vw, 140px);
+            isolation: isolate;
+        }
+        .archive-section::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 18% 12%, rgba(57, 197, 187, 0.16), transparent 32vw),
+                linear-gradient(rgba(3, 7, 11, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(3, 7, 11, 0.04) 1px, transparent 1px);
+            background-size: auto, 52px 52px, 52px 52px;
+            opacity: 0.78;
+        }
+        .archive-inner { position: relative; z-index: 1; }
+        .archive-nav {
+            position: sticky;
+            top: 4px;
+            z-index: 25;
+            display: flex;
+            width: min(100%, 580px);
+            gap: 2px;
+            padding: 4px;
+            margin-bottom: clamp(72px, 10vw, 150px);
+            pointer-events: auto;
+        }
+        .archive-pill {
+            flex: 1;
+            min-height: 54px;
+            padding: 24px 10px 7px;
+            border-radius: 6px;
+            background: rgba(250, 250, 250, 0.58);
+            color: rgba(0, 0, 0, 0.34);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10.5px;
+            line-height: 1.05;
+            letter-spacing: 0.015em;
+            text-transform: uppercase;
+            text-align: left;
+            transition: color 0.45s cubic-bezier(.215,.61,.355,1), background 0.45s cubic-bezier(.215,.61,.355,1), border-color 0.45s;
+        }
+        .archive-pill:hover,
+        .archive-pill:focus-visible {
+            color: rgba(0, 0, 0, 0.92);
+            background: rgba(255, 255, 255, 0.86);
+            border-color: rgba(57, 197, 187, 0.28);
+            outline: none;
+        }
+        .archive-hero {
+            max-width: 1320px;
+            margin: 0 auto clamp(52px, 8vw, 110px);
+        }
+        .archive-kicker {
+            display: block;
+            margin-bottom: 14px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: rgba(0, 0, 0, 0.38);
+        }
+        .archive-hero-title {
+            max-width: 1120px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(54px, 12vw, 168px);
+            line-height: 0.82;
+            letter-spacing: 0;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .archive-hero-title sup {
+            font-size: 0.16em;
+            vertical-align: top;
+            margin-left: 0.08em;
+            color: #39C5BB;
+        }
+        .archive-hero-copy {
+            max-width: 520px;
+            margin-top: clamp(22px, 3vw, 38px);
+            color: rgba(0, 0, 0, 0.56);
+            font-size: clamp(15px, 1.55vw, 19px);
+            line-height: 1.5;
+        }
+        .archive-grid {
+            max-width: 1480px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: clamp(6px, 0.7vw, 10px);
+        }
+        .archive-tile {
+            position: relative;
+            grid-column: span 4;
+            min-height: clamp(360px, 42vw, 650px);
+            border: 0;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #e7ece9;
+            cursor: pointer;
+            text-align: left;
+            transform: translateZ(0);
+        }
+        .archive-tile.featured { grid-column: span 6; min-height: clamp(520px, 76vh, 780px); }
+        .archive-tile.wide { grid-column: span 6; min-height: clamp(360px, 48vw, 620px); }
+        .archive-tile.slim { grid-column: span 3; }
+        .archive-tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            transform: scale(1.045);
+            opacity: 0.9;
+            filter: blur(6px) saturate(0.72) contrast(0.95);
+            transition: transform 0.9s cubic-bezier(.19,1,.22,1), filter 0.9s cubic-bezier(.19,1,.22,1), opacity 0.9s cubic-bezier(.19,1,.22,1);
+        }
+        .archive-tile:hover img,
+        .archive-tile:focus-visible img,
+        .archive-tile.is-touched img {
+            transform: scale(1);
+            opacity: 1;
+            filter: blur(0) saturate(1) contrast(1);
+        }
+        .archive-tile::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.52), transparent 42%, rgba(250,250,250,0.08));
+            opacity: 0.54;
+            transition: opacity 0.55s cubic-bezier(.215,.61,.355,1);
+        }
+        .archive-tile:hover::after,
+        .archive-tile:focus-visible::after,
+        .archive-tile.is-touched::after { opacity: 0.78; }
+        .archive-tile-meta {
+            position: absolute;
+            left: clamp(14px, 1.5vw, 22px);
+            right: clamp(14px, 1.5vw, 22px);
+            bottom: clamp(14px, 1.5vw, 22px);
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: flex-end;
+            color: #fff;
+            font-family: "Space Grotesk", "Microsoft YaHei", sans-serif;
+            transform: translateY(12px);
+            opacity: 0.58;
+            transition: transform 0.55s cubic-bezier(.215,.61,.355,1), opacity 0.55s cubic-bezier(.215,.61,.355,1);
+        }
+        .archive-tile:hover .archive-tile-meta,
+        .archive-tile:focus-visible .archive-tile-meta,
+        .archive-tile.is-touched .archive-tile-meta {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .archive-tile-title { font-size: clamp(18px, 2vw, 30px); font-weight: 700; line-height: 1; }
+        .archive-tile-sub { margin-top: 6px; color: rgba(255,255,255,0.66); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+        .archive-tile-index { color: rgba(255,255,255,0.62); font-size: 11px; letter-spacing: 0.1em; white-space: nowrap; }
+        .archive-process {
+            max-width: 1120px;
+            margin: clamp(72px, 12vw, 170px) auto 0;
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: clamp(28px, 7vw, 110px);
+            align-items: start;
+            color: rgba(0, 0, 0, 0.72);
+        }
+        .archive-process h4 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(34px, 6vw, 78px);
+            line-height: 0.95;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .archive-process p {
+            font-size: clamp(15px, 1.5vw, 19px);
+            line-height: 1.75;
+            color: rgba(0, 0, 0, 0.58);
+        }
+        .archive-section {
+            min-height: 155svh;
+            padding: 4px;
+            overflow: clip;
+            touch-action: pan-y;
+        }
+        .archive-section::before {
+            background:
+                linear-gradient(45deg, #fafafa, #fafafa 1%, rgba(250,250,250,0) 25%, rgba(250,250,250,0) 75%, #fafafa),
+                radial-gradient(circle at 12% 82%, rgba(57,197,187,0.08), transparent 30vw);
+            opacity: 0.88;
+        }
+        .archive-inner {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            height: 100svh;
+            overflow: hidden;
+        }
+        .archive-nav {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            z-index: 35;
+            width: min(calc(100% - 8px), 580px);
+            margin: 0;
+            padding: 0;
+        }
+        .archive-stage {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            min-height: 100svh;
+        }
+        .archive-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            touch-action: pan-y;
+        }
+        .archive-stage.is-dragging .archive-canvas {
+            cursor: grabbing;
+        }
+        .archive-pointer-label {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 240;
+            padding: 12px;
+            color: #fff;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10.5px;
+            line-height: 1.05;
+            letter-spacing: 0.015em;
+            text-transform: uppercase;
+            mix-blend-mode: exclusion;
+            opacity: 0;
+            transform: translate3d(-999px, -999px, 0);
+            pointer-events: none;
+            transition: opacity 0.35s cubic-bezier(.215,.61,.355,1);
+        }
+        .archive-stage-kicker {
+            position: absolute;
+            left: 12px;
+            bottom: 148px;
+            z-index: 3;
+            max-width: min(360px, calc(100% - 120px));
+            color: rgba(0,0,0,0.32);
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10.5px;
+            line-height: 1.25;
+            letter-spacing: 0.015em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+        .archive-mode-switch {
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            z-index: 36;
+            display: flex;
+            gap: 2px;
+        }
+        .archive-mode-switch button {
+            min-width: 70px;
+            min-height: 40px;
+            padding: 14px 16px 9px;
+            border-radius: 6px;
+            background: rgba(250, 250, 250, 0.66);
+            color: rgba(0,0,0,0.28);
+            border: 1px solid rgba(0,0,0,0.11);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10.5px;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+        .archive-mode-switch button.is-active { color: rgba(0,0,0,0.9); }
+        .archive-card-reader {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+        }
+        .archive-preview {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(14px, 3vw, 42px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s cubic-bezier(.215,.61,.355,1);
+        }
+        .archive-preview.is-open { opacity: 1; pointer-events: auto; }
+        .archive-preview-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(250, 250, 250, 0.88);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+        .archive-preview-shell {
+            position: relative;
+            width: min(100%, 1260px);
+            max-height: min(88vh, 820px);
+            display: grid;
+            grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+            gap: clamp(18px, 4vw, 64px);
+            align-items: center;
+            color: #050505;
+        }
+        .archive-preview-media {
+            height: min(82vh, 760px);
+            overflow: hidden;
+            border-radius: 6px;
+            background: #dfe8e4;
+        }
+        .archive-preview-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+        }
+        .archive-preview-copy {
+            font-family: "Space Grotesk", "Microsoft YaHei", sans-serif;
+        }
+        .archive-preview-index {
+            display: block;
+            margin-bottom: 18px;
+            color: rgba(0,0,0,0.38);
+            font-size: 11px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+        .archive-preview-title {
+            font-size: clamp(44px, 7vw, 94px);
+            line-height: 0.9;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .archive-preview-title span {
+            display: block;
+            margin-top: 10px;
+            color: #39C5BB;
+            font-size: 0.26em;
+            line-height: 1.1;
+            letter-spacing: 0.08em;
+        }
+        .archive-preview-note {
+            margin-top: clamp(24px, 4vw, 42px);
+            color: rgba(0,0,0,0.58);
+            font-size: clamp(14px, 1.4vw, 18px);
+            line-height: 1.75;
+        }
+        .archive-close {
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 2;
+            width: 48px;
+            height: 48px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.72);
+            color: #050505;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+        body.archive-light #main-header {
+            opacity: 0 !important;
+            pointer-events: none;
+            mix-blend-mode: normal;
+        }
+        body.archive-light #main-header .text-white,
+        body.archive-light #main-header .text-gray-300 { color: rgba(0,0,0,0.84) !important; }
+        body.archive-light #music-player {
+            background: rgba(250, 250, 250, 0.72);
+            border-color: rgba(0, 0, 0, 0.08);
+            box-shadow: 0 14px 44px rgba(0,0,0,0.12);
+            left: 1rem !important;
+            right: auto !important;
+        }
+        body.archive-light #music-player span:not(.text-miku) { color: rgba(0,0,0,0.74) !important; }
+        body.archive-preview-open { overflow: hidden; }
+        .mobile-audio-nudge {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom));
+            z-index: 180;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 58px;
+            padding: 10px 10px 10px 14px;
+            border: 1px solid rgba(57,197,187,0.2);
+            border-radius: 999px;
+            background: rgba(3,7,11,0.88);
+            color: #fff;
+            box-shadow: 0 14px 38px rgba(0,0,0,0.34);
+            opacity: 0;
+            pointer-events: none;
+            transform: translate3d(0, 18px, 0);
+            transition: opacity 0.32s ease, transform 0.32s ease;
+        }
+        .mobile-audio-nudge.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate3d(0, 0, 0);
+        }
+        .mobile-audio-copy {
+            min-width: 0;
+            font-family: "Space Grotesk", "Microsoft YaHei", sans-serif;
+            font-size: 11px;
+            line-height: 1.3;
+            letter-spacing: 0.02em;
+        }
+        .mobile-audio-copy strong {
+            display: block;
+            color: #39C5BB;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .mobile-audio-actions {
+            display: flex;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+        .mobile-audio-actions button {
+            min-width: 48px;
+            min-height: 38px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 12px;
+        }
+        .mobile-audio-actions button:first-child {
+            background: #39C5BB;
+            color: #03070b;
+            border-color: transparent;
+            font-weight: 700;
+        }
+        @media (max-width: 900px) {
+            .archive-section { min-height: 125svh; padding: 4px; }
+            .archive-nav { width: calc(100% - 8px); margin-bottom: 0; }
+            .archive-pill { min-height: 48px; padding: 20px 8px 7px; font-size: 9.5px; }
+            .archive-stage-kicker { bottom: 124px; max-width: min(300px, calc(100% - 24px)); }
+            .archive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .archive-tile,
+            .archive-tile.featured,
+            .archive-tile.wide,
+            .archive-tile.slim {
+                grid-column: span 1;
+                min-height: clamp(310px, 74vw, 560px);
+            }
+            .archive-tile.featured { grid-column: span 2; min-height: clamp(440px, 116vw, 680px); }
+            .archive-process { grid-template-columns: 1fr; }
+            .archive-preview-shell {
+                max-height: 92vh;
+                grid-template-columns: 1fr;
+                gap: 18px;
+                overflow-y: auto;
+                padding-top: 58px;
+            }
+            .archive-preview-media { height: min(58vh, 560px); }
+            .archive-close { top: 0; right: 0; }
+        }
+        @media (max-width: 520px) {
+            .archive-hero-title { font-size: clamp(44px, 18vw, 76px); }
+            .archive-grid { gap: 6px; }
+            .archive-tile,
+            .archive-tile.wide,
+            .archive-tile.slim { min-height: 295px; }
+            .archive-tile-meta { flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
+
+        /* Pretext specific */
+        .pretext-reveal { opacity: 0; filter: blur(20px); transform: translateY(40px); }
+        @media (max-width: 767px) {
+            body, html { cursor: auto; }
+            #particles-canvas { display: none; }
+            .cursor-dot, .cursor-outline { display: none !important; }
+            .glass-card,
+            #music-player,
+            #audio-prompt,
+            #audio-prompt-overlay,
+            .archive-preview-backdrop {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+            .glass-card { background: rgba(255, 255, 255, 0.035); }
+            .mobile-audio-nudge { display: flex; }
+            body.archive-light .mobile-audio-nudge,
+            body.archive-preview-open .mobile-audio-nudge {
+                opacity: 0;
+                pointer-events: none;
+                transform: translate3d(0, 18px, 0);
+            }
+            .tilt-wrapper { perspective: none; transform-style: flat; }
+            .tilt-card {
+                transition: transform 0.25s ease;
+                box-shadow: 0 14px 32px rgba(0,0,0,0.42);
+            }
+            .pretext-reveal { filter: none; transform: translateY(24px); }
+            .text-glow { text-shadow: 0 0 12px rgba(57, 197, 187, 0.45); }
+            .gallery-wrap {
+                height: auto;
+                min-height: 0;
+                display: block;
+                overflow: visible;
+                padding: 132px 0 48px;
+            }
+            .gallery-track {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 18px;
+                padding: 0 16px;
+            }
+            .gallery-item {
+                width: 100%;
+                min-height: 0;
+                aspect-ratio: 16 / 9;
+                border-radius: 8px;
+                box-shadow: 0 14px 34px rgba(0,0,0,0.38);
+            }
+            .gallery-overlay {
+                opacity: 1;
+                transform: translateY(0);
+                padding: 18px 16px;
+            }
+            .archive-section { min-height: 118svh; }
+            .archive-nav {
+                top: max(4px, env(safe-area-inset-top));
+                gap: 3px;
+                width: calc(100% - 8px);
+                padding: 0;
+            }
+            .archive-pill {
+                min-height: 42px;
+                padding: 13px 7px 6px;
+                font-size: 8.8px;
+                background: rgba(250, 250, 250, 0.72);
+            }
+            .archive-pill sup { display: none; }
+            .archive-pointer-label { display: none; }
+            .archive-stage-kicker {
+                bottom: 106px;
+                left: 14px;
+                max-width: calc(100% - 96px);
+                font-size: 9.5px;
+                line-height: 1.32;
+            }
+            .archive-mode-switch { right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); }
+            .archive-mode-switch button {
+                min-width: 66px;
+                min-height: 40px;
+                padding: 12px 13px 8px;
+                background: rgba(250, 250, 250, 0.82);
+            }
+            .archive-preview {
+                align-items: stretch;
+                padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+            }
+            .archive-preview-shell {
+                max-height: none;
+                height: 100%;
+                gap: 12px;
+                padding-top: 50px;
+            }
+            .archive-preview-media {
+                height: min(58svh, 520px);
+                border-radius: 8px;
+            }
+            .archive-preview-title { font-size: clamp(34px, 13vw, 56px); }
+            .archive-preview-note {
+                margin-top: 16px;
+                font-size: 13px;
+                line-height: 1.65;
+            }
+            .archive-close {
+                width: 44px;
+                height: 44px;
+                background: rgba(255,255,255,0.9);
+            }
+            .archive-preview-backdrop { background: rgba(250, 250, 250, 0.94); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.001ms !important;
+            }
+            #particles-canvas { display: none; }
+        }
+    </style>
 </head>
 <body>
-  <!-- 导航栏 -->
-  <nav class="navbar" id="navbar">
-    <div class="nav-container">
-      <a href="#" class="nav-logo">
-        <svg class="nav-icon" width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <circle cx="14" cy="14" r="12" stroke="#39C5BB" stroke-width="2"/>
-          <path d="M14 6 L14 14 L20 14" stroke="#39C5BB" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span class="nav-title">初音未来</span>
-      </a>
 
-      <button class="nav-toggle" id="navToggle" aria-label="菜单">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <ul class="nav-menu" id="navMenu">
-        <li><a href="#hero" class="nav-link active">首页</a></li>
-        <li><a href="#profile" class="nav-link">档案</a></li>
-        <li><a href="#about" class="nav-link">关于</a></li>
-        <li><a href="#gallery" class="nav-link">画廊</a></li>
-        <li><a href="#music" class="nav-link">音乐</a></li>
-      </ul>
+    <!-- ============================================================== -->
+    <!-- 阶段 0 & 1 & 2: UNVEIL 风格纯白加载层与百分比 -->
+    <!-- ============================================================== -->
+    <div id="unveil-loader">
+        <div id="intro-logo-container" class="relative mb-8">
+          <img src="assets/0logo-512.webp" alt="Logo" id="intro-logo-img" class="w-32 md:w-56 h-auto rounded-xl shadow-[0_0_40px_rgba(57,197,187,0.2)] opacity-0 object-contain" width="512" height="486" decoding="async" fetchpriority="high">
+             <div id="intro-logo-glow" class="absolute inset-0 bg-miku blur-3xl opacity-0 pointer-events-none"></div>
+         </div>
+        <div class="text-[15vw] md:text-[8vw] font-display font-bold text-[#111] leading-none tracking-tighter" id="unveil-percent">0%</div>
+        <div class="text-sm font-display tracking-[0.3em] text-gray-400 mt-4 uppercase">Loading Experience</div>
     </div>
-  </nav>
+    <div id="unveil-mask"></div>
 
-  <!-- ========================================
-       模块 A：Hero 区域
-       ======================================== -->
-  <section id="hero" class="hero">
-    <div class="hero-bg" id="heroBg">
-      <img src="assets/images/hero.webp" alt="" class="hero-bg-img" id="heroBgImg">
-    </div>
-    <div class="hero-overlay"></div>
-    <div class="hero-glow hero-glow-1"></div>
-    <div class="hero-glow hero-glow-2"></div>
-    <div class="hero-glow hero-glow-3"></div>
-    <div class="miku-twin-tails"></div>
-    <div class="sparkle-container">
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
-    </div>
-
-    <div class="hero-content">
-      <div class="hero-badge">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 1 L10 6 L15 6 L11 9.5 L12.5 15 L8 11.5 L3.5 15 L5 9.5 L1 6 L6 6 Z" fill="#39C5BB"/>
-        </svg>
-        <span>Welcome to Miku World</span>
-      </div>
-
-      <h1 class="hero-title">
-        <span class="title-cn">初音未来</span>
-        <span class="title-en">HATSUNE MIKU</span>
-      </h1>
-
-      <p class="hero-subtitle">
-        2007年8月31日发售 · 用歌声连接每一个梦想<br>
-        克理普敦未来媒体打造的电子歌姬，VOCALOID时代的开创者
-      </p>
-
-      <button class="hero-play" id="heroPlay" aria-label="播放背景音乐">
-        <svg class="play-icon" id="playIcon" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <polygon points="6,4 20,12 6,20" fill="#39C5BB"/>
-        </svg>
-        <span id="playText">点击聆听</span>
-      </button>
-    </div>
-
-    <div class="hero-scroll-indicator">
-      <span>向下探索</span>
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M10 4 L10 16 M5 11 L10 16 L15 11" stroke="#39C5BB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-
-    <!-- 音乐引导提示 -->
-    <div class="music-prompt" id="musicPrompt">
-      <div class="prompt-icon">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <circle cx="18" cy="18" r="16" stroke="#39C5BB" stroke-width="1" opacity="0.2"/>
-          <circle cx="18" cy="18" r="10" stroke="#39C5BB" stroke-width="1" opacity="0.4"/>
-          <path d="M14 12 L14 24 L24 18 Z" fill="#39C5BB"/>
-        </svg>
-      </div>
-      <p class="prompt-text"><span>♪</span> 聆听初音的声音 <span>♪</span></p>
-    </div>
-  </section>
-
-  <!-- ========================================
-       模块 C：画廊区域
-       ======================================== -->
-  <section id="gallery" class="section gallery">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Gallery</span>
-        <h2 class="section-title">画廊 · 同人与演进</h2>
-        <p class="section-desc">初音形象在创作者笔下千变万化，长按图片感受立体效果</p>
-      </div>
-
-      <div class="gallery-wrapper">
-        <div class="gallery-track" id="galleryTrack">
-          <!-- 骨架屏占位 -->
-          <div class="gallery-skeleton" id="gallerySkeleton">
-            <div class="skeleton-item"></div>
-            <div class="skeleton-item"></div>
-            <div class="skeleton-item"></div>
-          </div>
-          <!-- 实际图片由 JS 加载 -->
-        </div>
-
-        <div class="gallery-nav">
-          <button class="gallery-btn prev" id="galleryPrev" aria-label="上一张">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18 L9 12 L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
-          <div class="gallery-dots" id="galleryDots"></div>
-          <button class="gallery-btn next" id="galleryNext" aria-label="下一张">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M9 18 L15 12 L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================
-       模块 D：音乐区域 - 歌曲选择器
-       ======================================== -->
-  <section id="music" class="section music">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Music</span>
-        <h2 class="section-title">聆听天籁</h2>
-        <p class="section-desc">点击任意歌曲立即播放，感受初音的魅力</p>
-      </div>
-
-      <!-- 当前播放卡片 -->
-      <div class="now-playing-card" id="nowPlayingCard">
-        <div class="now-playing-bg" id="nowPlayingBg"></div>
-        <div class="now-playing-content">
-          <div class="now-playing-disc" id="nowPlayingDisc">
-            <img src="assets/images/player-cover.webp" alt="" id="nowCoverImg">
-          </div>
-          <div class="now-playing-info">
-            <div class="now-playing-top">
-              <div class="now-playing-label">正在播放</div>
-              <!-- 歌曲选择下拉 -->
-              <div class="song-selector" id="songSelector">
-                <button class="song-selector-btn" id="songSelectorBtn" aria-label="选择歌曲">
-                  <span id="selectorTitle">千本桜</span>
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M3 4.5 L6 7.5 L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
+    <!-- 用户友好引导：音乐提示弹窗 (加载完成后弹出) -->
+    <div id="audio-prompt-overlay" class="fixed inset-0 z-[200] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500 bg-dark/70 backdrop-blur-sm px-4">
+        <div id="audio-prompt" class="p-6 md:p-10 rounded-3xl text-center flex flex-col items-center shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-miku/40 bg-dark/90 backdrop-blur-2xl w-full max-w-sm md:max-w-md transform scale-95 transition-transform duration-500">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-miku/10 flex items-center justify-center mb-6 border border-miku/30 animate-[pulse_2s_ease-in-out_infinite]">
+                <svg class="w-8 h-8 md:w-10 md:h-10 text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </div>
+            <h3 class="text-2xl md:text-3xl font-display font-bold text-white mb-3 tracking-widest text-glow">推荐佩戴耳机</h3>
+            <p class="text-gray-300 text-sm mb-8 leading-relaxed">为了获得最佳的沉浸式体验，推荐您戴上耳机，并播放专属背景音乐。</p>
+            <div class="flex flex-col md:flex-row w-full md:w-auto gap-4">
+                <button onclick="startExperience(true)" class="hover-target w-full md:w-auto px-8 py-3 bg-miku text-dark font-bold rounded-full hover:scale-105 transition-all duration-300 hover:shadow-[0_0_20px_#39C5BB] cursor-pointer md:cursor-none">
+                    播放音乐
                 </button>
-                <div class="song-dropdown" id="songDropdown">
-                  <div class="song-dropdown-list" id="songDropdownList"></div>
-                </div>
-              </div>
-              <!-- 播放模式 -->
-              <button class="play-mode-btn" id="playModeBtn" aria-label="播放模式">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" id="playModeIcon">
-                  <path d="M4 6 L4 12 M7 5 L7 13 M10 7 L10 11 M13 4 L13 14 M16 6 L16 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-                <span class="play-mode-label" id="playModeLabel">顺序</span>
-              </button>
+                <button onclick="startExperience(false)" class="hover-target w-full md:w-auto px-8 py-3 bg-white/10 text-white font-bold rounded-full border border-white/20 hover:scale-105 transition-all duration-300 hover:bg-white/20 cursor-pointer md:cursor-none">
+                    保持静音
+                </button>
             </div>
-            <h3 class="now-playing-title" id="nowTitle">千本桜</h3>
-            <p class="now-playing-artist">初音未来</p>
-            <div class="now-playing-progress">
-              <div class="progress-bar" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
-                <div class="progress-thumb" id="progressThumb"></div>
-              </div>
-              <div class="progress-times">
-                <span id="timeCurrent">0:00</span>
-                <span id="timeTotal">4:03</span>
-              </div>
-            </div>
-            <div class="now-playing-controls">
-              <button class="np-btn" id="prevBtn" aria-label="上一首">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M16 3 L8 10 L16 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-              <button class="np-btn np-btn-play" id="playBtn" aria-label="播放">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" id="playIcon">
-                  <polygon points="8,5 23,14 8,23" fill="currentColor"/>
-                </svg>
-              </button>
-              <button class="np-btn" id="nextBtn" aria-label="下一首">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 3 L12 10 L4 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
         </div>
-      </div>
-
-        <div class="song-picker-viewport" id="songPickerViewport">
-          <div class="song-picker-track" id="songPickerTrack">
-            <!-- JS 动态生成 -->
-          </div>
-          <div class="song-picker-indicator">
-            <div class="indicator-line"></div>
-          </div>
-        </div>
-      </div>
     </div>
-  </section>
-
-  <!-- ========================================
-       模块 B：档案区域
-       ======================================== -->
-  <section id="profile" class="section profile">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Profile</span>
-        <h2 class="section-title">档案 · 音与形</h2>
-      </div>
-
-      <div class="profile-container">
-        <div class="profile-image" id="profileImage">
-          <img src="assets/images/profile.webp" alt="初音未来" class="profile-img">
-          <div class="profile-badge" id="profileBadge">
-            <span class="badge-number">01</span>
-            <span class="badge-label">左臂标志</span>
-          </div>
-          <div class="ripple-container" id="rippleContainer"></div>
+    <div id="mobile-audio-nudge" class="mobile-audio-nudge" aria-live="polite">
+        <div class="mobile-audio-copy">
+            <strong>Audio</strong>
+            建议佩戴耳机，音乐可稍后开启。
         </div>
-
-        <div class="profile-data" id="profileData">
-          <div class="data-item" data-delay="0">
-            <span class="data-label">年龄</span>
-            <span class="data-value"></span>
-          </div>
-          <div class="data-item" data-delay="1">
-            <span class="data-label">身高</span>
-            <span class="data-value"></span>
-          </div>
-          <div class="data-item" data-delay="2">
-            <span class="data-label">体重</span>
-            <span class="data-value"></span>
-          </div>
-          <div class="data-item" data-delay="3">
-            <span class="data-label">声源</span>
-            <span class="data-value"></span>
-          </div>
-          <div class="data-item" data-delay="4">
-            <span class="data-label">生日</span>
-            <span class="data-value"></span>
-          </div>
-          <div class="data-item" data-delay="5">
-            <span class="data-label">代表色</span>
-            <span class="data-value"></span>
-          </div>
+        <div class="mobile-audio-actions">
+            <button type="button" onclick="startExperience(true)">播放</button>
+            <button type="button" onclick="startExperience(false)">静音</button>
         </div>
-      </div>
-
-      <div class="profile-quote">
-        <blockquote>
-          "歌声は未来への橋渡し"
-        </blockquote>
-        <p class="quote-translate">歌声是通往未来的桥梁</p>
-      </div>
-
-      <!-- 初音未来详细介绍 -->
-      <div class="profile-detail">
-        <div class="section-header">
-          <span class="section-tag">Introduction</span>
-          <h2 class="section-title">初音未来简介</h2>
-        </div>
-        <div class="profile-narrative">
-          <div class="narrative-block">
-            <h3>什么是初音未来？</h3>
-            <p><strong>初音未来</strong>（日文：初音ミク，罗马音：Hatsune Miku）是由日本乐器制造商雅马哈（Yamaha）开发的VOCALOID系列电子歌声合成软件，以及以此软件开发的虚拟歌手。</p>
-            <p>2007年8月31日，克里普敦未来媒体（Crypton Future Media）正式发售"初音未来"，作为该公司"角色VOCALOID"系列的第一号作品。软件的原意是让任何人都不需要歌唱技巧就能创作歌曲，但独特的葱绿色双马尾少女形象和甜美嗓音迅速走红，成为世界上最具影响力的虚拟偶像。</p>
-          </div>
-          <div class="narrative-block">
-            <h3>VOCALOID 技术原理</h3>
-            <p>VOCALOID采用先进的"拼接式"歌声合成技术。首先由专业声优录制大量单音素音频样本（约500个基础音素），然后通过复杂的算法将这些音素拼接成完整的歌声。用户只需输入歌词和旋律，即可生成自然流畅的人声演唱。</p>
-            <p>初音未来的声源来自日本声优<b>藤田咲</b>（ふじた さき）。她的声音样本被精心采集和处理，创造出独特而富有表现力的电子歌声。</p>
-          </div>
-          <div class="narrative-block">
-            <h3>标志性形象设计</h3>
-            <p>初音未来的形象由日本插画家<b>KEi</b>设计。她拥有标志性的苍绿色（#39C5BB）长发，扎成双马尾造型，穿着未来感十足的科幻风格服装。左臂上印有"01"标志，象征她作为第一个VOCALOID的特殊地位。</p>
-            <p>这个形象设计极具辨识度，16年来已成为日本动漫文化和虚拟偶像的象征符号之一，被《时代》杂志评为"年度最有影响力的100人"之一。</p>
-          </div>
-          <div class="narrative-block">
-            <h3>二次创作的兴起</h3>
-            <p>初音未来采用"Creative Commons"授权模式，允许用户自由创作和分享二次作品。这一开放政策极大地激发了创作者的热情，催生了庞大的音乐、插画、动画创作社区。</p>
-            <p>在Niconico动画和YouTube平台上，数以万计的创作者使用初音未来创作歌曲、音乐视频和MMD舞蹈视频。这种UGC（用户生成内容）模式奠定了初音未来作为"虚拟创作偶像"的基础。</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 版本历程时间线 -->
-      <div class="timeline-section">
-        <div class="section-header">
-          <span class="section-tag">Evolution</span>
-          <h2 class="section-title">版本演进</h2>
-        </div>
-        <div class="timeline">
-          <!-- 软件版本 -->
-          <div class="timeline-item">
-            <div class="timeline-year">2007</div>
-            <div class="timeline-content">
-              <h4>VOCALOID 2 · 诞生</h4>
-              <p>2007年8月31日发售。クリプトン・フューチャー・メディア推出"角色 Vocal 系列"第1弹，发售直后即创下预期以上的大热卖纪录，开启虚拟偶像时代。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2008</div>
-            <div class="timeline-content">
-              <h4>MikuMikuDance 发布</h4>
-              <p>2008年2月24日，3D动画制作软件"MikuMikuDance"(MMD) 初版公开发布。用户可自由创作3D舞蹈动画，大大推动了二次创作文化的蓬勃发展。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2009</div>
-            <div class="timeline-content">
-              <h4>ねんどろいど · 雪ミク</h4>
-              <p>2009年3月，Good Smile Company 推出初音未来ねんどろいど手办。2010年2月，首个官方冬祭活动"SNOW MIKU"诞生，此后成为北海道札幌市的著名冬季节庆IP。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2010</div>
-            <div class="timeline-content">
-              <h4>初音Append · 六色绽放</h4>
-              <p>2010年4月30日，发布V2版初音ミク的扩展语音库"Append"系列。Sweet、Dark、Soft、Light、Vivid、Solid 六种不同音色的追加语音库，满足多元创作需求。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2011</div>
-            <div class="timeline-content">
-              <h4>YouTube 官方频道开设</h4>
-              <p>官方YouTube频道"HatsuneMiku"开设（截至2026年3月已拥有425万订阅、4.9亿次播放），标志着初音未来作为全球性内容创作者身份的确立。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2012</div>
-            <div class="timeline-content">
-              <h4>Lady Gaga 合作 · MIKU EXPO</h4>
-              <p>2012年5月，初音未来作为Lady Gaga"Artpop Ball"世界巡演的开场嘉宾登场。同年在印尼雅加达启动首届"MIKU EXPO"世界巡演，开启全球化现场演出。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2013</div>
-            <div class="timeline-content">
-              <h4>V3 · 进军全球</h4>
-              <p>2013年8月31日发布V3 English（英文版），同年9月26日发布日文版V3。VOCALOID3引擎带来更自然的歌声表现力，初音正式迈向国际市场。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2014</div>
-            <div class="timeline-content">
-              <h4>5周年 · 出版元年</h4>
-              <p>《初音ミクはなぜ世界を変えたのか？》出版，成为首部ボーカロイド音乐史专著。同年雪ミク5周年纪念活动SNOW MIKU 2014首次设定官方主题曲，宠物"ラビット・ユキネ"登场。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2016</div>
-            <div class="timeline-content">
-              <h4>V4X · 表现力革新</h4>
-              <p>2016年8月31日，VOCALOID4引擎版本V4X、V4 English同步发售。更细腻的声线控制与更丰富的表情参数，将虚拟歌姬的表现力推向新高度。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2017</div>
-            <div class="timeline-content">
-              <h4>10周年 · V4 Chinese · Magical Mirai</h4>
-              <p>2017年迎来出道10周年，同年9月发布中文版V4 Chinese（对应上海CUIT合作）。"初音ミク マジカルミライ 2017"于幕张举办，主题曲《砂の惑星》（Hachi作曲）大热。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2018</div>
-            <div class="timeline-content">
-              <h4>MIKU EXPO 2018 USA & Mexico · MIKU LAND VR</h4>
-              <p>2018年6-7月，MIKU EXPO 2018在美国7城市及墨西哥城举办（累计第50场纪念公演）。同年8月，初音ミク公式VR世界"MIKU LAND"在Virtual Cast平台限定开放。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2019</div>
-            <div class="timeline-content">
-              <h4>B站入驻 · NT发布前夜</h4>
-              <p>2019年正式入驻哔哩哔哩（截至2026年3日拥有391万粉丝）。Magical Mirai 2019发布NT制作计划预告，同年bilibili频道开设标志着中国市场深度运营的开始。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2020</div>
-            <div class="timeline-content">
-              <h4>NT · 疫情时代的数字 stars</h4>
-              <p>2020年11月27日，クリプトン自主研发的NT引擎正式发布，采用不同于VOCALOID的全新歌声合成技术。9月担任日本新冠疫情对策应援大使，"HATSUNE MIKU Digital Stars 2020"首次以线上形式举办。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2021</div>
-            <div class="timeline-content">
-              <h4>プロジェクトセカイ · 游戏元年</h4>
-              <p>2020年9月30日，Craft Egg开发的《プロジェクトセカイ カラフルステージ！feat. 初音ミク》（译名：世界计划）正式发布。2021年1月，游戏首个剧场版动画《剧场版プロジェクトセカイ 壊れたセカイと歌えないミク》上映。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2024</div>
-            <div class="timeline-content">
-              <h4>NT スーパーパック · V6 AI</h4>
-              <p>2024年8月30日，连同V6 AI发布"ピアプロキャラクターズ・スーパーパック"，以新引擎M9为核心融合全部6名Vocaloid角色语音。同年雪ミク迎来20周年。2025年3月18日NT (Ver.2) 以免费升级形式向所有NT用户推送。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2025</div>
-            <div class="timeline-content">
-              <h4>NT Ver.2 · AI驱动的新时代</h4>
-              <p>2025年3月18日，全新NT Ver.2发布。搭载AI参数调整辅助功能"Piapro Studio - Automatic Control"，Voice Color技术实现逐字音色调控。2025年剧场版プロジェクトセカイ公开。</p>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-year">2026</div>
-            <div class="timeline-content">
-              <h4>V6 · 即将到来</h4>
-              <p>预定2026年4月14日发布V6。最新一代VOCALOID引擎，预计将搭载更强大的AI歌声合成能力与更自然的情感表达。</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 影响力 -->
-      <div class="impact-section">
-        <div class="section-header">
-          <span class="section-tag">Impact</span>
-          <h2 class="section-title">文化影响</h2>
-        </div>
-        <div class="impact-grid">
-          <div class="impact-card">
-            <div class="impact-icon">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <path d="M16 4 L20 12 L28 12 L22 18 L24 28 L16 22 L8 28 L10 18 L4 12 L12 12 Z" stroke="#39C5BB" stroke-width="2"/>
-              </svg>
-            </div>
-            <h4>音乐革命</h4>
-            <p>催生VOCALOID音乐流派，全球数百万创作者使用</p>
-          </div>
-          <div class="impact-card">
-            <div class="impact-icon">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <circle cx="16" cy="16" r="12" stroke="#39C5BB" stroke-width="2"/>
-                <path d="M12 16 L15 19 L20 13" stroke="#39C5BB" stroke-width="2"/>
-              </svg>
-            </div>
-            <h4>技术标杆</h4>
-            <p>推动语音合成技术发展，为AI音乐奠定基础</p>
-          </div>
-          <div class="impact-card">
-            <div class="impact-icon">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <path d="M8 8 L24 8 L24 24 L8 24 Z M12 12 L20 12 M12 16 L20 16 M12 20 L16 20" stroke="#39C5BB" stroke-width="2"/>
-              </svg>
-            </div>
-            <h4>创作生态</h4>
-            <p>衍生众多二次创作，形成独特的亚文化圈</p>
-          </div>
-          <div class="impact-card">
-            <div class="impact-icon">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <rect x="6" y="10" width="20" height="14" rx="2" stroke="#39C5BB" stroke-width="2"/>
-                <path d="M12 16 L15 19 L20 13" stroke="#39C5BB" stroke-width="2"/>
-              </svg>
-            </div>
-            <h4>商业价值</h4>
-            <p>累计创造约100亿日元经济效益</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 关于初音 -->
-      <div class="about-section">
-        <div class="section-header">
-          <span class="section-tag">About</span>
-          <h2 class="section-title">关于初音</h2>
-          <p class="section-desc">从歌声中诞生，在梦想中成长</p>
-        </div>
-
-        <div class="about-grid">
-          <!-- 起源 -->
-          <div class="about-card about-origin">
-            <div class="about-card-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="18" stroke="#39C5BB" stroke-width="2"/>
-                <path d="M20 8 L20 20 L28 20" stroke="#39C5BB" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <h3>名字由来</h3>
-            <div class="about-card-content">
-              <p><strong>初音</strong>取自"第一次的声音"、"出发点"、"最初的VOCALOID 2"。</p>
-              <p><strong>未来</strong>象征着VOCALOID所代表"将来音乐的可能性"。</p>
-              <p class="about-quote">"来自未来的第一声"——这正是初音未来的本质</p>
-            </div>
-          </div>
-
-          <!-- 特征 -->
-          <div class="about-card about-features">
-            <div class="about-card-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <path d="M20 6 L26 14 L34 14 L28 20 L30 28 L20 23 L10 28 L12 20 L6 14 L14 14 Z" stroke="#39C5BB" stroke-width="2"/>
-              </svg>
-            </div>
-            <h3>形象设计</h3>
-            <div class="about-card-content">
-              <p>初音未来有着标志性的蓝绿色长发和科幻风格的服装。左臂的"01"是她最显著的标识，象征着她作为第一个VOCALOID的身份。</p>
-              <ul class="about-list">
-                <li><span>身高</span> 158cm</li>
-                <li><span>体重</span> 42kg</li>
-                <li><span>代表色</span> 苍绿色 #39C5BB</li>
-                <li><span>声源</span> 声优藤田咲</li>
-                <li><span>生日</span> 8月31日</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- 作品 -->
-          <div class="about-card about-works">
-            <div class="about-card-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <rect x="8" y="6" width="24" height="28" rx="4" stroke="#39C5BB" stroke-width="2"/>
-                <path d="M14 14 L26 14 M14 20 L26 20 M14 26 L20 26" stroke="#39C5BB" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <h3>代表作品</h3>
-            <div class="about-card-content">
-              <p>初音未来的代表作涵盖了众多脍炙人口的歌曲，展现了VOCALOID音乐的无限可能。</p>
-              <div class="featured-songs">
-                <div class="song-tag">千本桜</div>
-                <div class="song-tag">世界第一的公主殿下</div>
-                <div class="song-tag">甩葱歌</div>
-                <div class="song-tag">Melt</div>
-                <div class="song-tag">Tell Your World</div>
-                <div class="song-tag">炉心融解</div>
-                <div class="song-tag">胧月</div>
-                <div class="song-tag">爱言葉</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 影响 -->
-          <div class="about-card about-impact">
-            <div class="about-card-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="14" stroke="#39C5BB" stroke-width="2"/>
-                <circle cx="20" cy="20" r="8" stroke="#39C5BB" stroke-width="2"/>
-                <circle cx="20" cy="20" r="2" fill="#39C5BB"/>
-              </svg>
-            </div>
-            <h3>全球影响</h3>
-            <div class="about-card-content">
-              <p>初音未来不仅是一位虚拟歌手，更是一种文化现象。她改变了音乐创作的方式，让每个人都能成为音乐制作人。</p>
-              <div class="impact-stats">
-                <div class="stat-item">
-                  <span class="stat-number">100亿+</span>
-                  <span class="stat-label">累计经济效益（日元）</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-number">10万+</span>
-                  <span class="stat-label">原创歌曲数量</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-number">425万</span>
-                  <span class="stat-label">YouTube订阅</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 技术解析 -->
-          <div class="about-card about-tech">
-            <div class="about-card-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <path d="M8 20 L8 12 L20 6 L32 12 L32 20 L20 26 Z" stroke="#39C5BB" stroke-width="2"/>
-                <circle cx="20" cy="18" r="4" fill="#39C5BB"/>
-              </svg>
-            </div>
-            <h3>技术解析</h3>
-            <div class="about-card-content">
-              <p><strong>VOCALOID</strong>是由Yamaha开发的电子歌声合成技术，利用歌手的实际录音样本，通过算法生成逼真的人声。初音未来采用VOCALOID 2引擎的"主角"音色样本，由声优藤田咲录制。</p>
-              <ul class="about-list">
-                <li><span>核心技术</span> VOCALOID 2~V6引擎</li>
-                <li><span>声源</span> 藤田咲（配音演员）</li>
-                <li><span>采样方式</span> 约500个音素录音</li>
-                <li><span>开发者</span> 克里普敦未来媒体</li>
-                <li><span>角色设计</span> KEi（插画家）</li>
-              </ul>
-              <p class="about-quote">"让不会唱歌的人也能创作音乐" —— VOCALOID的设计理念</p>
-            </div>
-          </div>
-
-          <!-- 创作者生态 -->
-          <div class="about-card about-creators">
-            <div class="about-card-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="12" cy="14" r="6" stroke="#39C5BB" stroke-width="2"/>
-                <circle cx="28" cy="14" r="6" stroke="#39C5BB" stroke-width="2"/>
-                <path d="M6 30 C6 24 18 24 20 30 M20 30 C22 24 34 24 34 30" stroke="#39C5BB" stroke-width="2"/>
-              </svg>
-            </div>
-            <h3>创作者生态</h3>
-            <div class="about-card-content">
-              <p>初音未来的成功离不开庞大的创作者社区。音乐制作人、插画家、3D动画师、舞者等创作者共同构建了独特的初音文化。</p>
-              <ul class="about-list">
-                <li><span>代表音乐人</span> 哈库梅亚特（千本桜）、OZ（爱言葉）、米津玄师</li>
-                <li><span>3D创作</span> MikuMikuDance (MMD) 创作者群体</li>
-                <li><span>插画社区</span> Pixiv等平台上的大量同人创作</li>
-                <li><span>舞蹈文化</span> Niconico上的MMD舞蹈视频风靡全球</li>
-              </ul>
-              <p class="about-quote">"初音未来是属于所有人的创作平台" —— 创作者社区精神</p>
-            </div>
-          </div>
-
-          <!-- 演唱会与活动 -->
-          <div class="about-card about-concerts">
-            <div class="about-card-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <ellipse cx="20" cy="30" rx="16" ry="6" stroke="#39C5BB" stroke-width="2"/>
-                <path d="M12 30 L12 16 M20 30 L20 10 M28 30 L28 16" stroke="#39C5BB" stroke-width="2"/>
-                <circle cx="12" cy="12" r="4" fill="#39C5BB"/>
-                <circle cx="20" cy="6" r="4" fill="#39C5BB"/>
-                <circle cx="28" cy="12" r="4" fill="#39C5BB"/>
-              </svg>
-            </div>
-            <h3>演唱会与活动</h3>
-            <div class="about-card-content">
-              <p>初音未来是世界上第一位使用全息投影技术举办个人演唱会的虚拟歌手。2011年首个独立演唱会大获成功，此后成为标志性的演出形式。</p>
-              <ul class="about-list">
-                <li><span>首次个演</span> 2011年东京，3000张门票售罄</li>
-                <li><span>全息演唱会</span> 全球累计举办超过100场</li>
-                <li><span>MIKU EXPO</span> 世界巡演（美国、墨西哥、印尼等）</li>
-                <li><span>Magical Mirai</span> 日本年度大型演唱会活动</li>
-                <li><span>雪祭</span> SNOW MIKU北海道冰雪节</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- 商业合作 -->
-          <div class="about-card about-commerce">
-            <div class="about-card-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <rect x="8" y="14" width="24" height="18" rx="2" stroke="#39C5BB" stroke-width="2"/>
-                <path d="M8 18 L32 18" stroke="#39C5BB" stroke-width="2"/>
-                <rect x="14" y="8" width="12" height="6" stroke="#39C5BB" stroke-width="2"/>
-              </svg>
-            </div>
-            <h3>商业合作</h3>
-            <div class="about-card-content">
-              <p>初音未来的商业价值延伸至各个领域，从手办、服装到汽车品牌代言，成为虚拟偶像商业化的标杆。</p>
-              <ul class="about-list">
-                <li><span>手办系列</span> Good Smile Companyねんどろいど系列</li>
-                <li><span>汽车代言</span> 丰田汽车、 Lexus等品牌合作</li>
-                <li><span>科技合作</span> Google Chrome、Samsung等国际品牌</li>
-                <li><span>游戏联动</span> プロジェクトセカイ、偶像大师等</li>
-                <li><span>时装合作</span> 优衣库、CASETiFY等潮流品牌</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <!-- 发展历程 -->
-        <div class="about-timeline">
-          <div class="timeline-milestone">
-            <span class="milestone-year">2007</span>
-            <span class="milestone-event">初音未来正式诞生，VOCALOID时代开启，发售当日即创下大热卖纪录</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2008</span>
-            <span class="milestone-event">MikuMikuDance (MMD) 发布，3D舞蹈创作文化蓬勃发展</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2009</span>
-            <span class="milestone-event">ねんどろいど初音未来手办发行，官方冬祭SNOW MIKU诞生</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2010</span>
-            <span class="milestone-event">初音Append发布，Sweet/Dark/Soft/Light/Vivid/Solid六种扩展音色</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2011</span>
-            <span class="milestone-event">YouTube官方频道开设，425万订阅成为全球最具影响力虚拟歌手</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2012</span>
-            <span class="milestone-event">Lady Gaga世界巡演开场嘉宾，首届MIKU EXPO世界巡演启动</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2013</span>
-            <span class="milestone-event">V3 English英文版发布，V3日文版紧随其后，进军全球市场</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2014</span>
-            <span class="milestone-event">首部ボーカロイド音乐史专著出版，雪ミク5周年</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2016</span>
-            <span class="milestone-event">V4X引擎发布，更细腻声线控制与表情参数</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2017</span>
-            <span class="milestone-event">出道10周年，V4 Chinese中文版发布，Magical Mirai大热</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2018</span>
-            <span class="milestone-event">MIKU EXPO 2018美国7城市巡演，MIKU LAND VR开放</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2019</span>
-            <span class="milestone-event">入驻bilibili（391万粉丝），NT引擎开发预告发布</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2020</span>
-            <span class="milestone-event">NT引擎正式发布，担任新冠疫情应援大使</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2021</span>
-            <span class="milestone-event">《プロジェクトセカイ》游戏发布，剧场版动画上映</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2024</span>
-            <span class="milestone-event">NT スーパーパック + V6 AI发布，雪ミク20周年</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2025</span>
-            <span class="milestone-event">NT Ver.2发布，AI辅助演唱风格控制，剧场版公开</span>
-          </div>
-          <div class="timeline-milestone">
-            <span class="milestone-year">2026</span>
-            <span class="milestone-event">V6预定发布，更强大的AI歌声合成能力</span>
-          </div>
-        </div>
-
-        <!-- 关键人物 -->
-        <div class="key-people">
-          <h4 class="key-people-title">关键人物</h4>
-          <div class="people-grid">
-            <div class="person-card">
-              <span class="person-role">开发者</span>
-              <span class="person-name">佐佐木涉</span>
-              <span class="person-desc">初音未来开发负责人，被称为"初音之父"</span>
-            </div>
-            <div class="person-card">
-              <span class="person-role">插画家</span>
-              <span class="person-name">KEI</span>
-              <span class="person-desc">负责初音未来的角色形象设计</span>
-            </div>
-            <div class="person-card">
-              <span class="person-role">声优</span>
-              <span class="person-name">藤田咲</span>
-              <span class="person-desc">为初音未来提供原声配音</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </section>
 
-  <!-- 页脚 -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-brand">
-          <svg class="footer-icon" width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <circle cx="16" cy="16" r="14" stroke="#39C5BB" stroke-width="2"/>
-            <path d="M16 8 L16 16 L22 16" stroke="#39C5BB" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <div>
-            <p class="footer-title">初音未来</p>
-            <p class="footer-subtitle">用歌声连接每一个梦想</p>
-          </div>
+    <!-- 自定义鼠标 -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- 粒子背景特效 -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- 音乐播放器 -->
+    <div id="music-player" class="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[100] flex items-center gap-3 p-2 md:p-3 pr-4 md:pr-5 rounded-full cursor-pointer md:cursor-none hover-target" onclick="toggleMusic()">
+        <div class="record-cover w-10 h-10 md:w-12 md:h-12 rounded-full" id="record"></div>
+        <div class="flex-col hidden sm:flex">
+            <span class="text-[10px] md:text-xs text-gray-400 font-display tracking-wider">NOW PLAYING</span>
+            <span class="text-xs md:text-sm font-bold text-white tracking-wide truncate max-w-[120px] md:max-w-none">世界第一的公主殿下</span>
+            <div class="visualizer" id="visualizer">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div>
+            </div>
         </div>
-        <div class="footer-links">
-          <a href="#hero">首页</a>
-          <a href="#profile">档案</a>
-          <a href="#about">关于</a>
-          <a href="#gallery">画廊</a>
-          <a href="#music">音乐</a>
+        <audio id="bgm" loop preload="none">
+            <source src="assets/bgm.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <div id="main-content">
+        <!-- 阶段 4: UI 元素导航栏，加载完毕后由 GSAP 上浮展现 -->
+        <header class="fixed top-0 w-full p-6 md:p-8 flex justify-between items-center z-50 mix-blend-difference" id="main-header">
+            <div class="flex items-center gap-3 md:gap-4 unveil-nav-item">
+                <img src="assets/0logo-512.webp" id="nav-logo" class="w-8 h-8 md:w-12 h-12 rounded-md md:rounded-lg object-cover shadow-[0_0_15px_rgba(57,197,187,0.4)]" alt="Manga Bill Logo" width="512" height="486" decoding="async" fetchpriority="high">
+                <div class="text-lg md:text-xl font-display font-bold tracking-[0.2em] text-white">MANGA<span class="text-miku">BILL</span></div>
+            </div>
+            <div class="text-xs md:text-sm font-display tracking-widest text-gray-300 unveil-nav-item">EST. 2007</div>
+        </header>
+
+        <!-- 首屏 Hero Section -->
+        <section class="h-screen relative flex items-center justify-center overflow-hidden">
+            <div class="absolute w-full text-center z-0 pointer-events-none" data-speed="0.5">
+                <h1 class="text-[20vw] md:text-[15vw] leading-none font-display font-bold text-outline whitespace-nowrap opacity-30 mt-20 md:mt-0">
+                    HATSUNE<br class="md:hidden">MIKU
+                </h1>
+            </div>
+            
+            <div class="container mx-auto px-6 relative z-10 flex flex-col items-center mt-20">
+                <div class="tilt-wrapper gs-reveal w-full max-w-3xl">
+                    <img src="assets/hero-mobile.webp" srcset="assets/hero-mobile.webp 900w, assets/hero.webp 1920w" sizes="(max-width: 767px) 92vw, 768px" alt="Hatsune Miku Hero" class="tilt-card rounded-2xl w-full h-[45vh] md:h-[60vh] object-cover border border-miku/20" width="900" height="506" decoding="async" fetchpriority="high" />
+                </div>
+                <div class="mt-8 md:mt-12 text-center gs-reveal-up">
+                    <h2 class="text-4xl md:text-7xl font-bold mb-3 md:mb-4 tracking-tight">初音未来</h2>
+                    <p class="text-base md:text-xl text-miku font-light tracking-widest">从未来传来的最初之声</p>
+                </div>
+            </div>
+        </section>
+
+
+           <!-- ============================================================== -->
+
+        <!-- Pretext 风格巨物文字排版：初音未来纪念券设计思路 (PROJECT // 01)  -->
+
+        <!-- ============================================================== -->
+
+        <section class="bg-[#020406] text-white relative z-10 overflow-hidden" id="pretext-section">
+
+            <div class="min-h-[80vh] flex flex-col justify-center px-6 md:px-16 container mx-auto relative border-t border-white/5 pt-20">
+
+                <div class="pretext-reveal max-w-5xl">
+
+                    <h3 class="text-[12vw] md:text-[8vw] leading-[0.9] font-display font-bold tracking-tighter mb-8 md:mb-12">
+
+                        PROJECT<br><span class="text-miku">01</span>
+
+                    </h3>
+
+                    <p class="text-2xl md:text-4xl font-light text-gray-300 leading-snug md:leading-normal">
+
+                        这张纪念券，是我对初音的<span class="text-white font-bold">热爱</span>与信仰的具象化，也是<span class="text-miku">跨次元羁绊</span>的见证。
+
+                    </p>
+
+                    <p class="text-sm md:text-lg text-gray-500 font-display tracking-[0.2em] mt-12 md:mt-20">
+
+                        PRODUCED BY MANGA BILL
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-screen flex flex-col justify-center px-6 md:px-16 container mx-auto">
+
+                <div class="pretext-reveal max-w-6xl">
+
+                    <div class="text-miku text-lg md:text-xl font-display mb-4 md:mb-6 tracking-widest">ISSUER</div>
+
+                    <h2 class="text-[10vw] md:text-[6vw] leading-[1] font-display font-bold tracking-tighter mb-8 text-white uppercase break-words">
+
+                        Vocaloid<br>Monetary<br><span class="text-miku">Nexus</span>
+
+                    </h2>
+
+                    <p class="text-xl md:text-3xl font-light text-gray-400 max-w-3xl leading-relaxed">
+
+                        放弃传统银行命名。用 Nexus 呼应 Vocaloid 的科技内核，打造了一个<span class="text-white">只存在于虚拟世界</span>的金融中枢。
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-screen flex flex-col justify-center px-6 md:px-16 container mx-auto">
+
+                <div class="pretext-reveal w-full">
+
+                    <div class="flex flex-col lg:flex-row gap-12 lg:gap-32 items-start lg:items-center">
+
+                        <h2 class="text-[15vw] lg:text-[8vw] leading-[0.8] font-display font-bold tracking-tighter text-outline hover:text-white transition-colors duration-500 lg:w-1/2">
+
+                            BOARD<br>OF<br>DIRECTORS
+
+                        </h2>
+
+                        
+
+                        <div class="flex flex-col gap-8 md:gap-10 border-l-[3px] border-miku pl-6 md:pl-12 lg:w-1/2">
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">GOVERNOR 行长</span>
+
+                                <span class="text-4xl md:text-6xl text-miku font-bold group-hover:tracking-widest transition-all duration-300">初音未来</span>
+
+                            </div>
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">CHIEF FINANCIAL OFFICER 首席财务官</span>
+
+                                <span class="text-3xl md:text-5xl text-white font-bold group-hover:text-miku transition-colors duration-300">KAITO</span>
+
+                            </div>
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">CHIEF CASHIER 首席出纳官</span>
+
+                                <span class="text-3xl md:text-5xl text-white font-bold group-hover:text-miku transition-colors duration-300">镜音连</span>
+
+                            </div>
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">GENERAL COUNSEL 法务总监</span>
+
+                                <span class="text-3xl md:text-5xl text-white font-bold group-hover:text-miku transition-colors duration-300">镜音铃</span>
+
+                            </div>
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">COMPTROLLER 审计长</span>
+
+                                <span class="text-3xl md:text-5xl text-white font-bold group-hover:text-miku transition-colors duration-300">巡音流歌</span>
+
+                            </div>
+
+                            <p class="text-xs text-gray-500 mt-2 italic">（小彩蛋：镜音双子无法同时担任出纳与法务，侧面体现虚拟设定）</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-screen flex flex-col justify-center px-6 md:px-16 container mx-auto">
+
+                <div class="pretext-reveal max-w-5xl">
+
+                    <div class="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-8 mb-8 md:mb-12">
+
+                        <h2 class="text-[25vw] md:text-[18vw] leading-none font-display font-bold tracking-tighter text-miku drop-shadow-[0_0_30px_rgba(57,197,187,0.3)]">
+
+                            1000
+
+                        </h2>
+
+                        <span class="text-3xl md:text-6xl tracking-[0.3em] text-gray-500 font-light font-display">CRYSTALS</span>
+
+                    </div>
+
+                    <h4 class="text-2xl md:text-4xl text-white font-bold mb-4">专属纹章 Logo 与面值彩蛋</h4>
+
+                    <p class="text-xl md:text-2xl font-light text-gray-400 leading-relaxed">
+
+                        参考初音标志性的「01」Logo，融合维多利亚复古纹章。<br>
+
+                        1000 水晶藏了一个粉丝才懂的梗：<span class="text-white font-bold">3 张券，刚好凑齐一次游戏十连抽。</span>
+
+                    </p>
+
+                    <p class="text-lg md:text-xl text-gray-500 mt-6 md:mt-8 font-light italic">
+
+                        “无关实际价值，只希望你拿到它时，能想起和初音相伴的快乐时光。”
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-screen flex flex-col justify-center px-6 md:px-16 container mx-auto">
+
+                <div class="pretext-reveal w-full">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-32">
+
+                        <!-- FRONT -->
+
+                        <div class="border-t border-miku/30 pt-8 hover-target">
+
+                            <h3 class="text-5xl md:text-7xl font-display font-bold tracking-tighter text-white mb-6">
+
+                                FRONT<br><span class="text-miku text-2xl md:text-3xl font-bold tracking-widest mt-2 md:mt-4 block">虚拟歌姬</span>
+
+                            </h3>
+
+                            <p class="text-lg md:text-xl text-gray-400 font-light leading-relaxed">
+
+                                全新原创形象。她身着演唱会新队服，以向粉丝伸手互动的温柔姿态呈现。旁注 <span class="text-white font-bold">World is mine</span>，直接点题。
+
+                            </p>
+
+                        </div>
+
+                        <!-- BACK -->
+
+                        <div class="border-t border-miku/30 pt-8 mt-8 md:mt-32 hover-target">
+
+                            <h3 class="text-5xl md:text-7xl font-display font-bold tracking-tighter text-white mb-6">
+
+                                BACK<br><span class="text-miku text-2xl md:text-3xl font-bold tracking-widest mt-2 md:mt-4 block">公主殿下</span>
+
+                            </h3>
+
+                            <p class="text-lg md:text-xl text-gray-400 font-light leading-relaxed mb-4">
+
+                                贴合永远 16 岁的设定。摒弃厚重礼服，采用薄纱多层褶皱剪裁。蝴蝶装饰精巧点睛。
+
+                            </p>
+
+                            <p class="text-lg md:text-xl text-gray-400 font-light leading-relaxed">
+
+                                坐在复古树叶纹样上，身后复刻了演唱会的穹顶。<span class="text-white font-bold">她永远是舞台中央最耀眼的光。</span><br>
+
+                                左侧的巴洛克 + 哥特建筑线条，像为她筑起了一座专属城堡，氛围感直接拉满。
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-[80vh] flex flex-col justify-center px-6 md:px-16 container mx-auto text-center items-center pb-20">
+
+                <div class="pretext-reveal hover-target">
+
+                    <h2 class="text-2xl md:text-5xl font-light text-white max-w-4xl leading-relaxed mb-12 md:mb-16">
+
+                        「世界第一的公主殿下，<br>要好好看住我不然会跑去哪里，<br>我可不知道哟？」
+
+                    </h2>
+
+                    <div class="w-[1px] h-24 md:h-32 bg-gradient-to-b from-miku to-transparent mb-8 md:mb-12 mx-auto"></div>
+
+                    <p class="text-xs md:text-sm text-gray-500 tracking-[0.3em] uppercase font-display max-w-md mx-auto leading-loose">
+
+                        背面 1000 面值旁的二维码是跨次元入口<br>
+
+                        网页里还有初音的完整设计思路，藏满了小细节<br><br>
+
+                        向下滚动进入专属高定礼服 3D 陈列馆 ↓
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 阶段 5: UNVEIL 式礼服设计展厅 (EXHIBITION // 02) -->
+        <!-- ============================================================== -->
+        <section class="archive-section relative border-y border-white/5" id="exhibition-section">
+            <div class="archive-inner">
+                <nav class="archive-nav" aria-label="Dress archive navigation">
+                    <a class="archive-pill hover-target" href="#exhibition-section">Dress Archive<sup>®</sup></a>
+                    <a class="archive-pill hover-target" href="#archive-canvas">Looks</a>
+                    <a class="archive-pill hover-target" href="#archive-process">Process</a>
+                    <a class="archive-pill hover-target" href="#archive-contact">Contact</a>
+                </nav>
+
+                <div class="archive-stage" id="archive-process">
+                    <canvas class="archive-canvas hover-target" id="archive-canvas" aria-label="Interactive Hatsune Miku dress design archive"></canvas>
+                    <div class="archive-pointer-label" id="archive-pointer-label" aria-hidden="true"></div>
+                    <div class="archive-stage-kicker">
+                        Dress Design Archive® / Seven couture studies for Hatsune Miku. Tap or hover a plate to inspect.
+                    </div>
+                    <div class="archive-mode-switch" aria-hidden="true">
+                        <button class="is-active" type="button">Overview</button>
+                        <button type="button">Index</button>
+                    </div>
+                    <div class="archive-card-reader" id="archive-card-reader" aria-live="polite"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="archive-preview" id="archive-preview" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Dress design preview">
+            <div class="archive-preview-backdrop" data-archive-close></div>
+            <div class="archive-preview-shell">
+                <button class="archive-close hover-target" type="button" aria-label="Close dress preview" data-archive-close>×</button>
+                <div class="archive-preview-media">
+                    <img id="archive-preview-img" src="" alt="" decoding="async">
+                </div>
+                <div class="archive-preview-copy">
+                    <span class="archive-preview-index" id="archive-preview-index"></span>
+                    <h4 class="archive-preview-title" id="archive-preview-title"></h4>
+                    <p class="archive-preview-note" id="archive-preview-note"></p>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="footer-bottom">
-        <p>Made with ♥ for Miku Fans</p>
-      </div>
+
+
+        <!-- ============================================================== -->
+        <!-- 完整保留：原版所有区块 (ORIGIN, DESIGN, TECH, GALLERY) -->
+        <!-- ============================================================== -->
+        
+        <!-- ORIGIN -->
+        <section class="py-20 md:py-32 relative bg-surface backdrop-blur-sm border-y border-white/5">
+            <div class="container mx-auto px-6 max-w-6xl">
+                <div class="flex flex-col md:flex-row gap-12 md:gap-20 items-center">
+                    <div class="w-full md:w-5/12 tilt-wrapper gs-reveal-left">
+                        <div class="relative w-2/3 md:w-full mx-auto">
+                            <div class="absolute -inset-4 bg-miku/20 blur-2xl rounded-full"></div>
+                            <img src="assets/profile.webp" alt="Profile" class="tilt-card relative rounded-full w-full aspect-square object-cover border-2 border-miku/30" loading="lazy" decoding="async" />
+                        </div>
+                    </div>
+                    <div class="w-full md:w-7/12 flex flex-col justify-center gs-reveal-right">
+                        <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">ORIGIN // 03</div>
+                        <h3 class="text-3xl md:text-5xl font-bold mb-6 md:mb-8 leading-tight">源起与<span class="text-glow text-miku">核心概念</span></h3>
+                        
+                        <div class="space-y-4 md:space-y-6 text-gray-300 leading-relaxed font-light text-base md:text-lg">
+                            <div class="glass-card p-5 md:p-6 rounded-2xl hover-target">
+                                <h4 class="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-miku"></div>命名哲学与象征</h4>
+                                <p class="text-xs md:text-sm text-gray-400 mt-2">姓氏“初音”意指“初次的声音”与“出发点”；名字“未来”象征着“VOCALOID所代表的将来音乐之无限可能性”。合而观之即“从未来传来的最初之声”。</p>
+                            </div>
+                            <div class="glass-card p-5 md:p-6 rounded-2xl hover-target">
+                                <h4 class="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-miku"></div>寻声之旅：中之人</h4>
+                                <p class="text-xs md:text-sm text-gray-400 mt-2">原声数据由日本声优藤田咲（Fujita Saki）提供。在对比了近500份声优样本后脱颖而出，经过后期调整，诞生了极具标识度的“初音气”电子合成音。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DESIGN -->
+        <section class="py-20 md:py-32 relative">
+            <div class="container mx-auto px-6 max-w-7xl">
+                <div class="text-center mb-12 md:mb-20 gs-reveal-up">
+                    <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">DESIGN // 04</div>
+                    <h3 class="text-2xl md:text-5xl font-bold tracking-wider">二次元<span class="text-miku text-glow">美学基因</span></h3>
+                </div>
+                <div class="flex flex-col lg:flex-row gap-10 md:gap-16 relative items-start">
+                    <div class="w-full lg:w-1/2 lg:sticky top-24 md:top-32 gs-reveal-left">
+                        <div class="tilt-wrapper relative rounded-2xl p-2 bg-gradient-to-b from-miku/30 to-transparent">
+                            <div class="absolute -inset-4 bg-miku/10 blur-3xl rounded-2xl z-0"></div>
+                            <img src="assets/gallery-1.webp" alt="Hatsune Miku Full Body Design" class="tilt-card relative z-10 w-full h-[50vh] md:h-[75vh] object-cover object-top rounded-xl border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)]" loading="lazy" decoding="async" />
+                        </div>
+                    </div>
+                    <div class="w-full lg:w-1/2 space-y-6 md:space-y-8 py-4 md:py-10 gs-reveal-right">
+                        <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
+                            <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">初始公式服与角色基底</h4>
+                            <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">DESIGNER: KEI</div>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-4">设定的核心理念是“乐器的拟人化”。初音未来的身高设定为158cm，体重42kg，年龄16岁。</p>
+                            <ul class="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-400">
+                                <li class="flex items-start gap-3"><span class="text-miku mt-1">✦</span><span>**发型与色彩**：标志性的苍绿色超长双马尾，M形刘海。</span></li>
+                                <li class="flex items-start gap-3"><span class="text-miku mt-1">✦</span><span>**服装原型**：灵感高度致敬雅马哈经典全数字合成器DX7。</span></li>
+                            </ul>
+                        </div>
+                        <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
+                            <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">Append 版本的科幻异化</h4>
+                            <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">MODELER: 浅井真纪</div>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">整体向深度科幻与机能风靠拢。最显著的变化是原本的服装变为了紧身衣，领带直接内嵌于胸前的装甲中；短裙被解构，由腰部的科幻挂饰与延伸出的黑色线缆构成。</p>
+                        </div>
+                        <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
+                            <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">V3、V4X 到 NT 的演进</h4>
+                            <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">DESIGNER: iXima</div>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">提升了材质的透明感与光影的层次。在V4X中，发量在视觉上进行了优化缩减，整体身形更加修长，增加了大量金属质感的配饰与高跟鞋元素。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TECH -->
+        <section class="py-20 md:py-32 relative bg-surface border-y border-white/5">
+            <div class="container mx-auto px-6 max-w-5xl">
+                <div class="text-center mb-12 md:mb-20 gs-reveal-up">
+                    <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">TECH // 05</div>
+                    <h3 class="text-2xl md:text-5xl font-bold tracking-wider">核心引擎与<span class="text-miku">版本迭代史</span></h3>
+                </div>
+                <div class="relative border-l-2 border-miku/20 ml-2 md:ml-12 space-y-12 md:space-y-16 pb-6 md:pb-10">
+                    <div class="relative pl-8 md:pl-16 gs-reveal-up hover-target group">
+                        <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-dark border-2 border-miku group-hover:bg-miku group-hover:shadow-[0_0_15px_#39C5BB] transition-all"></div>
+                        <div class="text-miku font-display text-lg md:text-2xl font-bold mb-1 md:mb-2">2007.08</div>
+                        <h4 class="text-base md:text-xl font-bold text-white mb-2 md:mb-3">VOCALOID 2 (V2)：创世之作</h4>
+                        <p class="text-gray-400 text-xs md:text-sm leading-relaxed">首次将合成器拟人化，降低了专业电子音乐制作门槛。</p>
+                    </div>
+                    <div class="relative pl-8 md:pl-16 gs-reveal-up hover-target group">
+                        <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-dark border-2 border-miku group-hover:bg-miku group-hover:shadow-[0_0_15px_#39C5BB] transition-all"></div>
+                        <div class="text-miku font-display text-lg md:text-2xl font-bold mb-1 md:mb-2">2013</div>
+                        <h4 class="text-base md:text-xl font-bold text-white mb-2 md:mb-3">VOCALOID 3 (V3) 与外语声库</h4>
+                        <p class="text-gray-400 text-xs md:text-sm leading-relaxed">首次实现原生支持macOS系统。同期发售了首个英语声库，填补跨语种创作空白。</p>
+                    </div>
+                    <div class="relative pl-8 md:pl-16 gs-reveal-up hover-target group">
+                        <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-miku shadow-[0_0_15px_#39C5BB] transition-all"></div>
+                        <div class="text-miku font-display text-lg md:text-2xl font-bold mb-1 md:mb-2">2026.04</div>
+                        <h4 class="text-base md:text-xl font-bold text-white mb-2 md:mb-3">初音未来 V6：AI技术的终极融合</h4>
+                        <p class="text-gray-400 text-xs md:text-sm leading-relaxed">搭载 VOCALOID:AI。利用深度机器学习技术模拟极度接近人类真实的流畅度和换气感，突破“恐怖谷”效应。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GALLERY -->
+        <section class="gallery-wrap bg-dark relative border-t border-white/5">
+            <div class="container mx-auto px-6 absolute top-10 left-0 w-full z-10 mix-blend-difference pointer-events-none">
+                <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-2">GALLERY // 06</div>
+                <h3 class="text-3xl md:text-5xl font-bold text-white">MY ARTWORKS</h3>
+                <p class="text-miku mt-1 md:mt-2 text-xs md:text-base tracking-widest">同人创作图集</p>
+            </div>
+            <div class="gallery-track" id="gallery-track"></div>
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer id="archive-contact" class="pt-16 md:pt-24 pb-8 md:pb-12 border-t border-white/10 relative overflow-hidden bg-dark">
+            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-miku/10 blur-[100px] pointer-events-none"></div>
+            <div class="container mx-auto px-6 relative z-10 flex flex-col items-center">
+                <div class="text-center mb-8 md:mb-12 gs-reveal-up">
+                    <h2 class="text-2xl md:text-4xl font-display font-bold tracking-widest mb-2 md:mb-3 text-outline">CONNECT WITH US</h2>
+                    <p class="text-miku tracking-widest text-xs md:text-sm">扫码关注 Manga Bill 官方微信</p>
+                </div>
+                <div class="tilt-wrapper gs-reveal-up mb-16 md:mb-24 z-20">
+                    <div class="tilt-card relative p-[1px] rounded-3xl bg-gradient-to-b from-miku/50 via-transparent to-miku/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer md:cursor-none hover:scale-105 transition-transform duration-500">
+                        <div class="bg-dark/80 backdrop-blur-xl rounded-3xl p-6 md:p-8 flex flex-col items-center border border-white/5">
+                            <div class="w-40 h-40 md:w-48 md:h-48 rounded-2xl overflow-hidden mb-4 md:mb-6 relative group border border-miku/20 bg-white p-2">
+                                <div class="absolute top-0 left-0 w-full h-[2px] bg-miku shadow-[0_0_15px_#39C5BB] animate-[scan_2.5s_ease-in-out_infinite] z-10"></div>
+                                <img src="assets/0wechat.png" alt="WeChat QR Code" class="w-full h-full object-contain" loading="lazy" decoding="async">
+                            </div>
+                            <div class="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                <div class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-miku animate-pulse shadow-[0_0_10px_#39C5BB]"></div>
+                                <span class="text-white font-bold tracking-widest text-xs md:text-sm">WeChat Official</span>
+                            </div>
+                            <span class="text-gray-400 text-[10px] md:text-xs">Manga Bill 官方社群</span>
+                        </div>
+                    </div>
+                </div>
+                <h2 class="text-2xl md:text-4xl font-display font-bold text-outline mb-4 md:mb-6">THANK YOU</h2>
+                <p class="text-gray-500 text-[10px] md:text-sm tracking-widest text-center">DESIGNED FOR THE WORLD'S #1 PRINCESS BY MANGA BILL</p>
+            </div>
+        </footer>
     </div>
-  </footer>
 
-  <!-- 粒子画布（增强型） -->
-  <canvas id="particleCanvas"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script>
+      // ==========================================
+        // 1. UNVEIL 开幕序列机制 (阶段 0~4)
+        // ==========================================
+        function runWhenIdle(callback, timeout) {
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(callback, { timeout: timeout || 1200 });
+            } else {
+                setTimeout(callback, 16);
+            }
+        }
 
-  <!-- 灯箱 -->
-  <div class="lightbox" id="lightbox">
-    <button class="lightbox-close" id="lightboxClose" aria-label="关闭">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M18 6 L6 18 M6 6 L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </button>
-    <button class="lightbox-prev" id="lightboxPrev" aria-label="上一张">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <path d="M18 6 L10 14 L18 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </button>
-    <button class="lightbox-next" id="lightboxNext" aria-label="下一张">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <path d="M10 6 L18 14 L10 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </button>
-    <img class="lightbox-img" id="lightboxImg" src="" alt="">
-    <div class="lightbox-counter">
-      <span id="lightboxCurrent">1</span> / <span id="lightboxTotal">7</span>
-    </div>
-  </div>
+        function preloadImage(src) {
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = src;
+            return img;
+        }
 
-  <!-- 背景音乐（懒加载） -->
-  <audio id="bgAudio" preload="none">
-    <source src="assets/audio/bgm.mp3" type="audio/mpeg">
-  </audio>
+        function loadExternalScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
 
-  <script src="js/main.js"></script>
+        function preloadNonCriticalAssets() {
+            if (window.innerWidth < 768 || (navigator.connection && navigator.connection.saveData)) return;
+            [
+                'assets/profile.webp', 'assets/gallery-1.webp', 'assets/gallery-2.webp',
+                'assets/gallery-3.webp', 'assets/gallery-4.webp'
+            ].forEach(preloadImage);
+        }
+
+        let loaderFinished = false;
+
+        function initUnveilLoader() {
+            const images = [
+                'assets/0logo-512.webp',
+                window.innerWidth < 768 ? 'assets/hero-mobile.webp' : 'assets/hero.webp'
+            ];
+
+            let loaded = 0;
+            let displayProgress = 0;
+            let currentProgress = 0;
+            const percentEl = document.getElementById('unveil-percent');
+
+            gsap.to('#intro-logo-img', { opacity: 1, duration: 1.2, ease: "power2.out" });
+            gsap.to('#intro-logo-glow', { opacity: 0.4, duration: 1.5, yoyo: true, repeat: -1, ease: "sine.inOut" });
+
+            if (images.length === 0) currentProgress = 100;
+
+            images.forEach(src => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.onload = img.onerror = () => {
+                    loaded++;
+                    currentProgress = (loaded / images.length) * 100;
+                };
+                img.src = src;
+            });
+            setTimeout(() => { currentProgress = 100; }, 2800);
+
+            function updateLoader() {
+                displayProgress += (currentProgress - displayProgress) * 0.1;
+                if (currentProgress >= 100 && displayProgress > 96) displayProgress = 100;
+                percentEl.innerText = Math.round(displayProgress) + '%';
+
+                if (Math.round(displayProgress) >= 100) {
+                    percentEl.innerText = '100%';
+                    finishUnveilLoading();
+                } else {
+                    requestAnimationFrame(updateLoader);
+                }
+            }
+            requestAnimationFrame(updateLoader);
+        }
+
+        function finishUnveilLoading() {
+            if (loaderFinished) return;
+            loaderFinished = true;
+            const tl = gsap.timeline();
+            const introLogo = document.getElementById('intro-logo-img');
+            const navLogo = document.getElementById('nav-logo');
+            const introGlow = document.getElementById('intro-logo-glow');
+
+            const startRect = introLogo.getBoundingClientRect();
+            const targetRect = navLogo.getBoundingClientRect();
+            const scale = targetRect.width / startRect.width;
+            const x = targetRect.left - startRect.left;
+            const y = targetRect.top - startRect.top;
+
+            tl.to([introGlow, '#unveil-percent', '#unveil-loader > .text-sm'], { opacity: 0, duration: 0.4 });
+
+            tl.to(introLogo, {
+                x: x, y: y, scale: scale,
+                transformOrigin: "top left",
+                duration: 1.2, ease: "expo.inOut"
+            }, "-=0.2");
+
+            tl.to('#unveil-loader', {
+                backgroundColor: 'transparent', duration: 1.0, ease: "power2.inOut"
+            }, "-=1.0");
+
+            tl.set(navLogo, { opacity: 1 });
+            tl.set([introLogo, '#unveil-loader'], { display: 'none' });
+
+            tl.to('#unveil-mask', {
+                opacity: 0, duration: 0.75, ease: "power1.inOut",
+                onComplete: () => {
+                    document.getElementById('unveil-mask').style.display = 'none';
+                }
+            }, "-=0.5");
+
+            tl.to('body', { backgroundColor: '#03070b', duration: 0.4 }, "-=0.7");
+
+            tl.to('header', { opacity: 1, duration: 0.5, ease: "power1.inOut" }, "-=0.3");
+            tl.to('.unveil-nav-item', {
+                y: '0%', opacity: 1, duration: 0.6, stagger: 0.1, ease: "power2.out"
+            }, "-=0.8");
+
+            tl.call(() => {
+                initAnimations();
+                initArchiveWhenNeeded();
+                runWhenIdle(preloadNonCriticalAssets, 1500);
+
+                setTimeout(() => {
+                    if (isMobileRuntime) {
+                        const nudge = document.getElementById('mobile-audio-nudge');
+                        if (nudge) nudge.classList.add('is-visible');
+                        return;
+                    }
+                    const overlay = document.getElementById('audio-prompt-overlay');
+                    overlay.classList.remove('opacity-0', 'pointer-events-none');
+                    const prompt = document.getElementById('audio-prompt');
+                    prompt.classList.remove('scale-95');
+                    prompt.classList.add('scale-100');
+                }, 500);
+            });
+        }
+
+
+        // ==========================================
+        // 3. Dress Archive & Gallery & 初始化 & 动画 & 粒子 & 音乐
+        // ==========================================
+        const ARCHIVE_ITEMS = [
+            { file: '1.webp', mobileFile: '1-mobile.webp', titleZh: '祖母绿', titleEn: 'Emerald', index: 'Look 01', tone: 'Couture Green', note: '深绿调礼服作为整组的主视觉，强调宝石般的厚度和舞台灯下的贵气，适合作为公主殿下登场的第一套造型。' },
+            { file: '2.webp', mobileFile: '2-mobile.webp', titleZh: '葱绿', titleEn: 'Miku Green', index: 'Look 02', tone: 'Signature Miku', note: '更接近初音标志色的轻盈绿，把角色识别度放在第一位，适合连接公式服记忆和全新礼服设计。' },
+            { file: '3.webp', mobileFile: '3-mobile.webp', titleZh: '墨绿', titleEn: 'Dark Green', index: 'Look 03', tone: 'Deep Stage', note: '墨绿版本把整体气质压低，减少甜美感，突出更成熟的舞台轮廓和夜场演出的神秘感。' },
+            { file: '4.webp', mobileFile: '4-mobile.webp', titleZh: '苍蓝', titleEn: 'Pale Blue', index: 'Look 04', tone: 'Pale Blue', note: '苍蓝礼服更像清晨的舞台雾光，用低饱和冷色承接初音的电子感，同时保留少女感。' },
+            { file: '5.webp', mobileFile: '5-mobile.webp', titleZh: '蔚蓝', titleEn: 'Ocean Blue', index: 'Look 05', tone: 'Ocean Blue', note: '蔚蓝版本扩大了裙摆和色块的存在感，让造型更接近海面、穹顶和大型演唱会灯幕的联想。' },
+            { file: '6.webp', mobileFile: '6-mobile.webp', titleZh: '纯白', titleEn: 'Pure White', index: 'Look 06', tone: 'Ceremony White', note: '纯白礼服承担纪念券的仪式感，弱化色彩冲击，突出薄纱、层叠和公主形象的纯净。' },
+            { file: '7.webp', mobileFile: '7-mobile.webp', titleZh: '冰蓝', titleEn: 'Ice Blue', index: 'Look 07', tone: 'Ice Blue', note: '冰蓝作为收束款，带有透明、冷光和未来材质感，像把虚拟歌姬的电子声线凝成礼服。' }
+        ];
+
+        function renderDressArchive() {
+            const canvas = document.getElementById('archive-canvas');
+            const section = document.getElementById('exhibition-section');
+            const reader = document.getElementById('archive-card-reader');
+            const stage = canvas ? canvas.closest('.archive-stage') : null;
+            const pointerLabel = document.getElementById('archive-pointer-label');
+            if (!canvas || !section) return;
+            if (canvas.dataset.archiveBound === '1') return;
+            canvas.dataset.archiveBound = '1';
+
+            const ctx = canvas.getContext('2d');
+            const useMobileArchive = window.innerWidth < 720 || window.matchMedia('(pointer: coarse)').matches;
+            const itemState = ARCHIVE_ITEMS.map(() => ({ hover: 0 }));
+            const state = {
+                dpr: Math.min(window.devicePixelRatio || 1, 2),
+                width: 0,
+                height: 0,
+                mouseX: -9999,
+                mouseY: -9999,
+                clientX: -9999,
+                clientY: -9999,
+                labelX: -9999,
+                labelY: -9999,
+                smoothX: 0,
+                smoothY: 0,
+                inside: false,
+                dragging: false,
+                dragMoved: false,
+                dragStartX: 0,
+                dragStartY: 0,
+                dragStartScroll: 0,
+                scrollTarget: 0,
+                scroll: 0,
+                intro: -3.4,
+                introTarget: 0,
+                hoverIndex: -1,
+                lastHoverIndex: -1,
+                focusIndex: -1,
+                focusProgress: 0,
+                focusTarget: 0,
+                openTimer: null,
+                rects: [],
+                imagesReady: 0,
+                active: true,
+                rafId: 0,
+                lastFrameTime: 0,
+                frameInterval: useMobileArchive ? 1000 / 45 : 1000 / 60
+            };
+
+            ARCHIVE_ITEMS.forEach((item) => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.onload = () => { state.imagesReady += 1; };
+                img.src = 'assets/' + (useMobileArchive && item.mobileFile ? item.mobileFile : item.file);
+                item.image = img;
+            });
+
+            function resizeArchiveCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                state.dpr = useMobileArchive ? Math.min(window.devicePixelRatio || 1, 1.4) : Math.min(window.devicePixelRatio || 1, 2);
+                state.width = Math.max(1, Math.round(rect.width));
+                state.height = Math.max(1, Math.round(rect.height));
+                canvas.width = Math.round(state.width * state.dpr);
+                canvas.height = Math.round(state.height * state.dpr);
+                ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+            }
+
+            function clamp(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            function lerp(a, b, t) {
+                return a + (b - a) * t;
+            }
+
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function wrap(min, max, value) {
+                const range = max - min;
+                return ((((value - min) % range) + range) % range) + min;
+            }
+
+            function getArchiveLayout() {
+                const w = state.width;
+                const h = state.height;
+                const isMobile = w < 720;
+                const cardW = isMobile ? Math.min(255, w * 0.62) : Math.min(410, Math.max(250, w * 0.235));
+                const cardH = cardW * (isMobile ? 1.24 : 1.18);
+                const half = ARCHIVE_ITEMS.length / 2;
+                const centerX = isMobile ? w * 0.49 : w * 0.50;
+                const centerY = isMobile ? h * 0.62 : h * 0.60;
+                const stepX = isMobile ? w * 0.255 : w * 0.218;
+                const stepY = isMobile ? -h * 0.165 : -h * 0.128;
+                const parallaxX = (state.smoothX - w / 2) * (isMobile ? 0.025 : 0.04);
+                const parallaxY = (state.smoothY - h / 2) * (isMobile ? 0.014 : 0.025);
+                const flow = state.scroll * 0.035 + state.intro;
+
+                return ARCHIVE_ITEMS.map((item, index) => {
+                    const virtualX = wrap(-half, half, index - flow);
+                    const distance = Math.abs(virtualX);
+                    const depth = 1 - clamp(distance / half, 0, 1);
+                    const perspective = 0.92 + depth * 0.18;
+                    const width = cardW * perspective;
+                    const height = cardH * perspective;
+                    return {
+                        item,
+                        index,
+                        virtualX,
+                        depth,
+                        x: centerX + virtualX * stepX - width / 2 + parallaxX * (0.35 + depth),
+                        y: centerY + virtualX * stepY - height / 2 + parallaxY * (0.35 + depth),
+                        w: width,
+                        h: height
+                    };
+                }).sort((a, b) => a.virtualX - b.virtualX);
+            }
+
+            function coverDrawImage(img, x, y, w, h, pan) {
+                const iw = img.naturalWidth || img.width || 1;
+                const ih = img.naturalHeight || img.height || 1;
+                const scale = Math.max(w / iw, h / ih);
+                const sw = w / scale;
+                const sh = h / scale;
+                const sx = clamp((iw - sw) * (0.5 + (pan - 0.5) * 0.34), 0, Math.max(0, iw - sw));
+                const sy = Math.max(0, (ih - sh) * 0.12);
+                ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+            }
+
+            function drawCard(card, rect, hoverAmount, focusAmount) {
+                const mobileCanvas = state.width < 720;
+                const hovered = hoverAmount > 0.02;
+                const fadeForFocus = state.focusIndex >= 0 && card.index !== state.focusIndex ? 1 - focusAmount * 0.72 : 1;
+                const proximity = card.depth;
+                const baseAlpha = 0.18 + proximity * 0.24;
+                const alpha = clamp((baseAlpha + hoverAmount * 0.62 + focusAmount * 0.16) * fadeForFocus, 0.04, 0.98);
+                const blur = mobileCanvas ? Math.max(0, 1.1 - hoverAmount * 1.1 - focusAmount) : Math.max(0, 2.4 - hoverAmount * 2.4 - focusAmount * 2);
+                const saturation = 58 + hoverAmount * 42 + focusAmount * 26;
+                const contrast = 88 + hoverAmount * 12 + focusAmount * 10;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.shadowColor = hovered || focusAmount > 0.1 ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.11)';
+                ctx.shadowBlur = mobileCanvas ? (hovered || focusAmount > 0.1 ? 18 : 8) : (hovered || focusAmount > 0.1 ? 34 : 18);
+                ctx.shadowOffsetY = mobileCanvas ? (hovered || focusAmount > 0.1 ? 10 : 5) : (hovered || focusAmount > 0.1 ? 18 : 10);
+                ctx.fillStyle = '#e0e8e5';
+                ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+                if (card.item.image && card.item.image.complete) {
+                    ctx.filter = `blur(${blur}px) saturate(${saturation}%) contrast(${contrast}%)`;
+                    coverDrawImage(card.item.image, rect.x, rect.y, rect.w, rect.h, 0.28 + hoverAmount * 0.42 + focusAmount * 0.18);
+                    ctx.filter = 'none';
+                }
+
+                ctx.shadowColor = 'transparent';
+                ctx.fillStyle = hovered || focusAmount > 0.05 ? 'rgba(250,250,250,0.08)' : 'rgba(250,250,250,0.46)';
+                ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+                ctx.strokeStyle = hovered || focusAmount > 0.05 ? 'rgba(0,0,0,0.36)' : 'rgba(0,0,0,0.12)';
+                ctx.lineWidth = hovered || focusAmount > 0.05 ? 1.15 : 0.8;
+                ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1);
+
+                if (hoverAmount > 0.08 || focusAmount > 0.08) {
+                    ctx.globalAlpha = Math.min(1, alpha + 0.12) * Math.max(hoverAmount, focusAmount);
+                    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+                    ctx.font = '10.5px "Space Grotesk", sans-serif';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(card.item.index.toUpperCase(), rect.x + 14, rect.y + 14);
+                }
+                ctx.restore();
+            }
+
+            function hitTestArchiveCards() {
+                for (let i = state.rects.length - 1; i >= 0; i--) {
+                    const card = state.rects[i];
+                    const rect = card.rect;
+                    if (state.mouseX >= rect.x && state.mouseX <= rect.x + rect.w && state.mouseY >= rect.y && state.mouseY <= rect.y + rect.h) {
+                        return card.index;
+                    }
+                }
+                return -1;
+            }
+
+            function ensureArchiveRects() {
+                if (state.rects.length) return;
+                state.rects = getArchiveLayout().map((card) => ({
+                    ...card,
+                    rect: { x: card.x, y: card.y, w: card.w, h: card.h }
+                }));
+            }
+
+            function getArchiveTapTarget() {
+                ensureArchiveRects();
+                const directHit = hitTestArchiveCards();
+                if (directHit >= 0) return directHit;
+                if (!useMobileArchive || !state.rects.length) return -1;
+
+                let paddedHit = -1;
+                let bestIndex = -1;
+                let bestScore = Infinity;
+                const tapPad = 42;
+
+                for (let i = state.rects.length - 1; i >= 0; i--) {
+                    const card = state.rects[i];
+                    const rect = card.rect;
+                    const visible = rect.x < state.width && rect.x + rect.w > 0 && rect.y < state.height && rect.y + rect.h > 0;
+                    if (!visible) continue;
+
+                    if (
+                        state.mouseX >= rect.x - tapPad &&
+                        state.mouseX <= rect.x + rect.w + tapPad &&
+                        state.mouseY >= rect.y - tapPad &&
+                        state.mouseY <= rect.y + rect.h + tapPad
+                    ) {
+                        paddedHit = card.index;
+                        break;
+                    }
+
+                    const cx = rect.x + rect.w / 2;
+                    const cy = rect.y + rect.h / 2;
+                    const score = Math.hypot((state.mouseX - cx) / rect.w, (state.mouseY - cy) / rect.h) - card.depth * 0.18;
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestIndex = card.index;
+                    }
+                }
+
+                if (paddedHit >= 0) return paddedHit;
+                return bestIndex;
+            }
+
+            function drawArchiveFrame(time) {
+                if (!state.active || document.hidden) {
+                    state.rafId = 0;
+                    return;
+                }
+                if (time && state.lastFrameTime && time - state.lastFrameTime < state.frameInterval) {
+                    state.rafId = requestAnimationFrame(drawArchiveFrame);
+                    return;
+                }
+                state.lastFrameTime = time || performance.now();
+                ctx.clearRect(0, 0, state.width, state.height);
+                state.scroll += (state.scrollTarget - state.scroll) * 0.12;
+                state.intro += (state.introTarget - state.intro) * 0.045;
+                state.focusProgress += (state.focusTarget - state.focusProgress) * 0.12;
+                if (state.focusTarget === 0 && state.focusProgress < 0.01) {
+                    state.focusIndex = -1;
+                    state.focusProgress = 0;
+                }
+                state.smoothX += ((state.inside ? state.mouseX : state.width * 0.66) - state.smoothX) * 0.065;
+                state.smoothY += ((state.inside ? state.mouseY : state.height * 0.46) - state.smoothY) * 0.065;
+
+                const layout = getArchiveLayout();
+                state.rects = layout.map((card) => {
+                    let rect = {
+                        x: card.x,
+                        y: card.y,
+                        w: card.w,
+                        h: card.h
+                    };
+                    const focusAmount = card.index === state.focusIndex ? easeOutCubic(state.focusProgress) : 0;
+                    if (focusAmount > 0) {
+                        const targetW = Math.min(state.width * 0.56, 660);
+                        const targetH = Math.min(state.height * 0.78, targetW * 1.18);
+                        rect = {
+                            x: lerp(rect.x, state.width / 2 - targetW / 2, focusAmount),
+                            y: lerp(rect.y, state.height / 2 - targetH / 2, focusAmount),
+                            w: lerp(rect.w, targetW, focusAmount),
+                            h: lerp(rect.h, targetH, focusAmount)
+                        };
+                    } else if (state.focusProgress > 0.01 && state.focusIndex >= 0) {
+                        const away = card.virtualX < 0 ? -1 : 1;
+                        rect.x += away * state.focusProgress * 42;
+                        rect.y += state.focusProgress * 16;
+                    }
+                    return { ...card, rect };
+                });
+                state.hoverIndex = -1;
+
+                if (!state.dragging && state.focusIndex < 0) {
+                    state.hoverIndex = hitTestArchiveCards();
+                }
+
+                state.rects.forEach((card) => {
+                    const targetHover = card.index === state.hoverIndex ? 1 : 0;
+                    itemState[card.index].hover += (targetHover - itemState[card.index].hover) * 0.14;
+                    const hoverAmount = itemState[card.index].hover;
+                    const focusAmount = card.index === state.focusIndex ? easeOutCubic(state.focusProgress) : 0;
+                    const hoverLift = hoverAmount * -15;
+                    const hoverScale = 1 + hoverAmount * 0.032;
+                    const rect = {
+                        x: card.rect.x - (card.rect.w * (hoverScale - 1)) / 2 + hoverAmount * 8,
+                        y: card.rect.y - (card.rect.h * (hoverScale - 1)) / 2 + hoverLift,
+                        w: card.rect.w * hoverScale,
+                        h: card.rect.h * hoverScale
+                    };
+                    drawCard(card, rect, hoverAmount, focusAmount);
+                });
+
+                if (state.hoverIndex !== state.lastHoverIndex) {
+                    state.lastHoverIndex = state.hoverIndex;
+                    const item = ARCHIVE_ITEMS[state.hoverIndex];
+                    if (reader) reader.textContent = item ? item.index + ' ' + item.titleZh + ' ' + item.titleEn : '';
+                    if (pointerLabel) pointerLabel.textContent = item ? item.titleEn + ' / ' + item.index : '';
+                }
+
+                if (pointerLabel) {
+                    state.labelX += (state.clientX - state.labelX) * 0.16;
+                    state.labelY += (state.clientY - state.labelY) * 0.16;
+                    pointerLabel.style.transform = 'translate3d(' + state.labelX + 'px,' + state.labelY + 'px,0)';
+                    pointerLabel.style.opacity = state.hoverIndex >= 0 && !state.dragging && state.focusIndex < 0 ? '1' : '0';
+                }
+
+                canvas.style.cursor = state.dragging ? 'grabbing' : (state.hoverIndex >= 0 ? 'zoom-in' : 'grab');
+                state.rafId = requestAnimationFrame(drawArchiveFrame);
+            }
+
+            function startArchiveLoop() {
+                if (!state.rafId) {
+                    state.active = true;
+                    state.rafId = requestAnimationFrame(drawArchiveFrame);
+                }
+            }
+
+            function stopArchiveLoop() {
+                state.active = false;
+                if (state.rafId) {
+                    cancelAnimationFrame(state.rafId);
+                    state.rafId = 0;
+                }
+            }
+
+            function updateArchivePointer(event) {
+                const rect = canvas.getBoundingClientRect();
+                state.mouseX = event.clientX - rect.left;
+                state.mouseY = event.clientY - rect.top;
+                state.clientX = event.clientX;
+                state.clientY = event.clientY;
+                if (state.labelX < -900) {
+                    state.labelX = state.clientX;
+                    state.labelY = state.clientY;
+                }
+                state.inside = true;
+            }
+
+            canvas.addEventListener('pointermove', updateArchivePointer);
+            canvas.addEventListener('pointermove', (event) => {
+                if (!state.dragging) return;
+                const dx = event.clientX - state.dragStartX;
+                const dy = event.clientY - state.dragStartY;
+                if (Math.abs(dx) + Math.abs(dy) > 6) state.dragMoved = true;
+                state.scrollTarget = state.dragStartScroll - dx * 0.055 + dy * 0.018;
+            });
+            canvas.addEventListener('pointerenter', updateArchivePointer);
+            canvas.addEventListener('pointerdown', (event) => {
+                updateArchivePointer(event);
+                state.dragging = true;
+                state.dragMoved = false;
+                state.dragStartX = event.clientX;
+                state.dragStartY = event.clientY;
+                state.dragStartScroll = state.scrollTarget;
+                if (stage) stage.classList.add('is-dragging');
+                if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
+            });
+            canvas.addEventListener('pointerup', (event) => {
+                updateArchivePointer(event);
+                state.dragging = false;
+                if (stage) stage.classList.remove('is-dragging');
+                if (canvas.releasePointerCapture) canvas.releasePointerCapture(event.pointerId);
+                if (!state.dragMoved) {
+                    const activeIndex = state.hoverIndex >= 0 ? state.hoverIndex : getArchiveTapTarget();
+                    if (activeIndex >= 0) beginArchiveOpen(activeIndex);
+                }
+            });
+            canvas.addEventListener('click', (event) => {
+                updateArchivePointer(event);
+                const activeIndex = state.hoverIndex >= 0 ? state.hoverIndex : getArchiveTapTarget();
+                if (!state.dragMoved && activeIndex >= 0) beginArchiveOpen(activeIndex);
+            });
+            canvas.addEventListener('pointercancel', () => {
+                state.dragging = false;
+                if (stage) stage.classList.remove('is-dragging');
+            });
+            canvas.addEventListener('pointerleave', () => {
+                state.inside = false;
+                state.mouseX = -9999;
+                state.mouseY = -9999;
+                if (!state.dragging) state.hoverIndex = -1;
+            });
+            canvas.addEventListener('wheel', (event) => {
+                state.scrollTarget += (event.deltaY + event.deltaX) * 0.026;
+            }, { passive: true });
+
+            function beginArchiveOpen(index) {
+                if (state.focusIndex >= 0 || !ARCHIVE_ITEMS[index]) return;
+                state.focusIndex = index;
+                state.focusProgress = 0;
+                state.focusTarget = 1;
+                clearTimeout(state.openTimer);
+                state.openTimer = setTimeout(() => {
+                    openArchivePreview(index);
+                }, 560);
+            }
+
+            window.__resetArchiveFocus = () => {
+                clearTimeout(state.openTimer);
+                state.focusTarget = 0;
+                if (useMobileArchive) {
+                    state.focusIndex = -1;
+                    state.focusProgress = 0;
+                }
+            };
+
+            resizeArchiveCanvas();
+            window.addEventListener('resize', resizeArchiveCanvas);
+            startArchiveLoop();
+
+            if ('IntersectionObserver' in window) {
+                const archiveLoopObserver = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) startArchiveLoop();
+                    else stopArchiveLoop();
+                }, { rootMargin: '240px 0px' });
+                archiveLoopObserver.observe(section);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) stopArchiveLoop();
+                else if (section.getBoundingClientRect().bottom > -240 && section.getBoundingClientRect().top < window.innerHeight + 240) startArchiveLoop();
+            });
+
+            document.querySelectorAll('[data-archive-close]').forEach((el) => {
+                el.addEventListener('click', closeArchivePreview);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeArchivePreview();
+            });
+        }
+
+        function openArchivePreview(index) {
+            const item = ARCHIVE_ITEMS[index];
+            const preview = document.getElementById('archive-preview');
+            if (!item || !preview) return;
+
+            const img = document.getElementById('archive-preview-img');
+            const previewIndex = document.getElementById('archive-preview-index');
+            const title = document.getElementById('archive-preview-title');
+            const note = document.getElementById('archive-preview-note');
+
+            img.src = 'assets/' + (window.innerWidth < 720 && item.mobileFile ? item.mobileFile : item.file);
+            img.alt = item.index + ' ' + item.titleZh + ' ' + item.titleEn;
+            previewIndex.textContent = item.index + ' / ' + item.tone;
+            title.innerHTML = item.titleEn + '<span>' + item.titleZh + '</span>';
+            note.textContent = item.note;
+
+            preview.classList.add('is-open');
+            preview.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('archive-preview-open');
+
+            if (window.gsap) {
+                const mobilePreview = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
+                gsap.fromTo('.archive-preview-shell',
+                    { y: mobilePreview ? 10 : 24, filter: 'none' },
+                    { y: 0, filter: 'none', duration: mobilePreview ? 0.34 : 0.65, ease: mobilePreview ? 'power2.out' : 'power3.out' }
+                );
+            }
+        }
+
+        function closeArchivePreview() {
+            const preview = document.getElementById('archive-preview');
+            if (!preview || !preview.classList.contains('is-open')) return;
+            preview.classList.remove('is-open');
+            preview.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('archive-preview-open');
+            if (window.__resetArchiveFocus) window.__resetArchiveFocus();
+        }
+
+        function initArchiveWhenNeeded() {
+            const section = document.getElementById('exhibition-section');
+            if (!section || section.dataset.archiveObserved === '1') return;
+            section.dataset.archiveObserved = '1';
+
+            const start = () => {
+                renderDressArchive();
+                if (window.ScrollTrigger) ScrollTrigger.refresh();
+            };
+
+            if (!('IntersectionObserver' in window)) {
+                runWhenIdle(start, 1500);
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    observer.disconnect();
+                    start();
+                }
+            }, { rootMargin: '900px 0px' });
+            observer.observe(section);
+        }
+
+        const GALLERY_CONFIG = [
+            { file: 'gallery-2.webp', title: '光影之歌', desc: 'Illustration 02' },
+            { file: 'gallery-3.webp', title: '虚拟与现实', desc: 'Illustration 03' },
+            { file: 'gallery-4.webp', title: '永恒的乐章', desc: 'Illustration 04' }
+        ];
+
+        function renderDynamicGallery() {
+            const track = document.getElementById('gallery-track');
+            if (!track || track.dataset.rendered === '1') return;
+            track.dataset.rendered = '1';
+            GALLERY_CONFIG.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item hover-target';
+                div.innerHTML = [
+                    '<img src="assets/' + item.file + '" alt="' + item.title + '" loading="lazy" decoding="async">',
+                    '<div class="gallery-overlay">',
+                    '  <div class="text-lg md:text-2xl font-bold text-white mb-1">' + item.title + '</div>',
+                    '  <div class="text-xs md:text-sm text-miku">' + item.desc + '</div>',
+                    '</div>'
+                ].join('');
+                track.appendChild(div);
+            });
+        }
+
+        function initGalleryWhenNeeded() {
+            const track = document.getElementById('gallery-track');
+            if (!track || track.dataset.galleryObserved === '1') return;
+            track.dataset.galleryObserved = '1';
+
+            if (window.innerWidth >= 768 || !('IntersectionObserver' in window)) {
+                renderDynamicGallery();
+                return;
+            }
+
+            const wrap = track.closest('.gallery-wrap') || track;
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    observer.disconnect();
+                    renderDynamicGallery();
+                }
+            }, { rootMargin: '700px 0px' });
+            observer.observe(wrap);
+        }
+
+        window.addEventListener('load', () => {
+            initGalleryWhenNeeded();
+            initUnveilLoader();
+        });
+
+        function startExperience(playMusic) {
+            const overlay = document.getElementById('audio-prompt-overlay');
+            const prompt = document.getElementById('audio-prompt');
+            const nudge = document.getElementById('mobile-audio-nudge');
+            if (nudge) nudge.classList.remove('is-visible');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            prompt.classList.remove('scale-100');
+            prompt.classList.add('scale-95');
+            if(playMusic && !isPlaying) { toggleMusic(); }
+        }
+
+        const isMobileRuntime = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let lenis = null;
+        function initLenis() {
+            if (lenis || !window.Lenis) return;
+            lenis = new Lenis({
+                duration: 1.05,
+                easing: function(t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+                smooth: true
+            });
+            function raf(time) {
+                if (!lenis) return;
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+        }
+        if (!isMobileRuntime && !prefersReducedMotion) {
+            runWhenIdle(() => {
+                loadExternalScript('https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js')
+                    .then(initLenis)
+                    .catch(() => {});
+            }, 900);
+        }
+        gsap.registerPlugin(ScrollTrigger);
+
+        function initAnimations() {
+            const isMobile = window.innerWidth < 768;
+            const revealFrom = isMobile ? { opacity: 0, filter: 'none', y: 28 } : { opacity: 0, filter: 'blur(20px)', y: 60 };
+            const revealTo = isMobile ? { opacity: 1, filter: 'none', y: 0, duration: 0.75, ease: 'power2.out' } : { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1.5, ease: 'power3.out' };
+
+            gsap.utils.toArray('.pretext-reveal').forEach(function(elem) {
+                gsap.fromTo(elem,
+                    revealFrom,
+                    {
+                        opacity: revealTo.opacity, filter: revealTo.filter, y: revealTo.y,
+                        duration: revealTo.duration, ease: revealTo.ease,
+                        scrollTrigger: {
+                            trigger: elem, start: 'top 85%',
+                            toggleActions: isMobile ? 'play none none none' : 'play none none reverse'
+                        }
+                    }
+                );
+            });
+
+            gsap.utils.toArray('.gs-reveal-up:not(.pretext-reveal)').forEach(function(elem) {
+                gsap.fromTo(elem, { y: isMobile ? 24 : 50, opacity: 0 }, { y: 0, opacity: 1, duration: isMobile ? 0.7 : 1, ease: isMobile ? 'power2.out' : 'power3.out', scrollTrigger: { trigger: elem, start: 'top 85%' } });
+            });
+            gsap.utils.toArray('.gs-reveal-left').forEach(function(elem) {
+                gsap.fromTo(elem, { x: isMobile ? 0 : -50, y: isMobile ? 18 : 0, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: isMobile ? 0.7 : 1, ease: isMobile ? 'power2.out' : 'power3.out', scrollTrigger: { trigger: elem, start: 'top 85%' } });
+            });
+            gsap.utils.toArray('.gs-reveal-right').forEach(function(elem) {
+                gsap.fromTo(elem, { x: isMobile ? 0 : 50, y: isMobile ? 18 : 0, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: isMobile ? 0.7 : 1, ease: isMobile ? 'power2.out' : 'power3.out', scrollTrigger: { trigger: elem, start: 'top 85%' } });
+            });
+
+            if (!isMobile) {
+                gsap.utils.toArray('[data-speed]').forEach(function(elem) {
+                    var speed = elem.getAttribute('data-speed');
+                    gsap.to(elem, { y: function() { return ScrollTrigger.maxScroll(window) * speed; }, ease: 'none', scrollTrigger: { trigger: 'body', start: 'top top', end: 'bottom bottom', scrub: true } });
+                });
+            }
+
+            var track = document.getElementById('gallery-track');
+            if (track && !isMobile) {
+                gsap.to(track, {
+                    x: function() { return -(track.scrollWidth - window.innerWidth); },
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: '.gallery-wrap',
+                        start: 'top top',
+                        end: function() { return '+=' + (track.scrollWidth - window.innerWidth); },
+                        pin: true,
+                        scrub: 1,
+                        invalidateOnRefresh: true
+                    }
+                });
+            }
+
+            var archiveSection = document.getElementById('exhibition-section');
+            if (archiveSection) {
+                ScrollTrigger.create({
+                    trigger: archiveSection,
+                    start: 'top 58%',
+                    end: 'bottom 42%',
+                    onEnter: function() { document.body.classList.add('archive-light'); },
+                    onEnterBack: function() { document.body.classList.add('archive-light'); },
+                    onLeave: function() { document.body.classList.remove('archive-light'); },
+                    onLeaveBack: function() { document.body.classList.remove('archive-light'); }
+                });
+
+                gsap.fromTo('.archive-nav .archive-pill',
+                    { y: -18, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 0.8, stagger: 0.045, ease: 'power3.out', scrollTrigger: { trigger: archiveSection, start: 'top 70%' } }
+                );
+
+                gsap.fromTo(['.archive-canvas', '.archive-stage-kicker', '.archive-mode-switch'],
+                    { opacity: 0, filter: isMobile ? 'none' : 'blur(18px)' },
+                    { opacity: 1, filter: 'none', duration: isMobile ? 0.7 : 1.2, ease: isMobile ? 'power2.out' : 'power3.out', scrollTrigger: { trigger: archiveSection, start: 'top 68%' } }
+                );
+            }
+            bindCursorEvents();
+        }
+
+        var cursorDot = document.getElementById('cursor-dot');
+        var cursorOutline = document.getElementById('cursor-outline');
+
+        if (window.matchMedia('(pointer: fine)').matches) {
+            window.addEventListener('mousemove', function(e) {
+                gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                if(!gsap.isTweening(cursorOutline)) {
+                    gsap.to(cursorOutline, { x: e.clientX, y: e.clientY, duration: 0.5, ease: 'power2.out' });
+                }
+            });
+        }
+
+        function bindCursorEvents() {
+            if (window.matchMedia('(pointer: fine)').matches) {
+                document.querySelectorAll('a, button, .hover-target, .glass-card, .tilt-card').forEach(function(el) {
+                    el.addEventListener('mouseenter', function() { gsap.to(cursorOutline, { scale: 1.5, background: 'rgba(57, 197, 187, 0.1)' }); });
+                    el.addEventListener('mouseleave', function() { gsap.to(cursorOutline, { scale: 1, background: 'transparent' }); });
+                });
+            }
+        }
+
+        if (window.matchMedia('(pointer: fine)').matches) {
+            document.querySelectorAll('.tilt-wrapper').forEach(function(wrapper) {
+                var card = wrapper.querySelector('.tilt-card');
+                wrapper.addEventListener('mousemove', function(e) {
+                    var rect = wrapper.getBoundingClientRect();
+                    var x = e.clientX - rect.left;
+                    var y = e.clientY - rect.top;
+                    var centerX = rect.width / 2;
+                    var centerY = rect.height / 2;
+                    var rotateX = ((y - centerY) / centerY) * -10;
+                    var rotateY = ((x - centerX) / centerX) * 10;
+                    gsap.to(card, { rotationX: rotateX, rotationY: rotateY, transformPerspective: 1000, ease: 'power2.out', duration: 0.5 });
+                });
+                wrapper.addEventListener('mouseleave', function() {
+                    gsap.to(card, { rotationX: 0, rotationY: 0, ease: 'power2.out', duration: 0.8 });
+                });
+            });
+        }
+
+        // Particles are desktop-only. Mobile scan traffic needs native scroll and a quiet main thread.
+        function initParticles() {
+            if (isMobileRuntime || prefersReducedMotion) return;
+            var pCanvas = document.getElementById('particles-canvas');
+            if (!pCanvas) return;
+            var pCtx = pCanvas.getContext('2d');
+            var pWidth, pHeight, particleFrame = 0;
+            var particles = [];
+            function pResize() { pWidth = pCanvas.width = window.innerWidth; pHeight = pCanvas.height = window.innerHeight; }
+            window.addEventListener('resize', pResize, { passive: true });
+            pResize();
+
+            function Particle() {
+                this.x = Math.random() * pWidth;
+                this.y = Math.random() * pHeight;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = -Math.random() * 0.5 - 0.1;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            Particle.prototype.update = function() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if(this.y < 0) { this.y = pHeight; this.x = Math.random() * pWidth; }
+            };
+            Particle.prototype.draw = function() {
+                pCtx.fillStyle = 'rgba(57, 197, 187, ' + this.opacity + ')';
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                pCtx.fill();
+            };
+
+            var particleCount = Math.min(70, Math.round(window.innerWidth / 18));
+            for(var pi=0; pi<particleCount; pi++) particles.push(new Particle());
+
+            function animateParticles(time) {
+                if (document.hidden) {
+                    particleFrame = requestAnimationFrame(animateParticles);
+                    return;
+                }
+                pCtx.clearRect(0, 0, pWidth, pHeight);
+                for(var pi=0; pi<particles.length; pi++) { particles[pi].update(); particles[pi].draw(); }
+                particleFrame = requestAnimationFrame(animateParticles);
+            }
+            particleFrame = requestAnimationFrame(animateParticles);
+        }
+        runWhenIdle(initParticles, 2200);
+
+        // Music
+        var bgm = document.getElementById('bgm');
+        var record = document.getElementById('record');
+        var bars = document.querySelectorAll('.bar');
+        var isPlaying = false;
+        var visualizerInterval;
+        var playPromise;
+
+        function toggleMusic() {
+            if(isPlaying) {
+                isPlaying = false;
+                record.classList.remove('playing');
+                clearInterval(visualizerInterval);
+                for(var bi=0; bi<bars.length; bi++) bars[bi].style.height = '20%';
+                if (playPromise !== undefined) {
+                    playPromise.then(function() { bgm.pause(); }).catch(function(e) { console.error(e); });
+                } else {
+                    bgm.pause();
+                }
+            } else {
+                isPlaying = true;
+                record.classList.add('playing');
+                visualizerInterval = setInterval(function() {
+                    for(var bi=0; bi<bars.length; bi++) {
+                        bars[bi].style.height = (Math.random() * 80 + 20) + '%';
+                    }
+                }, 150);
+                playPromise = bgm.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(function(error) {
+                        isPlaying = false;
+                        record.classList.remove('playing');
+                        clearInterval(visualizerInterval);
+                        for(var bi=0; bi<bars.length; bi++) bars[bi].style.height = '20%';
+                    });
+                }
+            }
+        }
+    </script>
 </body>
 </html>
