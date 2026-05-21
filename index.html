@@ -4,201 +4,764 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>初音未来 Hatsune Miku - 世界第一的公主殿下</title>
-    
-    <!-- 引入 Tailwind CSS 进行高效排版 -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        miku: '#39C5BB',
-                        'miku-dark': '#1e6a64',
-                        'miku-glow': 'rgba(57, 197, 187, 0.5)',
-                        dark: '#03070b',
-                        surface: 'rgba(255, 255, 255, 0.03)',
-                        surfaceHover: 'rgba(255, 255, 255, 0.08)',
-                        glass: 'rgba(10, 15, 20, 0.6)'
-                    },
-                    fontFamily: {
-                        sans: ['"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
-                        display: ['"Space Grotesk"', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="image" href="assets/0logo-512.webp" type="image/webp">
+    <link rel="preload" as="image" href="assets/hero-mobile.webp" type="image/webp" media="(max-width: 767px)">
+    <link rel="preload" as="image" href="assets/hero.webp" type="image/webp" media="(min-width: 768px)">
+    <link rel="stylesheet" href="assets/tailwind.generated.css">
 
-    <!-- 引入 Lenis (平滑滚动) 和 GSAP (高级动画) -->
-    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
 
-        /* 基础重置与隐藏原生滚动条 */
-        body, html { margin: 0; padding: 0; background-color: #03070b; color: #fff; cursor: none; overflow-x: hidden; }
+        /* -------------------------------------- */
+        /* UNVEIL 级开幕核心样式 (阶段 0 - 初始状态) */
+        /* -------------------------------------- */
+        body, html { 
+            margin: 0; padding: 0; 
+            background-color: rgb(193,230,198); /* 初始绿色背景 */
+            color: #fff; cursor: none; overflow-x: hidden; 
+            transition: background-color 0.4s ease; /* 阶段 4 背景色过渡 */
+        }
         ::-webkit-scrollbar { width: 0px; }
 
-        /* 自定义鼠标指针 */
+        /* 白色加载层与遮罩 */
+        #unveil-loader {
+            position: fixed; inset: 0; z-index: 9999;
+            background-color: #fafafa;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #unveil-mask {
+            position: fixed; inset: 0; z-index: 9998;
+            background-color: #fafafa; pointer-events: none;
+        }
+
+        /* 顶部导航隐藏状态 (待 GSAP 驱动 slide up) */
+        .unveil-nav-item { opacity: 0; transform: translateY(75%); }
+        header { opacity: 0; }
+
+        /* -------------------------------------- */
+        /* 全局通用样式 */
+        /* -------------------------------------- */
         .cursor-dot, .cursor-outline {
-            position: fixed;
-            top: 0; left: 0;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            z-index: 9999;
-            pointer-events: none;
+            position: fixed; top: 0; left: 0; transform: translate(-50%, -50%);
+            border-radius: 50%; z-index: 10000; pointer-events: none;
         }
         .cursor-dot { width: 6px; height: 6px; background-color: var(--miku, #39C5BB); }
         .cursor-outline {
-            width: 40px; height: 40px;
-            border: 1px solid rgba(57, 197, 187, 0.5);
+            width: 40px; height: 40px; border: 1px solid rgba(57, 197, 187, 0.5);
             transition: width 0.2s, height 0.2s, background-color 0.2s;
         }
-
-        /* 移动端优化：触摸屏设备隐藏自定义鼠标，恢复原生交互 */
         @media (pointer: coarse) {
             body, html { cursor: auto; }
             .cursor-dot, .cursor-outline { display: none !important; }
             .hover-target, a, button { cursor: pointer; }
         }
         
-        /* 粒子背景画布 */
-        #particles-canvas {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 0; pointer-events: none; opacity: 0.6;
-        }
-
-        /* 页面内容层级 */
+        #particles-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; opacity: 0.6; }
         #main-content { position: relative; z-index: 10; }
 
-        /* 文字发光与遮罩特效 */
         .text-glow { text-shadow: 0 0 20px rgba(57, 197, 187, 0.6); }
-        .text-outline {
-            color: transparent;
-            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
-            transition: all 0.5s ease;
-        }
+        .text-outline { color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2); transition: all 0.5s ease; }
         .text-outline:hover { -webkit-text-stroke: 1px #39C5BB; color: rgba(57, 197, 187, 0.1); }
 
-        /* 高级玻璃拟物卡片 */
+        /* 玻璃卡片 (保留用于原版块) */
         .glass-card {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s;
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05); transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s;
         }
-        /* 仅在非触摸屏设备开启悬浮上移特效，避免移动端点击出现卡顿 */
         @media (hover: hover) and (pointer: fine) {
-            .glass-card:hover {
-                background: rgba(255, 255, 255, 0.05);
-                border-color: rgba(57, 197, 187, 0.3);
-                transform: translateY(-5px);
-            }
+            .glass-card:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(57, 197, 187, 0.3); transform: translateY(-5px); }
         }
 
         /* 音乐播放器 UI */
         #music-player {
-            background: rgba(10, 15, 20, 0.7);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(57, 197, 187, 0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(57, 197, 187, 0.1);
+            background: rgba(10, 15, 20, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(57, 197, 187, 0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(57, 197, 187, 0.1);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
         }
-        @media (hover: hover) and (pointer: fine) {
-            #music-player:hover { transform: scale(1.05); border-color: #39C5BB; }
-        }
-        
+        @media (hover: hover) and (pointer: fine) { #music-player:hover { transform: scale(1.05); border-color: #39C5BB; } }
         .record-cover {
-            background-image: url('assets/player.png'); background-size: cover; background-position: center;
-            border: 2px solid #222; box-shadow: 0 0 10px rgba(0,0,0,0.8);
-            animation: spin 8s linear infinite; animation-play-state: paused;
+            background-image: url('assets/player-cover.webp'); background-size: cover; background-position: center;
+            border: 2px solid #222; box-shadow: 0 0 10px rgba(0,0,0,0.8); animation: spin 8s linear infinite; animation-play-state: paused;
         }
         .record-cover.playing { animation-play-state: running; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        
         .visualizer { display: flex; gap: 3px; height: 15px; align-items: flex-end; margin-top: 4px; }
         .bar { width: 3px; background-color: #39C5BB; height: 20%; border-radius: 2px; transition: height 0.1s; }
 
-        /* 3D 卡片倾斜容器 */
         .tilt-wrapper { perspective: 1000px; transform-style: preserve-3d; }
         .tilt-card { transition: transform 0.1s ease; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
 
-        /* 画廊横向滚动容器 (响应式适配) */
+        /* 画廊横向滚动容器 (原版块) */
         .gallery-wrap { overflow: hidden; height: 100vh; display: flex; align-items: center; }
         .gallery-track { display: flex; gap: 4vw; padding: 0 10vw; width: max-content; }
         .gallery-item {
-            width: 85vw; /* 移动端默认宽度 */
-            height: auto; aspect-ratio: 16/9; flex-shrink: 0;
-            position: relative; border-radius: 16px; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            width: 85vw; height: auto; aspect-ratio: 16/9; flex-shrink: 0;
+            position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
             border: 1px solid rgba(57, 197, 187, 0.1);
         }
-        @media (min-width: 768px) {
-            .gallery-item { height: 65vh; width: auto; }
-        }
-        
-        .gallery-item img {
-            width: 100%; height: 100%; object-fit: cover;
-            transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1);
-        }
+        @media (min-width: 768px) { .gallery-item { height: 65vh; width: auto; } }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1); }
         @media (hover: hover) and (pointer: fine) {
             .gallery-item:hover img { transform: scale(1.05); }
             .gallery-item:hover .gallery-overlay { transform: translateY(0); opacity: 1; }
         }
         .gallery-overlay {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            padding: 20px 20px; /* 移动端减小内边距 */
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 20px; 
             background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
-            transform: translateY(20px); opacity: 0;
-            transition: all 0.4s ease;
+            transform: translateY(20px); opacity: 0; transition: all 0.4s ease;
         }
-        /* 移动端自动显示遮罩，不再依赖 hover */
-        @media (pointer: coarse) {
-            .gallery-overlay { transform: translateY(0); opacity: 1; }
+        @media (pointer: coarse) { .gallery-overlay { transform: translateY(0); opacity: 1; } }
+        @media (min-width: 768px) { .gallery-overlay { padding: 40px 30px; } }
+
+        @keyframes scan { 0%, 100% { top: 0%; opacity: 0; } 10%, 90% { opacity: 1; } 50% { top: 100%; opacity: 1; } }
+
+        /* Dress Archive: UNVEIL-inspired project wall */
+        .archive-section {
+            min-height: 240vh;
+            background: #fafafa;
+            color: #050505;
+            padding: clamp(88px, 10vw, 150px) clamp(14px, 3vw, 44px) clamp(72px, 10vw, 140px);
+            isolation: isolate;
         }
-        @media (min-width: 768px) {
-            .gallery-overlay { padding: 40px 30px; }
+        .archive-section::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 18% 12%, rgba(57, 197, 187, 0.16), transparent 32vw),
+                linear-gradient(rgba(3, 7, 11, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(3, 7, 11, 0.04) 1px, transparent 1px);
+            background-size: auto, 52px 52px, 52px 52px;
+            opacity: 0.78;
+        }
+        .archive-inner { position: relative; z-index: 1; }
+        .archive-nav {
+            position: sticky;
+            top: 4px;
+            z-index: 25;
+            display: flex;
+            width: min(100%, 580px);
+            gap: 2px;
+            padding: 4px;
+            margin-bottom: clamp(72px, 10vw, 150px);
+            pointer-events: auto;
+        }
+        .archive-pill {
+            flex: 1;
+            min-height: 54px;
+            padding: 24px 10px 7px;
+            border-radius: 6px;
+            background: rgba(250, 250, 250, 0.58);
+            color: rgba(0, 0, 0, 0.34);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10.5px;
+            line-height: 1.05;
+            letter-spacing: 0.015em;
+            text-transform: uppercase;
+            text-align: left;
+            transition: color 0.45s cubic-bezier(.215,.61,.355,1), background 0.45s cubic-bezier(.215,.61,.355,1), border-color 0.45s;
+        }
+        .archive-pill:hover,
+        .archive-pill:focus-visible {
+            color: rgba(0, 0, 0, 0.92);
+            background: rgba(255, 255, 255, 0.86);
+            border-color: rgba(57, 197, 187, 0.28);
+            outline: none;
+        }
+        .archive-hero {
+            max-width: 1320px;
+            margin: 0 auto clamp(52px, 8vw, 110px);
+        }
+        .archive-kicker {
+            display: block;
+            margin-bottom: 14px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: rgba(0, 0, 0, 0.38);
+        }
+        .archive-hero-title {
+            max-width: 1120px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(54px, 12vw, 168px);
+            line-height: 0.82;
+            letter-spacing: 0;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .archive-hero-title sup {
+            font-size: 0.16em;
+            vertical-align: top;
+            margin-left: 0.08em;
+            color: #39C5BB;
+        }
+        .archive-hero-copy {
+            max-width: 520px;
+            margin-top: clamp(22px, 3vw, 38px);
+            color: rgba(0, 0, 0, 0.56);
+            font-size: clamp(15px, 1.55vw, 19px);
+            line-height: 1.5;
+        }
+        .archive-grid {
+            max-width: 1480px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: clamp(6px, 0.7vw, 10px);
+        }
+        .archive-tile {
+            position: relative;
+            grid-column: span 4;
+            min-height: clamp(360px, 42vw, 650px);
+            border: 0;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #e7ece9;
+            cursor: pointer;
+            text-align: left;
+            transform: translateZ(0);
+        }
+        .archive-tile.featured { grid-column: span 6; min-height: clamp(520px, 76vh, 780px); }
+        .archive-tile.wide { grid-column: span 6; min-height: clamp(360px, 48vw, 620px); }
+        .archive-tile.slim { grid-column: span 3; }
+        .archive-tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            transform: scale(1.045);
+            opacity: 0.9;
+            filter: blur(6px) saturate(0.72) contrast(0.95);
+            transition: transform 0.9s cubic-bezier(.19,1,.22,1), filter 0.9s cubic-bezier(.19,1,.22,1), opacity 0.9s cubic-bezier(.19,1,.22,1);
+        }
+        .archive-tile:hover img,
+        .archive-tile:focus-visible img,
+        .archive-tile.is-touched img {
+            transform: scale(1);
+            opacity: 1;
+            filter: blur(0) saturate(1) contrast(1);
+        }
+        .archive-tile::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.52), transparent 42%, rgba(250,250,250,0.08));
+            opacity: 0.54;
+            transition: opacity 0.55s cubic-bezier(.215,.61,.355,1);
+        }
+        .archive-tile:hover::after,
+        .archive-tile:focus-visible::after,
+        .archive-tile.is-touched::after { opacity: 0.78; }
+        .archive-tile-meta {
+            position: absolute;
+            left: clamp(14px, 1.5vw, 22px);
+            right: clamp(14px, 1.5vw, 22px);
+            bottom: clamp(14px, 1.5vw, 22px);
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: flex-end;
+            color: #fff;
+            font-family: "Space Grotesk", "Microsoft YaHei", sans-serif;
+            transform: translateY(12px);
+            opacity: 0.58;
+            transition: transform 0.55s cubic-bezier(.215,.61,.355,1), opacity 0.55s cubic-bezier(.215,.61,.355,1);
+        }
+        .archive-tile:hover .archive-tile-meta,
+        .archive-tile:focus-visible .archive-tile-meta,
+        .archive-tile.is-touched .archive-tile-meta {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .archive-tile-title { font-size: clamp(18px, 2vw, 30px); font-weight: 700; line-height: 1; }
+        .archive-tile-sub { margin-top: 6px; color: rgba(255,255,255,0.66); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+        .archive-tile-index { color: rgba(255,255,255,0.62); font-size: 11px; letter-spacing: 0.1em; white-space: nowrap; }
+        .archive-process {
+            max-width: 1120px;
+            margin: clamp(72px, 12vw, 170px) auto 0;
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: clamp(28px, 7vw, 110px);
+            align-items: start;
+            color: rgba(0, 0, 0, 0.72);
+        }
+        .archive-process h4 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(34px, 6vw, 78px);
+            line-height: 0.95;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .archive-process p {
+            font-size: clamp(15px, 1.5vw, 19px);
+            line-height: 1.75;
+            color: rgba(0, 0, 0, 0.58);
+        }
+        .archive-section {
+            min-height: 155svh;
+            padding: 4px;
+            overflow: clip;
+            touch-action: pan-y;
+        }
+        .archive-section::before {
+            background:
+                linear-gradient(45deg, #fafafa, #fafafa 1%, rgba(250,250,250,0) 25%, rgba(250,250,250,0) 75%, #fafafa),
+                radial-gradient(circle at 12% 82%, rgba(57,197,187,0.08), transparent 30vw);
+            opacity: 0.88;
+        }
+        .archive-inner {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            height: 100svh;
+            overflow: hidden;
+        }
+        .archive-nav {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            z-index: 35;
+            width: min(calc(100% - 8px), 580px);
+            margin: 0;
+            padding: 0;
+        }
+        .archive-stage {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            min-height: 100svh;
+        }
+        .archive-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            touch-action: pan-y;
+        }
+        .archive-stage.is-dragging .archive-canvas {
+            cursor: grabbing;
+        }
+        .archive-pointer-label {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 240;
+            padding: 12px;
+            color: #fff;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10.5px;
+            line-height: 1.05;
+            letter-spacing: 0.015em;
+            text-transform: uppercase;
+            mix-blend-mode: exclusion;
+            opacity: 0;
+            transform: translate3d(-999px, -999px, 0);
+            pointer-events: none;
+            transition: opacity 0.35s cubic-bezier(.215,.61,.355,1);
+        }
+        .archive-stage-kicker {
+            position: absolute;
+            left: 12px;
+            bottom: 148px;
+            z-index: 3;
+            max-width: min(360px, calc(100% - 120px));
+            color: rgba(0,0,0,0.32);
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10.5px;
+            line-height: 1.25;
+            letter-spacing: 0.015em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+        .archive-mode-switch {
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            z-index: 36;
+            display: flex;
+            gap: 2px;
+        }
+        .archive-mode-switch button {
+            min-width: 70px;
+            min-height: 40px;
+            padding: 14px 16px 9px;
+            border-radius: 6px;
+            background: rgba(250, 250, 250, 0.66);
+            color: rgba(0,0,0,0.28);
+            border: 1px solid rgba(0,0,0,0.11);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10.5px;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+        .archive-mode-switch button.is-active { color: rgba(0,0,0,0.9); }
+        .archive-card-reader {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+        }
+        .archive-preview {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(14px, 3vw, 42px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s cubic-bezier(.215,.61,.355,1);
+        }
+        .archive-preview.is-open { opacity: 1; pointer-events: auto; }
+        .archive-preview-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(250, 250, 250, 0.88);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+        .archive-preview-shell {
+            position: relative;
+            width: min(100%, 1260px);
+            max-height: min(88vh, 820px);
+            display: grid;
+            grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+            gap: clamp(18px, 4vw, 64px);
+            align-items: center;
+            color: #050505;
+        }
+        .archive-preview-media {
+            height: min(82vh, 760px);
+            overflow: hidden;
+            border-radius: 6px;
+            background: #dfe8e4;
+        }
+        .archive-preview-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+        }
+        .archive-preview-copy {
+            font-family: "Space Grotesk", "Microsoft YaHei", sans-serif;
+        }
+        .archive-preview-index {
+            display: block;
+            margin-bottom: 18px;
+            color: rgba(0,0,0,0.38);
+            font-size: 11px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+        .archive-preview-title {
+            font-size: clamp(44px, 7vw, 94px);
+            line-height: 0.9;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .archive-preview-title span {
+            display: block;
+            margin-top: 10px;
+            color: #39C5BB;
+            font-size: 0.26em;
+            line-height: 1.1;
+            letter-spacing: 0.08em;
+        }
+        .archive-preview-note {
+            margin-top: clamp(24px, 4vw, 42px);
+            color: rgba(0,0,0,0.58);
+            font-size: clamp(14px, 1.4vw, 18px);
+            line-height: 1.75;
+        }
+        .archive-close {
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 2;
+            width: 48px;
+            height: 48px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.72);
+            color: #050505;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+        body.archive-light #main-header {
+            opacity: 0 !important;
+            pointer-events: none;
+            mix-blend-mode: normal;
+        }
+        body.archive-light #main-header .text-white,
+        body.archive-light #main-header .text-gray-300 { color: rgba(0,0,0,0.84) !important; }
+        body.archive-light #music-player {
+            background: rgba(250, 250, 250, 0.72);
+            border-color: rgba(0, 0, 0, 0.08);
+            box-shadow: 0 14px 44px rgba(0,0,0,0.12);
+            left: 1rem !important;
+            right: auto !important;
+        }
+        body.archive-light #music-player span:not(.text-miku) { color: rgba(0,0,0,0.74) !important; }
+        body.archive-preview-open { overflow: hidden; }
+        .mobile-audio-nudge {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom));
+            z-index: 180;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 58px;
+            padding: 10px 10px 10px 14px;
+            border: 1px solid rgba(57,197,187,0.2);
+            border-radius: 999px;
+            background: rgba(3,7,11,0.88);
+            color: #fff;
+            box-shadow: 0 14px 38px rgba(0,0,0,0.34);
+            opacity: 0;
+            pointer-events: none;
+            transform: translate3d(0, 18px, 0);
+            transition: opacity 0.32s ease, transform 0.32s ease;
+        }
+        .mobile-audio-nudge.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate3d(0, 0, 0);
+        }
+        .mobile-audio-copy {
+            min-width: 0;
+            font-family: "Space Grotesk", "Microsoft YaHei", sans-serif;
+            font-size: 11px;
+            line-height: 1.3;
+            letter-spacing: 0.02em;
+        }
+        .mobile-audio-copy strong {
+            display: block;
+            color: #39C5BB;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .mobile-audio-actions {
+            display: flex;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+        .mobile-audio-actions button {
+            min-width: 48px;
+            min-height: 38px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 12px;
+        }
+        .mobile-audio-actions button:first-child {
+            background: #39C5BB;
+            color: #03070b;
+            border-color: transparent;
+            font-weight: 700;
+        }
+        @media (max-width: 900px) {
+            .archive-section { min-height: 125svh; padding: 4px; }
+            .archive-nav { width: calc(100% - 8px); margin-bottom: 0; }
+            .archive-pill { min-height: 48px; padding: 20px 8px 7px; font-size: 9.5px; }
+            .archive-stage-kicker { bottom: 124px; max-width: min(300px, calc(100% - 24px)); }
+            .archive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .archive-tile,
+            .archive-tile.featured,
+            .archive-tile.wide,
+            .archive-tile.slim {
+                grid-column: span 1;
+                min-height: clamp(310px, 74vw, 560px);
+            }
+            .archive-tile.featured { grid-column: span 2; min-height: clamp(440px, 116vw, 680px); }
+            .archive-process { grid-template-columns: 1fr; }
+            .archive-preview-shell {
+                max-height: 92vh;
+                grid-template-columns: 1fr;
+                gap: 18px;
+                overflow-y: auto;
+                padding-top: 58px;
+            }
+            .archive-preview-media { height: min(58vh, 560px); }
+            .archive-close { top: 0; right: 0; }
+        }
+        @media (max-width: 520px) {
+            .archive-hero-title { font-size: clamp(44px, 18vw, 76px); }
+            .archive-grid { gap: 6px; }
+            .archive-tile,
+            .archive-tile.wide,
+            .archive-tile.slim { min-height: 295px; }
+            .archive-tile-meta { flex-direction: column; align-items: flex-start; gap: 8px; }
         }
 
-        /* 加载动画 */
-        #loader {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #03070b; z-index: 10000;
-            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        /* Pretext specific */
+        .pretext-reveal { opacity: 0; filter: blur(20px); transform: translateY(40px); }
+        @media (max-width: 767px) {
+            body, html { cursor: auto; }
+            #particles-canvas { display: none; }
+            .cursor-dot, .cursor-outline { display: none !important; }
+            .glass-card,
+            #music-player,
+            #audio-prompt,
+            #audio-prompt-overlay,
+            .archive-preview-backdrop {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+            .glass-card { background: rgba(255, 255, 255, 0.035); }
+            .mobile-audio-nudge { display: flex; }
+            body.archive-light .mobile-audio-nudge,
+            body.archive-preview-open .mobile-audio-nudge {
+                opacity: 0;
+                pointer-events: none;
+                transform: translate3d(0, 18px, 0);
+            }
+            .tilt-wrapper { perspective: none; transform-style: flat; }
+            .tilt-card {
+                transition: transform 0.25s ease;
+                box-shadow: 0 14px 32px rgba(0,0,0,0.42);
+            }
+            .pretext-reveal { filter: none; transform: translateY(24px); }
+            .text-glow { text-shadow: 0 0 12px rgba(57, 197, 187, 0.45); }
+            .gallery-wrap {
+                height: auto;
+                min-height: 0;
+                display: block;
+                overflow: visible;
+                padding: 132px 0 48px;
+            }
+            .gallery-track {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 18px;
+                padding: 0 16px;
+            }
+            .gallery-item {
+                width: 100%;
+                min-height: 0;
+                aspect-ratio: 16 / 9;
+                border-radius: 8px;
+                box-shadow: 0 14px 34px rgba(0,0,0,0.38);
+            }
+            .gallery-overlay {
+                opacity: 1;
+                transform: translateY(0);
+                padding: 18px 16px;
+            }
+            .archive-section { min-height: 118svh; }
+            .archive-nav {
+                top: max(4px, env(safe-area-inset-top));
+                gap: 3px;
+                width: calc(100% - 8px);
+                padding: 0;
+            }
+            .archive-pill {
+                min-height: 42px;
+                padding: 13px 7px 6px;
+                font-size: 8.8px;
+                background: rgba(250, 250, 250, 0.72);
+            }
+            .archive-pill sup { display: none; }
+            .archive-pointer-label { display: none; }
+            .archive-stage-kicker {
+                bottom: 106px;
+                left: 14px;
+                max-width: calc(100% - 96px);
+                font-size: 9.5px;
+                line-height: 1.32;
+            }
+            .archive-mode-switch { right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); }
+            .archive-mode-switch button {
+                min-width: 66px;
+                min-height: 40px;
+                padding: 12px 13px 8px;
+                background: rgba(250, 250, 250, 0.82);
+            }
+            .archive-preview {
+                align-items: stretch;
+                padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+            }
+            .archive-preview-shell {
+                max-height: none;
+                height: 100%;
+                gap: 12px;
+                padding-top: 50px;
+            }
+            .archive-preview-media {
+                height: min(58svh, 520px);
+                border-radius: 8px;
+            }
+            .archive-preview-title { font-size: clamp(34px, 13vw, 56px); }
+            .archive-preview-note {
+                margin-top: 16px;
+                font-size: 13px;
+                line-height: 1.65;
+            }
+            .archive-close {
+                width: 44px;
+                height: 44px;
+                background: rgba(255,255,255,0.9);
+            }
+            .archive-preview-backdrop { background: rgba(250, 250, 250, 0.94); }
         }
-        .loader-line-wrap { width: 200px; height: 2px; background: rgba(255,255,255,0.1); overflow: hidden; margin-top: 40px; }
-        .loader-line { width: 0%; height: 100%; background: #39C5BB; transition: width 0.1s; }
-
-        /* 微信二维码扫描光效 */
-        @keyframes scan {
-            0%, 100% { top: 0%; opacity: 0; }
-            10%, 90% { opacity: 1; }
-            50% { top: 100%; opacity: 1; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.001ms !important;
+            }
+            #particles-canvas { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 加载画面 -->
-    <div id="loader">
-        <div id="intro-logo-container" class="relative">
-            <img src="assets/0logo.jpg" alt="Manga Bill Logo" id="intro-logo-img" class="w-32 md:w-56 h-auto rounded-xl shadow-[0_0_40px_rgba(57,197,187,0.2)] opacity-0 object-contain">
-            <div id="intro-logo-glow" class="absolute inset-0 bg-miku blur-3xl opacity-0 pointer-events-none"></div>
-        </div>
-        <div class="loader-line-wrap"><div class="loader-line" id="loader-progress"></div></div>
+    <!-- ============================================================== -->
+    <!-- 阶段 0 & 1 & 2: UNVEIL 风格纯白加载层与百分比 -->
+    <!-- ============================================================== -->
+    <div id="unveil-loader">
+        <div id="intro-logo-container" class="relative mb-8">
+          <img src="assets/0logo-512.webp" alt="Logo" id="intro-logo-img" class="w-32 md:w-56 h-auto rounded-xl shadow-[0_0_40px_rgba(57,197,187,0.2)] opacity-0 object-contain" width="512" height="486" decoding="async" fetchpriority="high">
+             <div id="intro-logo-glow" class="absolute inset-0 bg-miku blur-3xl opacity-0 pointer-events-none"></div>
+         </div>
+        <div class="text-[15vw] md:text-[8vw] font-display font-bold text-[#111] leading-none tracking-tighter" id="unveil-percent">0%</div>
+        <div class="text-sm font-display tracking-[0.3em] text-gray-400 mt-4 uppercase">Loading Experience</div>
     </div>
+    <div id="unveil-mask"></div>
 
-    <!-- 用户友好引导：音乐提示弹窗 (重构：采用覆盖层 Flex 居中，解决 Transform 冲突) -->
+    <!-- 用户友好引导：音乐提示弹窗 (加载完成后弹出) -->
     <div id="audio-prompt-overlay" class="fixed inset-0 z-[200] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500 bg-dark/70 backdrop-blur-sm px-4">
         <div id="audio-prompt" class="p-6 md:p-10 rounded-3xl text-center flex flex-col items-center shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-miku/40 bg-dark/90 backdrop-blur-2xl w-full max-w-sm md:max-w-md transform scale-95 transition-transform duration-500">
             <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-miku/10 flex items-center justify-center mb-6 border border-miku/30 animate-[pulse_2s_ease-in-out_infinite]">
                 <svg class="w-8 h-8 md:w-10 md:h-10 text-miku" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                <svg class="w-8 h-8 md:w-10 md:h-10 text-miku" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                </svg>
             </div>
             <h3 class="text-2xl md:text-3xl font-display font-bold text-white mb-3 tracking-widest text-glow">推荐佩戴耳机</h3>
             <p class="text-gray-300 text-sm mb-8 leading-relaxed">为了获得最佳的沉浸式体验，推荐您戴上耳机，并播放专属背景音乐。</p>
@@ -212,15 +775,25 @@
             </div>
         </div>
     </div>
+    <div id="mobile-audio-nudge" class="mobile-audio-nudge" aria-live="polite">
+        <div class="mobile-audio-copy">
+            <strong>Audio</strong>
+            建议佩戴耳机，音乐可稍后开启。
+        </div>
+        <div class="mobile-audio-actions">
+            <button type="button" onclick="startExperience(true)">播放</button>
+            <button type="button" onclick="startExperience(false)">静音</button>
+        </div>
+    </div>
 
     <!-- 自定义鼠标 -->
     <div class="cursor-dot" id="cursor-dot"></div>
     <div class="cursor-outline" id="cursor-outline"></div>
 
-    <!-- 背景特效 -->
+    <!-- 粒子背景特效 -->
     <canvas id="particles-canvas"></canvas>
 
-    <!-- 音乐播放器 (移动端缩放适配) -->
+    <!-- 音乐播放器 -->
     <div id="music-player" class="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[100] flex items-center gap-3 p-2 md:p-3 pr-4 md:pr-5 rounded-full cursor-pointer md:cursor-none hover-target" onclick="toggleMusic()">
         <div class="record-cover w-10 h-10 md:w-12 md:h-12 rounded-full" id="record"></div>
         <div class="flex-col hidden sm:flex">
@@ -231,22 +804,20 @@
                 <div class="bar"></div><div class="bar"></div>
             </div>
         </div>
-        <!-- 兼容性音频标签 -->
-        <audio id="bgm" loop>
+        <audio id="bgm" loop preload="none">
             <source src="assets/bgm.mp3" type="audio/mpeg">
-            <source src="assets/bgm.wav" type="audio/wav">
         </audio>
     </div>
 
     <div id="main-content">
-        <!-- 导航栏 -->
-        <nav class="fixed top-0 w-full p-6 md:p-8 flex justify-between items-center z-50 mix-blend-difference">
-            <div class="flex items-center gap-3 md:gap-4">
-                <img src="assets/0logo.jpg" id="nav-logo" class="w-8 h-8 md:w-12 md:h-12 rounded-md md:rounded-lg object-cover opacity-0 shadow-[0_0_15px_rgba(57,197,187,0.4)]" alt="Manga Bill Logo">
+        <!-- 阶段 4: UI 元素导航栏，加载完毕后由 GSAP 上浮展现 -->
+        <header class="fixed top-0 w-full p-6 md:p-8 flex justify-between items-center z-50 mix-blend-difference" id="main-header">
+            <div class="flex items-center gap-3 md:gap-4 unveil-nav-item">
+                <img src="assets/0logo-512.webp" id="nav-logo" class="w-8 h-8 md:w-12 h-12 rounded-md md:rounded-lg object-cover shadow-[0_0_15px_rgba(57,197,187,0.4)]" alt="Manga Bill Logo" width="512" height="486" decoding="async" fetchpriority="high">
                 <div class="text-lg md:text-xl font-display font-bold tracking-[0.2em] text-white">MANGA<span class="text-miku">BILL</span></div>
             </div>
-            <div class="text-xs md:text-sm font-display tracking-widest text-gray-300">EST. 2007</div>
-        </nav>
+            <div class="text-xs md:text-sm font-display tracking-widest text-gray-300 unveil-nav-item">EST. 2007</div>
+        </header>
 
         <!-- 首屏 Hero Section -->
         <section class="h-screen relative flex items-center justify-center overflow-hidden">
@@ -258,7 +829,7 @@
             
             <div class="container mx-auto px-6 relative z-10 flex flex-col items-center mt-20">
                 <div class="tilt-wrapper gs-reveal w-full max-w-3xl">
-                    <img src="assets/hero.png" alt="Hatsune Miku Hero" class="tilt-card rounded-2xl w-full h-[45vh] md:h-[60vh] object-cover border border-miku/20" />
+                    <img src="assets/hero-mobile.webp" srcset="assets/hero-mobile.webp 900w, assets/hero.webp 1920w" sizes="(max-width: 767px) 92vw, 768px" alt="Hatsune Miku Hero" class="tilt-card rounded-2xl w-full h-[45vh] md:h-[60vh] object-cover border border-miku/20" width="900" height="506" decoding="async" fetchpriority="high" />
                 </div>
                 <div class="mt-8 md:mt-12 text-center gs-reveal-up">
                     <h2 class="text-4xl md:text-7xl font-bold mb-3 md:mb-4 tracking-tight">初音未来</h2>
@@ -267,18 +838,318 @@
             </div>
         </section>
 
-        <!-- 1. 企划源起与核心概念溯源 -->
+
+           <!-- ============================================================== -->
+
+        <!-- Pretext 风格巨物文字排版：初音未来纪念券设计思路 (PROJECT // 01)  -->
+
+        <!-- ============================================================== -->
+
+        <section class="bg-[#020406] text-white relative z-10 overflow-hidden" id="pretext-section">
+
+            <div class="min-h-[80vh] flex flex-col justify-center px-6 md:px-16 container mx-auto relative border-t border-white/5 pt-20">
+
+                <div class="pretext-reveal max-w-5xl">
+
+                    <h3 class="text-[12vw] md:text-[8vw] leading-[0.9] font-display font-bold tracking-tighter mb-8 md:mb-12">
+
+                        PROJECT<br><span class="text-miku">01</span>
+
+                    </h3>
+
+                    <p class="text-2xl md:text-4xl font-light text-gray-300 leading-snug md:leading-normal">
+
+                        这张纪念券，是我对初音的<span class="text-white font-bold">热爱</span>与信仰的具象化，也是<span class="text-miku">跨次元羁绊</span>的见证。
+
+                    </p>
+
+                    <p class="text-sm md:text-lg text-gray-500 font-display tracking-[0.2em] mt-12 md:mt-20">
+
+                        PRODUCED BY MANGA BILL
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-screen flex flex-col justify-center px-6 md:px-16 container mx-auto">
+
+                <div class="pretext-reveal max-w-6xl">
+
+                    <div class="text-miku text-lg md:text-xl font-display mb-4 md:mb-6 tracking-widest">ISSUER</div>
+
+                    <h2 class="text-[10vw] md:text-[6vw] leading-[1] font-display font-bold tracking-tighter mb-8 text-white uppercase break-words">
+
+                        Vocaloid<br>Monetary<br><span class="text-miku">Nexus</span>
+
+                    </h2>
+
+                    <p class="text-xl md:text-3xl font-light text-gray-400 max-w-3xl leading-relaxed">
+
+                        放弃传统银行命名。用 Nexus 呼应 Vocaloid 的科技内核，打造了一个<span class="text-white">只存在于虚拟世界</span>的金融中枢。
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-screen flex flex-col justify-center px-6 md:px-16 container mx-auto">
+
+                <div class="pretext-reveal w-full">
+
+                    <div class="flex flex-col lg:flex-row gap-12 lg:gap-32 items-start lg:items-center">
+
+                        <h2 class="text-[15vw] lg:text-[8vw] leading-[0.8] font-display font-bold tracking-tighter text-outline hover:text-white transition-colors duration-500 lg:w-1/2">
+
+                            BOARD<br>OF<br>DIRECTORS
+
+                        </h2>
+
+                        
+
+                        <div class="flex flex-col gap-8 md:gap-10 border-l-[3px] border-miku pl-6 md:pl-12 lg:w-1/2">
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">GOVERNOR 行长</span>
+
+                                <span class="text-4xl md:text-6xl text-miku font-bold group-hover:tracking-widest transition-all duration-300">初音未来</span>
+
+                            </div>
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">CHIEF FINANCIAL OFFICER 首席财务官</span>
+
+                                <span class="text-3xl md:text-5xl text-white font-bold group-hover:text-miku transition-colors duration-300">KAITO</span>
+
+                            </div>
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">CHIEF CASHIER 首席出纳官</span>
+
+                                <span class="text-3xl md:text-5xl text-white font-bold group-hover:text-miku transition-colors duration-300">镜音连</span>
+
+                            </div>
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">GENERAL COUNSEL 法务总监</span>
+
+                                <span class="text-3xl md:text-5xl text-white font-bold group-hover:text-miku transition-colors duration-300">镜音铃</span>
+
+                            </div>
+
+                            <div class="group hover-target">
+
+                                <span class="text-gray-500 font-display text-xs md:text-sm tracking-widest block mb-1">COMPTROLLER 审计长</span>
+
+                                <span class="text-3xl md:text-5xl text-white font-bold group-hover:text-miku transition-colors duration-300">巡音流歌</span>
+
+                            </div>
+
+                            <p class="text-xs text-gray-500 mt-2 italic">（小彩蛋：镜音双子无法同时担任出纳与法务，侧面体现虚拟设定）</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-screen flex flex-col justify-center px-6 md:px-16 container mx-auto">
+
+                <div class="pretext-reveal max-w-5xl">
+
+                    <div class="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-8 mb-8 md:mb-12">
+
+                        <h2 class="text-[25vw] md:text-[18vw] leading-none font-display font-bold tracking-tighter text-miku drop-shadow-[0_0_30px_rgba(57,197,187,0.3)]">
+
+                            1000
+
+                        </h2>
+
+                        <span class="text-3xl md:text-6xl tracking-[0.3em] text-gray-500 font-light font-display">CRYSTALS</span>
+
+                    </div>
+
+                    <h4 class="text-2xl md:text-4xl text-white font-bold mb-4">专属纹章 Logo 与面值彩蛋</h4>
+
+                    <p class="text-xl md:text-2xl font-light text-gray-400 leading-relaxed">
+
+                        参考初音标志性的「01」Logo，融合维多利亚复古纹章。<br>
+
+                        1000 水晶藏了一个粉丝才懂的梗：<span class="text-white font-bold">3 张券，刚好凑齐一次游戏十连抽。</span>
+
+                    </p>
+
+                    <p class="text-lg md:text-xl text-gray-500 mt-6 md:mt-8 font-light italic">
+
+                        “无关实际价值，只希望你拿到它时，能想起和初音相伴的快乐时光。”
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-screen flex flex-col justify-center px-6 md:px-16 container mx-auto">
+
+                <div class="pretext-reveal w-full">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-32">
+
+                        <!-- FRONT -->
+
+                        <div class="border-t border-miku/30 pt-8 hover-target">
+
+                            <h3 class="text-5xl md:text-7xl font-display font-bold tracking-tighter text-white mb-6">
+
+                                FRONT<br><span class="text-miku text-2xl md:text-3xl font-bold tracking-widest mt-2 md:mt-4 block">虚拟歌姬</span>
+
+                            </h3>
+
+                            <p class="text-lg md:text-xl text-gray-400 font-light leading-relaxed">
+
+                                全新原创形象。她身着演唱会新队服，以向粉丝伸手互动的温柔姿态呈现。旁注 <span class="text-white font-bold">World is mine</span>，直接点题。
+
+                            </p>
+
+                        </div>
+
+                        <!-- BACK -->
+
+                        <div class="border-t border-miku/30 pt-8 mt-8 md:mt-32 hover-target">
+
+                            <h3 class="text-5xl md:text-7xl font-display font-bold tracking-tighter text-white mb-6">
+
+                                BACK<br><span class="text-miku text-2xl md:text-3xl font-bold tracking-widest mt-2 md:mt-4 block">公主殿下</span>
+
+                            </h3>
+
+                            <p class="text-lg md:text-xl text-gray-400 font-light leading-relaxed mb-4">
+
+                                贴合永远 16 岁的设定。摒弃厚重礼服，采用薄纱多层褶皱剪裁。蝴蝶装饰精巧点睛。
+
+                            </p>
+
+                            <p class="text-lg md:text-xl text-gray-400 font-light leading-relaxed">
+
+                                坐在复古树叶纹样上，身后复刻了演唱会的穹顶。<span class="text-white font-bold">她永远是舞台中央最耀眼的光。</span><br>
+
+                                左侧的巴洛克 + 哥特建筑线条，像为她筑起了一座专属城堡，氛围感直接拉满。
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="min-h-[80vh] flex flex-col justify-center px-6 md:px-16 container mx-auto text-center items-center pb-20">
+
+                <div class="pretext-reveal hover-target">
+
+                    <h2 class="text-2xl md:text-5xl font-light text-white max-w-4xl leading-relaxed mb-12 md:mb-16">
+
+                        「世界第一的公主殿下，<br>要好好看住我不然会跑去哪里，<br>我可不知道哟？」
+
+                    </h2>
+
+                    <div class="w-[1px] h-24 md:h-32 bg-gradient-to-b from-miku to-transparent mb-8 md:mb-12 mx-auto"></div>
+
+                    <p class="text-xs md:text-sm text-gray-500 tracking-[0.3em] uppercase font-display max-w-md mx-auto leading-loose">
+
+                        背面 1000 面值旁的二维码是跨次元入口<br>
+
+                        网页里还有初音的完整设计思路，藏满了小细节<br><br>
+
+                        向下滚动进入专属高定礼服 3D 陈列馆 ↓
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 阶段 5: UNVEIL 式礼服设计展厅 (EXHIBITION // 02) -->
+        <!-- ============================================================== -->
+        <section class="archive-section relative border-y border-white/5" id="exhibition-section">
+            <div class="archive-inner">
+                <nav class="archive-nav" aria-label="Dress archive navigation">
+                    <a class="archive-pill hover-target" href="#exhibition-section">Dress Archive<sup>®</sup></a>
+                    <a class="archive-pill hover-target" href="#archive-canvas">Looks</a>
+                    <a class="archive-pill hover-target" href="#archive-process">Process</a>
+                    <a class="archive-pill hover-target" href="#archive-contact">Contact</a>
+                </nav>
+
+                <div class="archive-stage" id="archive-process">
+                    <canvas class="archive-canvas hover-target" id="archive-canvas" aria-label="Interactive Hatsune Miku dress design archive"></canvas>
+                    <div class="archive-pointer-label" id="archive-pointer-label" aria-hidden="true"></div>
+                    <div class="archive-stage-kicker">
+                        Dress Design Archive® / Seven couture studies for Hatsune Miku. Tap or hover a plate to inspect.
+                    </div>
+                    <div class="archive-mode-switch" aria-hidden="true">
+                        <button class="is-active" type="button">Overview</button>
+                        <button type="button">Index</button>
+                    </div>
+                    <div class="archive-card-reader" id="archive-card-reader" aria-live="polite"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="archive-preview" id="archive-preview" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Dress design preview">
+            <div class="archive-preview-backdrop" data-archive-close></div>
+            <div class="archive-preview-shell">
+                <button class="archive-close hover-target" type="button" aria-label="Close dress preview" data-archive-close>×</button>
+                <div class="archive-preview-media">
+                    <img id="archive-preview-img" src="" alt="" decoding="async">
+                </div>
+                <div class="archive-preview-copy">
+                    <span class="archive-preview-index" id="archive-preview-index"></span>
+                    <h4 class="archive-preview-title" id="archive-preview-title"></h4>
+                    <p class="archive-preview-note" id="archive-preview-note"></p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ============================================================== -->
+        <!-- 完整保留：原版所有区块 (ORIGIN, DESIGN, TECH, GALLERY) -->
+        <!-- ============================================================== -->
+        
+        <!-- ORIGIN -->
         <section class="py-20 md:py-32 relative bg-surface backdrop-blur-sm border-y border-white/5">
             <div class="container mx-auto px-6 max-w-6xl">
                 <div class="flex flex-col md:flex-row gap-12 md:gap-20 items-center">
                     <div class="w-full md:w-5/12 tilt-wrapper gs-reveal-left">
                         <div class="relative w-2/3 md:w-full mx-auto">
                             <div class="absolute -inset-4 bg-miku/20 blur-2xl rounded-full"></div>
-                            <img src="assets/profile.png" alt="Profile" class="tilt-card relative rounded-full w-full aspect-square object-cover border-2 border-miku/30" />
+                            <img src="assets/profile.webp" alt="Profile" class="tilt-card relative rounded-full w-full aspect-square object-cover border-2 border-miku/30" loading="lazy" decoding="async" />
                         </div>
                     </div>
                     <div class="w-full md:w-7/12 flex flex-col justify-center gs-reveal-right">
-                        <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">ORIGIN // 01</div>
+                        <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">ORIGIN // 03</div>
                         <h3 class="text-3xl md:text-5xl font-bold mb-6 md:mb-8 leading-tight">源起与<span class="text-glow text-miku">核心概念</span></h3>
                         
                         <div class="space-y-4 md:space-y-6 text-gray-300 leading-relaxed font-light text-base md:text-lg">
@@ -290,88 +1161,65 @@
                                 <h4 class="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-miku"></div>寻声之旅：中之人</h4>
                                 <p class="text-xs md:text-sm text-gray-400 mt-2">原声数据由日本声优藤田咲（Fujita Saki）提供。在对比了近500份声优样本后脱颖而出，经过后期调整，诞生了极具标识度的“初音气”电子合成音。</p>
                             </div>
-                            
-                            <!-- Manga Bill 官方徽章 -->
-                            <div class="mt-6 md:mt-8 inline-flex items-center gap-4 md:gap-5 gs-reveal-up bg-white/5 p-3 md:p-4 rounded-2xl border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors duration-300">
-                                <img src="assets/0badge.png" alt="Manga Bill Badge" class="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-miku/50 shadow-[0_0_20px_rgba(57,197,187,0.3)] animate-[spin_12s_linear_infinite] object-cover" />
-                                <div class="text-[10px] md:text-xs text-gray-300 font-display tracking-widest border-l border-miku/30 pl-3 md:pl-4 py-1">
-                                    PRODUCED BY<br><span class="text-miku font-bold text-xs md:text-sm">MANGA BILL</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 2. 视觉形象设定 -->
+        <!-- DESIGN -->
         <section class="py-20 md:py-32 relative">
             <div class="container mx-auto px-6 max-w-7xl">
                 <div class="text-center mb-12 md:mb-20 gs-reveal-up">
-                    <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">DESIGN // 02</div>
+                    <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">DESIGN // 04</div>
                     <h3 class="text-2xl md:text-5xl font-bold tracking-wider">二次元<span class="text-miku text-glow">美学基因</span></h3>
                 </div>
-
                 <div class="flex flex-col lg:flex-row gap-10 md:gap-16 relative items-start">
-                    <!-- 左侧：Sticky 悬停展示 -->
                     <div class="w-full lg:w-1/2 lg:sticky top-24 md:top-32 gs-reveal-left">
                         <div class="tilt-wrapper relative rounded-2xl p-2 bg-gradient-to-b from-miku/30 to-transparent">
                             <div class="absolute -inset-4 bg-miku/10 blur-3xl rounded-2xl z-0"></div>
-                            <img src="assets/gallery-1.png" alt="Hatsune Miku Full Body Design" class="tilt-card relative z-10 w-full h-[50vh] md:h-[75vh] object-cover object-top rounded-xl border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)]" />
+                            <img src="assets/gallery-1.webp" alt="Hatsune Miku Full Body Design" class="tilt-card relative z-10 w-full h-[50vh] md:h-[75vh] object-cover object-top rounded-xl border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)]" loading="lazy" decoding="async" />
                         </div>
                     </div>
-
-                    <!-- 右侧：文字解说卡片 -->
                     <div class="w-full lg:w-1/2 space-y-6 md:space-y-8 py-4 md:py-10 gs-reveal-right">
                         <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
                             <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">初始公式服与角色基底</h4>
                             <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">DESIGNER: KEI</div>
-                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-4">
-                                设定的核心理念是“乐器的拟人化”。初音未来的身高设定为158cm，体重42kg，年龄16岁。
-                            </p>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-4">设定的核心理念是“乐器的拟人化”。初音未来的身高设定为158cm，体重42kg，年龄16岁。</p>
                             <ul class="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-400">
                                 <li class="flex items-start gap-3"><span class="text-miku mt-1">✦</span><span>**发型与色彩**：标志性的苍绿色超长双马尾，M形刘海。</span></li>
                                 <li class="flex items-start gap-3"><span class="text-miku mt-1">✦</span><span>**服装原型**：灵感高度致敬雅马哈经典全数字合成器DX7。</span></li>
                             </ul>
                         </div>
-
                         <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
                             <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">Append 版本的科幻异化</h4>
                             <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">MODELER: 浅井真纪</div>
-                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">
-                                整体向深度科幻与机能风靠拢。最显著的变化是原本的服装变为了紧身衣，领带直接内嵌于胸前的装甲中；短裙被解构，由腰部的科幻挂饰与延伸出的黑色线缆构成。
-                            </p>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">整体向深度科幻与机能风靠拢。最显著的变化是原本的服装变为了紧身衣，领带直接内嵌于胸前的装甲中；短裙被解构，由腰部的科幻挂饰与延伸出的黑色线缆构成。</p>
                         </div>
-
                         <div class="glass-card p-6 md:p-8 rounded-3xl hover-target">
                             <h4 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-4">V3、V4X 到 NT 的演进</h4>
                             <div class="text-miku text-xs md:text-sm mb-3 md:mb-4 font-display">DESIGNER: iXima</div>
-                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">
-                                提升了材质的透明感与光影的层次。在V4X中，发量在视觉上进行了优化缩减，整体身形更加修长，增加了大量金属质感的配饰与高跟鞋元素。
-                            </p>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">提升了材质的透明感与光影的层次。在V4X中，发量在视觉上进行了优化缩减，整体身形更加修长，增加了大量金属质感的配饰与高跟鞋元素。</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 3. 核心合成引擎与软件版本迭代史 -->
+        <!-- TECH -->
         <section class="py-20 md:py-32 relative bg-surface border-y border-white/5">
             <div class="container mx-auto px-6 max-w-5xl">
                 <div class="text-center mb-12 md:mb-20 gs-reveal-up">
-                    <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">TECH // 03</div>
+                    <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-3 md:mb-4">TECH // 05</div>
                     <h3 class="text-2xl md:text-5xl font-bold tracking-wider">核心引擎与<span class="text-miku">版本迭代史</span></h3>
                 </div>
-
                 <div class="relative border-l-2 border-miku/20 ml-2 md:ml-12 space-y-12 md:space-y-16 pb-6 md:pb-10">
-                    <!-- V2 -->
                     <div class="relative pl-8 md:pl-16 gs-reveal-up hover-target group">
                         <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-dark border-2 border-miku group-hover:bg-miku group-hover:shadow-[0_0_15px_#39C5BB] transition-all"></div>
                         <div class="text-miku font-display text-lg md:text-2xl font-bold mb-1 md:mb-2">2007.08</div>
                         <h4 class="text-base md:text-xl font-bold text-white mb-2 md:mb-3">VOCALOID 2 (V2)：创世之作</h4>
                         <p class="text-gray-400 text-xs md:text-sm leading-relaxed">首次将合成器拟人化，降低了专业电子音乐制作门槛。</p>
                     </div>
-                    <!-- 其他节点省略同等格式适配... -->
                     <div class="relative pl-8 md:pl-16 gs-reveal-up hover-target group">
                         <div class="absolute -left-[9px] top-1 md:top-2 w-4 h-4 rounded-full bg-dark border-2 border-miku group-hover:bg-miku group-hover:shadow-[0_0_15px_#39C5BB] transition-all"></div>
                         <div class="text-miku font-display text-lg md:text-2xl font-bold mb-1 md:mb-2">2013</div>
@@ -388,31 +1236,31 @@
             </div>
         </section>
 
-        <!-- 4. 画廊展示 (响应式适配，保持 JS 渲染) -->
-        <section class="gallery-wrap bg-dark relative">
+        <!-- GALLERY -->
+        <section class="gallery-wrap bg-dark relative border-t border-white/5">
             <div class="container mx-auto px-6 absolute top-10 left-0 w-full z-10 mix-blend-difference pointer-events-none">
+                <div class="text-miku font-display tracking-[0.3em] text-xs md:text-sm mb-2">GALLERY // 06</div>
                 <h3 class="text-3xl md:text-5xl font-bold text-white">MY ARTWORKS</h3>
                 <p class="text-miku mt-1 md:mt-2 text-xs md:text-base tracking-widest">同人创作图集</p>
             </div>
             <div class="gallery-track" id="gallery-track"></div>
         </section>
 
-        <!-- Footer -->
-        <footer class="pt-16 md:pt-24 pb-8 md:pb-12 border-t border-white/10 relative overflow-hidden bg-dark">
+
+        <!-- FOOTER -->
+        <footer id="archive-contact" class="pt-16 md:pt-24 pb-8 md:pb-12 border-t border-white/10 relative overflow-hidden bg-dark">
             <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-miku/10 blur-[100px] pointer-events-none"></div>
-            
             <div class="container mx-auto px-6 relative z-10 flex flex-col items-center">
                 <div class="text-center mb-8 md:mb-12 gs-reveal-up">
                     <h2 class="text-2xl md:text-4xl font-display font-bold tracking-widest mb-2 md:mb-3 text-outline">CONNECT WITH US</h2>
                     <p class="text-miku tracking-widest text-xs md:text-sm">扫码关注 Manga Bill 官方微信</p>
                 </div>
-
                 <div class="tilt-wrapper gs-reveal-up mb-16 md:mb-24 z-20">
                     <div class="tilt-card relative p-[1px] rounded-3xl bg-gradient-to-b from-miku/50 via-transparent to-miku/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer md:cursor-none hover:scale-105 transition-transform duration-500">
                         <div class="bg-dark/80 backdrop-blur-xl rounded-3xl p-6 md:p-8 flex flex-col items-center border border-white/5">
                             <div class="w-40 h-40 md:w-48 md:h-48 rounded-2xl overflow-hidden mb-4 md:mb-6 relative group border border-miku/20 bg-white p-2">
                                 <div class="absolute top-0 left-0 w-full h-[2px] bg-miku shadow-[0_0_15px_#39C5BB] animate-[scan_2.5s_ease-in-out_infinite] z-10"></div>
-                                <img src="assets/0wechat.png" alt="WeChat QR Code" class="w-full h-full object-contain">
+                                <img src="assets/0wechat.png" alt="WeChat QR Code" class="w-full h-full object-contain" loading="lazy" decoding="async">
                             </div>
                             <div class="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                                 <div class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-miku animate-pulse shadow-[0_0_10px_#39C5BB]"></div>
@@ -422,264 +1270,959 @@
                         </div>
                     </div>
                 </div>
-
                 <h2 class="text-2xl md:text-4xl font-display font-bold text-outline mb-4 md:mb-6">THANK YOU</h2>
                 <p class="text-gray-500 text-[10px] md:text-sm tracking-widest text-center">DESIGNED FOR THE WORLD'S #1 PRINCESS BY MANGA BILL</p>
             </div>
         </footer>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script>
-        // 【智能画廊配置区】
+      // ==========================================
+        // 1. UNVEIL 开幕序列机制 (阶段 0~4)
+        // ==========================================
+        function runWhenIdle(callback, timeout) {
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(callback, { timeout: timeout || 1200 });
+            } else {
+                setTimeout(callback, 16);
+            }
+        }
+
+        function preloadImage(src) {
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = src;
+            return img;
+        }
+
+        function loadExternalScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        function preloadNonCriticalAssets() {
+            if (window.innerWidth < 768 || (navigator.connection && navigator.connection.saveData)) return;
+            [
+                'assets/profile.webp', 'assets/gallery-1.webp', 'assets/gallery-2.webp',
+                'assets/gallery-3.webp', 'assets/gallery-4.webp'
+            ].forEach(preloadImage);
+        }
+
+        let loaderFinished = false;
+
+        function initUnveilLoader() {
+            const images = [
+                'assets/0logo-512.webp',
+                window.innerWidth < 768 ? 'assets/hero-mobile.webp' : 'assets/hero.webp'
+            ];
+
+            let loaded = 0;
+            let displayProgress = 0;
+            let currentProgress = 0;
+            const percentEl = document.getElementById('unveil-percent');
+
+            gsap.to('#intro-logo-img', { opacity: 1, duration: 1.2, ease: "power2.out" });
+            gsap.to('#intro-logo-glow', { opacity: 0.4, duration: 1.5, yoyo: true, repeat: -1, ease: "sine.inOut" });
+
+            if (images.length === 0) currentProgress = 100;
+
+            images.forEach(src => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.onload = img.onerror = () => {
+                    loaded++;
+                    currentProgress = (loaded / images.length) * 100;
+                };
+                img.src = src;
+            });
+            setTimeout(() => { currentProgress = 100; }, 2800);
+
+            function updateLoader() {
+                displayProgress += (currentProgress - displayProgress) * 0.1;
+                if (currentProgress >= 100 && displayProgress > 96) displayProgress = 100;
+                percentEl.innerText = Math.round(displayProgress) + '%';
+
+                if (Math.round(displayProgress) >= 100) {
+                    percentEl.innerText = '100%';
+                    finishUnveilLoading();
+                } else {
+                    requestAnimationFrame(updateLoader);
+                }
+            }
+            requestAnimationFrame(updateLoader);
+        }
+
+        function finishUnveilLoading() {
+            if (loaderFinished) return;
+            loaderFinished = true;
+            const tl = gsap.timeline();
+            const introLogo = document.getElementById('intro-logo-img');
+            const navLogo = document.getElementById('nav-logo');
+            const introGlow = document.getElementById('intro-logo-glow');
+
+            const startRect = introLogo.getBoundingClientRect();
+            const targetRect = navLogo.getBoundingClientRect();
+            const scale = targetRect.width / startRect.width;
+            const x = targetRect.left - startRect.left;
+            const y = targetRect.top - startRect.top;
+
+            tl.to([introGlow, '#unveil-percent', '#unveil-loader > .text-sm'], { opacity: 0, duration: 0.4 });
+
+            tl.to(introLogo, {
+                x: x, y: y, scale: scale,
+                transformOrigin: "top left",
+                duration: 1.2, ease: "expo.inOut"
+            }, "-=0.2");
+
+            tl.to('#unveil-loader', {
+                backgroundColor: 'transparent', duration: 1.0, ease: "power2.inOut"
+            }, "-=1.0");
+
+            tl.set(navLogo, { opacity: 1 });
+            tl.set([introLogo, '#unveil-loader'], { display: 'none' });
+
+            tl.to('#unveil-mask', {
+                opacity: 0, duration: 0.75, ease: "power1.inOut",
+                onComplete: () => {
+                    document.getElementById('unveil-mask').style.display = 'none';
+                }
+            }, "-=0.5");
+
+            tl.to('body', { backgroundColor: '#03070b', duration: 0.4 }, "-=0.7");
+
+            tl.to('header', { opacity: 1, duration: 0.5, ease: "power1.inOut" }, "-=0.3");
+            tl.to('.unveil-nav-item', {
+                y: '0%', opacity: 1, duration: 0.6, stagger: 0.1, ease: "power2.out"
+            }, "-=0.8");
+
+            tl.call(() => {
+                initAnimations();
+                initArchiveWhenNeeded();
+                runWhenIdle(preloadNonCriticalAssets, 1500);
+
+                setTimeout(() => {
+                    if (isMobileRuntime) {
+                        const nudge = document.getElementById('mobile-audio-nudge');
+                        if (nudge) nudge.classList.add('is-visible');
+                        return;
+                    }
+                    const overlay = document.getElementById('audio-prompt-overlay');
+                    overlay.classList.remove('opacity-0', 'pointer-events-none');
+                    const prompt = document.getElementById('audio-prompt');
+                    prompt.classList.remove('scale-95');
+                    prompt.classList.add('scale-100');
+                }, 500);
+            });
+        }
+
+
+        // ==========================================
+        // 3. Dress Archive & Gallery & 初始化 & 动画 & 粒子 & 音乐
+        // ==========================================
+        const ARCHIVE_ITEMS = [
+            { file: '1.webp', mobileFile: '1-mobile.webp', titleZh: '祖母绿', titleEn: 'Emerald', index: 'Look 01', tone: 'Couture Green', note: '深绿调礼服作为整组的主视觉，强调宝石般的厚度和舞台灯下的贵气，适合作为公主殿下登场的第一套造型。' },
+            { file: '2.webp', mobileFile: '2-mobile.webp', titleZh: '葱绿', titleEn: 'Miku Green', index: 'Look 02', tone: 'Signature Miku', note: '更接近初音标志色的轻盈绿，把角色识别度放在第一位，适合连接公式服记忆和全新礼服设计。' },
+            { file: '3.webp', mobileFile: '3-mobile.webp', titleZh: '墨绿', titleEn: 'Dark Green', index: 'Look 03', tone: 'Deep Stage', note: '墨绿版本把整体气质压低，减少甜美感，突出更成熟的舞台轮廓和夜场演出的神秘感。' },
+            { file: '4.webp', mobileFile: '4-mobile.webp', titleZh: '苍蓝', titleEn: 'Pale Blue', index: 'Look 04', tone: 'Pale Blue', note: '苍蓝礼服更像清晨的舞台雾光，用低饱和冷色承接初音的电子感，同时保留少女感。' },
+            { file: '5.webp', mobileFile: '5-mobile.webp', titleZh: '蔚蓝', titleEn: 'Ocean Blue', index: 'Look 05', tone: 'Ocean Blue', note: '蔚蓝版本扩大了裙摆和色块的存在感，让造型更接近海面、穹顶和大型演唱会灯幕的联想。' },
+            { file: '6.webp', mobileFile: '6-mobile.webp', titleZh: '纯白', titleEn: 'Pure White', index: 'Look 06', tone: 'Ceremony White', note: '纯白礼服承担纪念券的仪式感，弱化色彩冲击，突出薄纱、层叠和公主形象的纯净。' },
+            { file: '7.webp', mobileFile: '7-mobile.webp', titleZh: '冰蓝', titleEn: 'Ice Blue', index: 'Look 07', tone: 'Ice Blue', note: '冰蓝作为收束款，带有透明、冷光和未来材质感，像把虚拟歌姬的电子声线凝成礼服。' }
+        ];
+
+        function renderDressArchive() {
+            const canvas = document.getElementById('archive-canvas');
+            const section = document.getElementById('exhibition-section');
+            const reader = document.getElementById('archive-card-reader');
+            const stage = canvas ? canvas.closest('.archive-stage') : null;
+            const pointerLabel = document.getElementById('archive-pointer-label');
+            if (!canvas || !section) return;
+            if (canvas.dataset.archiveBound === '1') return;
+            canvas.dataset.archiveBound = '1';
+
+            const ctx = canvas.getContext('2d');
+            const useMobileArchive = window.innerWidth < 720 || window.matchMedia('(pointer: coarse)').matches;
+            const itemState = ARCHIVE_ITEMS.map(() => ({ hover: 0 }));
+            const state = {
+                dpr: Math.min(window.devicePixelRatio || 1, 2),
+                width: 0,
+                height: 0,
+                mouseX: -9999,
+                mouseY: -9999,
+                clientX: -9999,
+                clientY: -9999,
+                labelX: -9999,
+                labelY: -9999,
+                smoothX: 0,
+                smoothY: 0,
+                inside: false,
+                dragging: false,
+                dragMoved: false,
+                dragStartX: 0,
+                dragStartY: 0,
+                dragStartScroll: 0,
+                scrollTarget: 0,
+                scroll: 0,
+                intro: -3.4,
+                introTarget: 0,
+                hoverIndex: -1,
+                lastHoverIndex: -1,
+                focusIndex: -1,
+                focusProgress: 0,
+                focusTarget: 0,
+                openTimer: null,
+                rects: [],
+                imagesReady: 0,
+                active: true,
+                rafId: 0,
+                lastFrameTime: 0,
+                frameInterval: useMobileArchive ? 1000 / 45 : 1000 / 60
+            };
+
+            ARCHIVE_ITEMS.forEach((item) => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.onload = () => { state.imagesReady += 1; };
+                img.src = 'assets/' + (useMobileArchive && item.mobileFile ? item.mobileFile : item.file);
+                item.image = img;
+            });
+
+            function resizeArchiveCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                state.dpr = useMobileArchive ? Math.min(window.devicePixelRatio || 1, 1.4) : Math.min(window.devicePixelRatio || 1, 2);
+                state.width = Math.max(1, Math.round(rect.width));
+                state.height = Math.max(1, Math.round(rect.height));
+                canvas.width = Math.round(state.width * state.dpr);
+                canvas.height = Math.round(state.height * state.dpr);
+                ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+            }
+
+            function clamp(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            function lerp(a, b, t) {
+                return a + (b - a) * t;
+            }
+
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function wrap(min, max, value) {
+                const range = max - min;
+                return ((((value - min) % range) + range) % range) + min;
+            }
+
+            function getArchiveLayout() {
+                const w = state.width;
+                const h = state.height;
+                const isMobile = w < 720;
+                const cardW = isMobile ? Math.min(255, w * 0.62) : Math.min(410, Math.max(250, w * 0.235));
+                const cardH = cardW * (isMobile ? 1.24 : 1.18);
+                const half = ARCHIVE_ITEMS.length / 2;
+                const centerX = isMobile ? w * 0.49 : w * 0.50;
+                const centerY = isMobile ? h * 0.62 : h * 0.60;
+                const stepX = isMobile ? w * 0.255 : w * 0.218;
+                const stepY = isMobile ? -h * 0.165 : -h * 0.128;
+                const parallaxX = (state.smoothX - w / 2) * (isMobile ? 0.025 : 0.04);
+                const parallaxY = (state.smoothY - h / 2) * (isMobile ? 0.014 : 0.025);
+                const flow = state.scroll * 0.035 + state.intro;
+
+                return ARCHIVE_ITEMS.map((item, index) => {
+                    const virtualX = wrap(-half, half, index - flow);
+                    const distance = Math.abs(virtualX);
+                    const depth = 1 - clamp(distance / half, 0, 1);
+                    const perspective = 0.92 + depth * 0.18;
+                    const width = cardW * perspective;
+                    const height = cardH * perspective;
+                    return {
+                        item,
+                        index,
+                        virtualX,
+                        depth,
+                        x: centerX + virtualX * stepX - width / 2 + parallaxX * (0.35 + depth),
+                        y: centerY + virtualX * stepY - height / 2 + parallaxY * (0.35 + depth),
+                        w: width,
+                        h: height
+                    };
+                }).sort((a, b) => a.virtualX - b.virtualX);
+            }
+
+            function coverDrawImage(img, x, y, w, h, pan) {
+                const iw = img.naturalWidth || img.width || 1;
+                const ih = img.naturalHeight || img.height || 1;
+                const scale = Math.max(w / iw, h / ih);
+                const sw = w / scale;
+                const sh = h / scale;
+                const sx = clamp((iw - sw) * (0.5 + (pan - 0.5) * 0.34), 0, Math.max(0, iw - sw));
+                const sy = Math.max(0, (ih - sh) * 0.12);
+                ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+            }
+
+            function drawCard(card, rect, hoverAmount, focusAmount) {
+                const mobileCanvas = state.width < 720;
+                const hovered = hoverAmount > 0.02;
+                const fadeForFocus = state.focusIndex >= 0 && card.index !== state.focusIndex ? 1 - focusAmount * 0.72 : 1;
+                const proximity = card.depth;
+                const baseAlpha = 0.18 + proximity * 0.24;
+                const alpha = clamp((baseAlpha + hoverAmount * 0.62 + focusAmount * 0.16) * fadeForFocus, 0.04, 0.98);
+                const blur = mobileCanvas ? Math.max(0, 1.1 - hoverAmount * 1.1 - focusAmount) : Math.max(0, 2.4 - hoverAmount * 2.4 - focusAmount * 2);
+                const saturation = 58 + hoverAmount * 42 + focusAmount * 26;
+                const contrast = 88 + hoverAmount * 12 + focusAmount * 10;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.shadowColor = hovered || focusAmount > 0.1 ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.11)';
+                ctx.shadowBlur = mobileCanvas ? (hovered || focusAmount > 0.1 ? 18 : 8) : (hovered || focusAmount > 0.1 ? 34 : 18);
+                ctx.shadowOffsetY = mobileCanvas ? (hovered || focusAmount > 0.1 ? 10 : 5) : (hovered || focusAmount > 0.1 ? 18 : 10);
+                ctx.fillStyle = '#e0e8e5';
+                ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+                if (card.item.image && card.item.image.complete) {
+                    ctx.filter = `blur(${blur}px) saturate(${saturation}%) contrast(${contrast}%)`;
+                    coverDrawImage(card.item.image, rect.x, rect.y, rect.w, rect.h, 0.28 + hoverAmount * 0.42 + focusAmount * 0.18);
+                    ctx.filter = 'none';
+                }
+
+                ctx.shadowColor = 'transparent';
+                ctx.fillStyle = hovered || focusAmount > 0.05 ? 'rgba(250,250,250,0.08)' : 'rgba(250,250,250,0.46)';
+                ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+                ctx.strokeStyle = hovered || focusAmount > 0.05 ? 'rgba(0,0,0,0.36)' : 'rgba(0,0,0,0.12)';
+                ctx.lineWidth = hovered || focusAmount > 0.05 ? 1.15 : 0.8;
+                ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1);
+
+                if (hoverAmount > 0.08 || focusAmount > 0.08) {
+                    ctx.globalAlpha = Math.min(1, alpha + 0.12) * Math.max(hoverAmount, focusAmount);
+                    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+                    ctx.font = '10.5px "Space Grotesk", sans-serif';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(card.item.index.toUpperCase(), rect.x + 14, rect.y + 14);
+                }
+                ctx.restore();
+            }
+
+            function hitTestArchiveCards() {
+                for (let i = state.rects.length - 1; i >= 0; i--) {
+                    const card = state.rects[i];
+                    const rect = card.rect;
+                    if (state.mouseX >= rect.x && state.mouseX <= rect.x + rect.w && state.mouseY >= rect.y && state.mouseY <= rect.y + rect.h) {
+                        return card.index;
+                    }
+                }
+                return -1;
+            }
+
+            function ensureArchiveRects() {
+                if (state.rects.length) return;
+                state.rects = getArchiveLayout().map((card) => ({
+                    ...card,
+                    rect: { x: card.x, y: card.y, w: card.w, h: card.h }
+                }));
+            }
+
+            function getArchiveTapTarget() {
+                ensureArchiveRects();
+                const directHit = hitTestArchiveCards();
+                if (directHit >= 0) return directHit;
+                if (!useMobileArchive || !state.rects.length) return -1;
+
+                let paddedHit = -1;
+                let bestIndex = -1;
+                let bestScore = Infinity;
+                const tapPad = 42;
+
+                for (let i = state.rects.length - 1; i >= 0; i--) {
+                    const card = state.rects[i];
+                    const rect = card.rect;
+                    const visible = rect.x < state.width && rect.x + rect.w > 0 && rect.y < state.height && rect.y + rect.h > 0;
+                    if (!visible) continue;
+
+                    if (
+                        state.mouseX >= rect.x - tapPad &&
+                        state.mouseX <= rect.x + rect.w + tapPad &&
+                        state.mouseY >= rect.y - tapPad &&
+                        state.mouseY <= rect.y + rect.h + tapPad
+                    ) {
+                        paddedHit = card.index;
+                        break;
+                    }
+
+                    const cx = rect.x + rect.w / 2;
+                    const cy = rect.y + rect.h / 2;
+                    const score = Math.hypot((state.mouseX - cx) / rect.w, (state.mouseY - cy) / rect.h) - card.depth * 0.18;
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestIndex = card.index;
+                    }
+                }
+
+                if (paddedHit >= 0) return paddedHit;
+                return bestIndex;
+            }
+
+            function drawArchiveFrame(time) {
+                if (!state.active || document.hidden) {
+                    state.rafId = 0;
+                    return;
+                }
+                if (time && state.lastFrameTime && time - state.lastFrameTime < state.frameInterval) {
+                    state.rafId = requestAnimationFrame(drawArchiveFrame);
+                    return;
+                }
+                state.lastFrameTime = time || performance.now();
+                ctx.clearRect(0, 0, state.width, state.height);
+                state.scroll += (state.scrollTarget - state.scroll) * 0.12;
+                state.intro += (state.introTarget - state.intro) * 0.045;
+                state.focusProgress += (state.focusTarget - state.focusProgress) * 0.12;
+                if (state.focusTarget === 0 && state.focusProgress < 0.01) {
+                    state.focusIndex = -1;
+                    state.focusProgress = 0;
+                }
+                state.smoothX += ((state.inside ? state.mouseX : state.width * 0.66) - state.smoothX) * 0.065;
+                state.smoothY += ((state.inside ? state.mouseY : state.height * 0.46) - state.smoothY) * 0.065;
+
+                const layout = getArchiveLayout();
+                state.rects = layout.map((card) => {
+                    let rect = {
+                        x: card.x,
+                        y: card.y,
+                        w: card.w,
+                        h: card.h
+                    };
+                    const focusAmount = card.index === state.focusIndex ? easeOutCubic(state.focusProgress) : 0;
+                    if (focusAmount > 0) {
+                        const targetW = Math.min(state.width * 0.56, 660);
+                        const targetH = Math.min(state.height * 0.78, targetW * 1.18);
+                        rect = {
+                            x: lerp(rect.x, state.width / 2 - targetW / 2, focusAmount),
+                            y: lerp(rect.y, state.height / 2 - targetH / 2, focusAmount),
+                            w: lerp(rect.w, targetW, focusAmount),
+                            h: lerp(rect.h, targetH, focusAmount)
+                        };
+                    } else if (state.focusProgress > 0.01 && state.focusIndex >= 0) {
+                        const away = card.virtualX < 0 ? -1 : 1;
+                        rect.x += away * state.focusProgress * 42;
+                        rect.y += state.focusProgress * 16;
+                    }
+                    return { ...card, rect };
+                });
+                state.hoverIndex = -1;
+
+                if (!state.dragging && state.focusIndex < 0) {
+                    state.hoverIndex = hitTestArchiveCards();
+                }
+
+                state.rects.forEach((card) => {
+                    const targetHover = card.index === state.hoverIndex ? 1 : 0;
+                    itemState[card.index].hover += (targetHover - itemState[card.index].hover) * 0.14;
+                    const hoverAmount = itemState[card.index].hover;
+                    const focusAmount = card.index === state.focusIndex ? easeOutCubic(state.focusProgress) : 0;
+                    const hoverLift = hoverAmount * -15;
+                    const hoverScale = 1 + hoverAmount * 0.032;
+                    const rect = {
+                        x: card.rect.x - (card.rect.w * (hoverScale - 1)) / 2 + hoverAmount * 8,
+                        y: card.rect.y - (card.rect.h * (hoverScale - 1)) / 2 + hoverLift,
+                        w: card.rect.w * hoverScale,
+                        h: card.rect.h * hoverScale
+                    };
+                    drawCard(card, rect, hoverAmount, focusAmount);
+                });
+
+                if (state.hoverIndex !== state.lastHoverIndex) {
+                    state.lastHoverIndex = state.hoverIndex;
+                    const item = ARCHIVE_ITEMS[state.hoverIndex];
+                    if (reader) reader.textContent = item ? item.index + ' ' + item.titleZh + ' ' + item.titleEn : '';
+                    if (pointerLabel) pointerLabel.textContent = item ? item.titleEn + ' / ' + item.index : '';
+                }
+
+                if (pointerLabel) {
+                    state.labelX += (state.clientX - state.labelX) * 0.16;
+                    state.labelY += (state.clientY - state.labelY) * 0.16;
+                    pointerLabel.style.transform = 'translate3d(' + state.labelX + 'px,' + state.labelY + 'px,0)';
+                    pointerLabel.style.opacity = state.hoverIndex >= 0 && !state.dragging && state.focusIndex < 0 ? '1' : '0';
+                }
+
+                canvas.style.cursor = state.dragging ? 'grabbing' : (state.hoverIndex >= 0 ? 'zoom-in' : 'grab');
+                state.rafId = requestAnimationFrame(drawArchiveFrame);
+            }
+
+            function startArchiveLoop() {
+                if (!state.rafId) {
+                    state.active = true;
+                    state.rafId = requestAnimationFrame(drawArchiveFrame);
+                }
+            }
+
+            function stopArchiveLoop() {
+                state.active = false;
+                if (state.rafId) {
+                    cancelAnimationFrame(state.rafId);
+                    state.rafId = 0;
+                }
+            }
+
+            function updateArchivePointer(event) {
+                const rect = canvas.getBoundingClientRect();
+                state.mouseX = event.clientX - rect.left;
+                state.mouseY = event.clientY - rect.top;
+                state.clientX = event.clientX;
+                state.clientY = event.clientY;
+                if (state.labelX < -900) {
+                    state.labelX = state.clientX;
+                    state.labelY = state.clientY;
+                }
+                state.inside = true;
+            }
+
+            canvas.addEventListener('pointermove', updateArchivePointer);
+            canvas.addEventListener('pointermove', (event) => {
+                if (!state.dragging) return;
+                const dx = event.clientX - state.dragStartX;
+                const dy = event.clientY - state.dragStartY;
+                if (Math.abs(dx) + Math.abs(dy) > 6) state.dragMoved = true;
+                state.scrollTarget = state.dragStartScroll - dx * 0.055 + dy * 0.018;
+            });
+            canvas.addEventListener('pointerenter', updateArchivePointer);
+            canvas.addEventListener('pointerdown', (event) => {
+                updateArchivePointer(event);
+                state.dragging = true;
+                state.dragMoved = false;
+                state.dragStartX = event.clientX;
+                state.dragStartY = event.clientY;
+                state.dragStartScroll = state.scrollTarget;
+                if (stage) stage.classList.add('is-dragging');
+                if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
+            });
+            canvas.addEventListener('pointerup', (event) => {
+                updateArchivePointer(event);
+                state.dragging = false;
+                if (stage) stage.classList.remove('is-dragging');
+                if (canvas.releasePointerCapture) canvas.releasePointerCapture(event.pointerId);
+                if (!state.dragMoved) {
+                    const activeIndex = state.hoverIndex >= 0 ? state.hoverIndex : getArchiveTapTarget();
+                    if (activeIndex >= 0) beginArchiveOpen(activeIndex);
+                }
+            });
+            canvas.addEventListener('click', (event) => {
+                updateArchivePointer(event);
+                const activeIndex = state.hoverIndex >= 0 ? state.hoverIndex : getArchiveTapTarget();
+                if (!state.dragMoved && activeIndex >= 0) beginArchiveOpen(activeIndex);
+            });
+            canvas.addEventListener('pointercancel', () => {
+                state.dragging = false;
+                if (stage) stage.classList.remove('is-dragging');
+            });
+            canvas.addEventListener('pointerleave', () => {
+                state.inside = false;
+                state.mouseX = -9999;
+                state.mouseY = -9999;
+                if (!state.dragging) state.hoverIndex = -1;
+            });
+            canvas.addEventListener('wheel', (event) => {
+                state.scrollTarget += (event.deltaY + event.deltaX) * 0.026;
+            }, { passive: true });
+
+            function beginArchiveOpen(index) {
+                if (state.focusIndex >= 0 || !ARCHIVE_ITEMS[index]) return;
+                state.focusIndex = index;
+                state.focusProgress = 0;
+                state.focusTarget = 1;
+                clearTimeout(state.openTimer);
+                state.openTimer = setTimeout(() => {
+                    openArchivePreview(index);
+                }, 560);
+            }
+
+            window.__resetArchiveFocus = () => {
+                clearTimeout(state.openTimer);
+                state.focusTarget = 0;
+                if (useMobileArchive) {
+                    state.focusIndex = -1;
+                    state.focusProgress = 0;
+                }
+            };
+
+            resizeArchiveCanvas();
+            window.addEventListener('resize', resizeArchiveCanvas);
+            startArchiveLoop();
+
+            if ('IntersectionObserver' in window) {
+                const archiveLoopObserver = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) startArchiveLoop();
+                    else stopArchiveLoop();
+                }, { rootMargin: '240px 0px' });
+                archiveLoopObserver.observe(section);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) stopArchiveLoop();
+                else if (section.getBoundingClientRect().bottom > -240 && section.getBoundingClientRect().top < window.innerHeight + 240) startArchiveLoop();
+            });
+
+            document.querySelectorAll('[data-archive-close]').forEach((el) => {
+                el.addEventListener('click', closeArchivePreview);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeArchivePreview();
+            });
+        }
+
+        function openArchivePreview(index) {
+            const item = ARCHIVE_ITEMS[index];
+            const preview = document.getElementById('archive-preview');
+            if (!item || !preview) return;
+
+            const img = document.getElementById('archive-preview-img');
+            const previewIndex = document.getElementById('archive-preview-index');
+            const title = document.getElementById('archive-preview-title');
+            const note = document.getElementById('archive-preview-note');
+
+            img.src = 'assets/' + (window.innerWidth < 720 && item.mobileFile ? item.mobileFile : item.file);
+            img.alt = item.index + ' ' + item.titleZh + ' ' + item.titleEn;
+            previewIndex.textContent = item.index + ' / ' + item.tone;
+            title.innerHTML = item.titleEn + '<span>' + item.titleZh + '</span>';
+            note.textContent = item.note;
+
+            preview.classList.add('is-open');
+            preview.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('archive-preview-open');
+
+            if (window.gsap) {
+                const mobilePreview = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
+                gsap.fromTo('.archive-preview-shell',
+                    { y: mobilePreview ? 10 : 24, filter: 'none' },
+                    { y: 0, filter: 'none', duration: mobilePreview ? 0.34 : 0.65, ease: mobilePreview ? 'power2.out' : 'power3.out' }
+                );
+            }
+        }
+
+        function closeArchivePreview() {
+            const preview = document.getElementById('archive-preview');
+            if (!preview || !preview.classList.contains('is-open')) return;
+            preview.classList.remove('is-open');
+            preview.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('archive-preview-open');
+            if (window.__resetArchiveFocus) window.__resetArchiveFocus();
+        }
+
+        function initArchiveWhenNeeded() {
+            const section = document.getElementById('exhibition-section');
+            if (!section || section.dataset.archiveObserved === '1') return;
+            section.dataset.archiveObserved = '1';
+
+            const start = () => {
+                renderDressArchive();
+                if (window.ScrollTrigger) ScrollTrigger.refresh();
+            };
+
+            if (!('IntersectionObserver' in window)) {
+                runWhenIdle(start, 1500);
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    observer.disconnect();
+                    start();
+                }
+            }, { rootMargin: '900px 0px' });
+            observer.observe(section);
+        }
+
         const GALLERY_CONFIG = [
-            { file: 'gallery-2.png', title: '光影之歌', desc: 'Illustration 02' },
-            { file: 'gallery-3.png', title: '虚拟与现实', desc: 'Illustration 03' },
-            { file: 'gallery-4.png', title: '永恒的乐章', desc: 'Illustration 04' },
-            // { file: 'image_0939c8.jpg', title: '葱色回忆', desc: 'Illustration Extra' },
-            // { file: 'image_09adaa.png', title: '未来音轨', desc: 'Illustration 05' }
+            { file: 'gallery-2.webp', title: '光影之歌', desc: 'Illustration 02' },
+            { file: 'gallery-3.webp', title: '虚拟与现实', desc: 'Illustration 03' },
+            { file: 'gallery-4.webp', title: '永恒的乐章', desc: 'Illustration 04' }
         ];
 
         function renderDynamicGallery() {
             const track = document.getElementById('gallery-track');
+            if (!track || track.dataset.rendered === '1') return;
+            track.dataset.rendered = '1';
             GALLERY_CONFIG.forEach((item) => {
                 const div = document.createElement('div');
                 div.className = 'gallery-item hover-target';
-                div.innerHTML = `
-                    <img src="assets/${item.file}" alt="${item.title}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100%\\' height=\\'100%\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'#111\\'/><text x=\\'50%\\' y=\\'50%\\' fill=\\'#39C5BB\\' font-family=\\'Arial\\' font-size=\\'16\\' text-anchor=\\'middle\\'>加载失败: ${item.file}</text></svg>'">
-                    <div class="gallery-overlay">
-                        <div class="text-lg md:text-2xl font-bold text-white mb-1">${item.title}</div>
-                        <div class="text-xs md:text-sm text-miku">${item.desc}</div>
-                    </div>
-                `;
+                div.innerHTML = [
+                    '<img src="assets/' + item.file + '" alt="' + item.title + '" loading="lazy" decoding="async">',
+                    '<div class="gallery-overlay">',
+                    '  <div class="text-lg md:text-2xl font-bold text-white mb-1">' + item.title + '</div>',
+                    '  <div class="text-xs md:text-sm text-miku">' + item.desc + '</div>',
+                    '</div>'
+                ].join('');
                 track.appendChild(div);
             });
         }
 
-        window.addEventListener('load', () => {
-            renderDynamicGallery();
+        function initGalleryWhenNeeded() {
+            const track = document.getElementById('gallery-track');
+            if (!track || track.dataset.galleryObserved === '1') return;
+            track.dataset.galleryObserved = '1';
 
-            let progress = 0;
-            const loaderProgress = document.getElementById('loader-progress');
-            const loader = document.getElementById('loader');
-            const introLogoImg = document.getElementById('intro-logo-img');
-            const introLogoGlow = document.getElementById('intro-logo-glow');
-            const navLogo = document.getElementById('nav-logo');
+            if (window.innerWidth >= 768 || !('IntersectionObserver' in window)) {
+                renderDynamicGallery();
+                return;
+            }
 
-            gsap.to(introLogoImg, { opacity: 1, duration: 1, ease: "power2.out" });
-            gsap.to(introLogoGlow, { opacity: 0.6, duration: 1.5, yoyo: true, repeat: -1, ease: "sine.inOut" });
-            
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if(progress > 100) progress = 100;
-                loaderProgress.style.width = `${progress}%`;
-                
-                if(progress === 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        gsap.killTweensOf(introLogoGlow);
-                        gsap.to(introLogoGlow, { opacity: 0, duration: 0.3 });
-                        gsap.to('.loader-line-wrap', { opacity: 0, duration: 0.3 });
-
-                        const targetRect = navLogo.getBoundingClientRect();
-                        const startRect = introLogoImg.getBoundingClientRect();
-
-                        const scale = targetRect.width / startRect.width;
-                        const targetX = targetRect.left - startRect.left;
-                        const targetY = targetRect.top - startRect.top;
-
-                        gsap.to(loader, { backgroundColor: 'rgba(3,7,11,0)', duration: 1.2, ease: "power2.inOut" });
-
-                        gsap.to(introLogoImg, {
-                            x: targetX,
-                            y: targetY,
-                            scale: scale,
-                            transformOrigin: "top left",
-                            duration: 1.2,
-                            ease: "expo.inOut",
-                            onComplete: () => {
-                                gsap.set(navLogo, { opacity: 1 });
-                                gsap.set(loader, { display: 'none' }); 
-                                initAnimations();
-
-                                // 显示弹窗 (重构后的逻辑，剥离了 Transform 冲突)
-                                setTimeout(() => {
-                                    const overlay = document.getElementById('audio-prompt-overlay');
-                                    overlay.classList.remove('opacity-0', 'pointer-events-none');
-                                    
-                                    const prompt = document.getElementById('audio-prompt');
-                                    prompt.classList.remove('scale-95');
-                                    prompt.classList.add('scale-100');
-                                }, 300);
-                            }
-                        });
-
-                    }, 600);
+            const wrap = track.closest('.gallery-wrap') || track;
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    observer.disconnect();
+                    renderDynamicGallery();
                 }
-            }, 50);
+            }, { rootMargin: '700px 0px' });
+            observer.observe(wrap);
+        }
+
+        window.addEventListener('load', () => {
+            initGalleryWhenNeeded();
+            initUnveilLoader();
         });
 
         function startExperience(playMusic) {
             const overlay = document.getElementById('audio-prompt-overlay');
             const prompt = document.getElementById('audio-prompt');
-            
+            const nudge = document.getElementById('mobile-audio-nudge');
+            if (nudge) nudge.classList.remove('is-visible');
             overlay.classList.add('opacity-0', 'pointer-events-none');
             prompt.classList.remove('scale-100');
             prompt.classList.add('scale-95');
-            
-            if(playMusic && !isPlaying) {
-                toggleMusic();
-            }
+            if(playMusic && !isPlaying) { toggleMusic(); }
         }
 
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            smooth: true
-        });
-        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-        requestAnimationFrame(raf);
+        const isMobileRuntime = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let lenis = null;
+        function initLenis() {
+            if (lenis || !window.Lenis) return;
+            lenis = new Lenis({
+                duration: 1.05,
+                easing: function(t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+                smooth: true
+            });
+            function raf(time) {
+                if (!lenis) return;
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+        }
+        if (!isMobileRuntime && !prefersReducedMotion) {
+            runWhenIdle(() => {
+                loadExternalScript('https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js')
+                    .then(initLenis)
+                    .catch(() => {});
+            }, 900);
+        }
         gsap.registerPlugin(ScrollTrigger);
 
         function initAnimations() {
-            // 响应式检测：如果是移动端竖屏，可能需要禁用某些消耗性能的视差
             const isMobile = window.innerWidth < 768;
+            const revealFrom = isMobile ? { opacity: 0, filter: 'none', y: 28 } : { opacity: 0, filter: 'blur(20px)', y: 60 };
+            const revealTo = isMobile ? { opacity: 1, filter: 'none', y: 0, duration: 0.75, ease: 'power2.out' } : { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1.5, ease: 'power3.out' };
 
-            gsap.utils.toArray('.gs-reveal-up').forEach(elem => {
-                gsap.fromTo(elem, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out", scrollTrigger: { trigger: elem, start: "top 85%" } });
+            gsap.utils.toArray('.pretext-reveal').forEach(function(elem) {
+                gsap.fromTo(elem,
+                    revealFrom,
+                    {
+                        opacity: revealTo.opacity, filter: revealTo.filter, y: revealTo.y,
+                        duration: revealTo.duration, ease: revealTo.ease,
+                        scrollTrigger: {
+                            trigger: elem, start: 'top 85%',
+                            toggleActions: isMobile ? 'play none none none' : 'play none none reverse'
+                        }
+                    }
+                );
             });
-            gsap.utils.toArray('.gs-reveal-left').forEach(elem => {
-                gsap.fromTo(elem, { x: isMobile ? 0 : -50, opacity: 0 }, { x: 0, opacity: 1, duration: 1, ease: "power3.out", scrollTrigger: { trigger: elem, start: "top 85%" } });
+
+            gsap.utils.toArray('.gs-reveal-up:not(.pretext-reveal)').forEach(function(elem) {
+                gsap.fromTo(elem, { y: isMobile ? 24 : 50, opacity: 0 }, { y: 0, opacity: 1, duration: isMobile ? 0.7 : 1, ease: isMobile ? 'power2.out' : 'power3.out', scrollTrigger: { trigger: elem, start: 'top 85%' } });
             });
-            gsap.utils.toArray('.gs-reveal-right').forEach(elem => {
-                gsap.fromTo(elem, { x: isMobile ? 0 : 50, opacity: 0 }, { x: 0, opacity: 1, duration: 1, ease: "power3.out", scrollTrigger: { trigger: elem, start: "top 85%" } });
+            gsap.utils.toArray('.gs-reveal-left').forEach(function(elem) {
+                gsap.fromTo(elem, { x: isMobile ? 0 : -50, y: isMobile ? 18 : 0, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: isMobile ? 0.7 : 1, ease: isMobile ? 'power2.out' : 'power3.out', scrollTrigger: { trigger: elem, start: 'top 85%' } });
+            });
+            gsap.utils.toArray('.gs-reveal-right').forEach(function(elem) {
+                gsap.fromTo(elem, { x: isMobile ? 0 : 50, y: isMobile ? 18 : 0, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: isMobile ? 0.7 : 1, ease: isMobile ? 'power2.out' : 'power3.out', scrollTrigger: { trigger: elem, start: 'top 85%' } });
             });
 
             if (!isMobile) {
-                gsap.utils.toArray('[data-speed]').forEach(elem => {
-                    const speed = elem.getAttribute('data-speed');
-                    gsap.to(elem, { y: () => (ScrollTrigger.maxScroll(window) * speed), ease: "none", scrollTrigger: { trigger: "body", start: "top top", end: "bottom bottom", scrub: true } });
+                gsap.utils.toArray('[data-speed]').forEach(function(elem) {
+                    var speed = elem.getAttribute('data-speed');
+                    gsap.to(elem, { y: function() { return ScrollTrigger.maxScroll(window) * speed; }, ease: 'none', scrollTrigger: { trigger: 'body', start: 'top top', end: 'bottom bottom', scrub: true } });
                 });
             }
 
-            const track = document.getElementById('gallery-track');
-            if (track) {
-                const getScrollAmount = () => -(track.scrollWidth - window.innerWidth);
+            var track = document.getElementById('gallery-track');
+            if (track && !isMobile) {
                 gsap.to(track, {
-                    x: getScrollAmount,
-                    ease: "none",
+                    x: function() { return -(track.scrollWidth - window.innerWidth); },
+                    ease: 'none',
                     scrollTrigger: {
-                        trigger: ".gallery-wrap",
-                        start: "top top",
-                        end: () => `+=${track.scrollWidth - window.innerWidth}`,
+                        trigger: '.gallery-wrap',
+                        start: 'top top',
+                        end: function() { return '+=' + (track.scrollWidth - window.innerWidth); },
                         pin: true,
-                        animation: true,
                         scrub: 1,
                         invalidateOnRefresh: true
                     }
                 });
             }
+
+            var archiveSection = document.getElementById('exhibition-section');
+            if (archiveSection) {
+                ScrollTrigger.create({
+                    trigger: archiveSection,
+                    start: 'top 58%',
+                    end: 'bottom 42%',
+                    onEnter: function() { document.body.classList.add('archive-light'); },
+                    onEnterBack: function() { document.body.classList.add('archive-light'); },
+                    onLeave: function() { document.body.classList.remove('archive-light'); },
+                    onLeaveBack: function() { document.body.classList.remove('archive-light'); }
+                });
+
+                gsap.fromTo('.archive-nav .archive-pill',
+                    { y: -18, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 0.8, stagger: 0.045, ease: 'power3.out', scrollTrigger: { trigger: archiveSection, start: 'top 70%' } }
+                );
+
+                gsap.fromTo(['.archive-canvas', '.archive-stage-kicker', '.archive-mode-switch'],
+                    { opacity: 0, filter: isMobile ? 'none' : 'blur(18px)' },
+                    { opacity: 1, filter: 'none', duration: isMobile ? 0.7 : 1.2, ease: isMobile ? 'power2.out' : 'power3.out', scrollTrigger: { trigger: archiveSection, start: 'top 68%' } }
+                );
+            }
             bindCursorEvents();
         }
 
-        const cursorDot = document.getElementById('cursor-dot');
-        const cursorOutline = document.getElementById('cursor-outline');
-        
-        // 仅在非触摸设备上执行鼠标光标动画，以节省移动端性能
-        if (window.matchMedia("(pointer: fine)").matches) {
-            window.addEventListener('mousemove', (e) => {
+        var cursorDot = document.getElementById('cursor-dot');
+        var cursorOutline = document.getElementById('cursor-outline');
+
+        if (window.matchMedia('(pointer: fine)').matches) {
+            window.addEventListener('mousemove', function(e) {
                 gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0.1 });
-                gsap.to(cursorOutline, { x: e.clientX, y: e.clientY, duration: 0.5, ease: "power2.out" });
+                if(!gsap.isTweening(cursorOutline)) {
+                    gsap.to(cursorOutline, { x: e.clientX, y: e.clientY, duration: 0.5, ease: 'power2.out' });
+                }
             });
         }
 
         function bindCursorEvents() {
-            if (window.matchMedia("(pointer: fine)").matches) {
-                document.querySelectorAll('a, button, .hover-target, .glass-card, .tilt-card').forEach(el => {
-                    el.addEventListener('mouseenter', () => { gsap.to(cursorOutline, { scale: 1.5, backgroundColor: 'rgba(57, 197, 187, 0.1)' }); });
-                    el.addEventListener('mouseleave', () => { gsap.to(cursorOutline, { scale: 1, backgroundColor: 'transparent' }); });
+            if (window.matchMedia('(pointer: fine)').matches) {
+                document.querySelectorAll('a, button, .hover-target, .glass-card, .tilt-card').forEach(function(el) {
+                    el.addEventListener('mouseenter', function() { gsap.to(cursorOutline, { scale: 1.5, background: 'rgba(57, 197, 187, 0.1)' }); });
+                    el.addEventListener('mouseleave', function() { gsap.to(cursorOutline, { scale: 1, background: 'transparent' }); });
                 });
             }
         }
 
-        // 3D 倾斜特效也限制在非触摸设备上
-        if (window.matchMedia("(pointer: fine)").matches) {
-            document.querySelectorAll('.tilt-wrapper').forEach(wrapper => {
-                const card = wrapper.querySelector('.tilt-card');
-                wrapper.addEventListener('mousemove', e => {
-                    const rect = wrapper.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    const rotateX = ((y - centerY) / centerY) * -10; 
-                    const rotateY = ((x - centerX) / centerX) * 10;
-                    gsap.to(card, { rotationX: rotateX, rotationY: rotateY, transformPerspective: 1000, ease: "power2.out", duration: 0.5 });
+        if (window.matchMedia('(pointer: fine)').matches) {
+            document.querySelectorAll('.tilt-wrapper').forEach(function(wrapper) {
+                var card = wrapper.querySelector('.tilt-card');
+                wrapper.addEventListener('mousemove', function(e) {
+                    var rect = wrapper.getBoundingClientRect();
+                    var x = e.clientX - rect.left;
+                    var y = e.clientY - rect.top;
+                    var centerX = rect.width / 2;
+                    var centerY = rect.height / 2;
+                    var rotateX = ((y - centerY) / centerY) * -10;
+                    var rotateY = ((x - centerX) / centerX) * 10;
+                    gsap.to(card, { rotationX: rotateX, rotationY: rotateY, transformPerspective: 1000, ease: 'power2.out', duration: 0.5 });
                 });
-                wrapper.addEventListener('mouseleave', () => {
-                    gsap.to(card, { rotationX: 0, rotationY: 0, ease: "power2.out", duration: 0.8 });
+                wrapper.addEventListener('mouseleave', function() {
+                    gsap.to(card, { rotationX: 0, rotationY: 0, ease: 'power2.out', duration: 0.8 });
                 });
             });
         }
 
-        const canvas = document.getElementById('particles-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize);
-        resize();
+        // Particles are desktop-only. Mobile scan traffic needs native scroll and a quiet main thread.
+        function initParticles() {
+            if (isMobileRuntime || prefersReducedMotion) return;
+            var pCanvas = document.getElementById('particles-canvas');
+            if (!pCanvas) return;
+            var pCtx = pCanvas.getContext('2d');
+            var pWidth, pHeight, particleFrame = 0;
+            var particles = [];
+            function pResize() { pWidth = pCanvas.width = window.innerWidth; pHeight = pCanvas.height = window.innerHeight; }
+            window.addEventListener('resize', pResize, { passive: true });
+            pResize();
 
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width; this.y = Math.random() * height;
+            function Particle() {
+                this.x = Math.random() * pWidth;
+                this.y = Math.random() * pHeight;
                 this.size = Math.random() * 2 + 0.5;
-                this.speedX = Math.random() * 0.5 - 0.25; this.speedY = -Math.random() * 0.5 - 0.1;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = -Math.random() * 0.5 - 0.1;
                 this.opacity = Math.random() * 0.5 + 0.1;
             }
-            update() {
-                this.x += this.speedX; this.y += this.speedY;
-                if(this.y < 0) { this.y = height; this.x = Math.random() * width; }
-            }
-            draw() {
-                ctx.fillStyle = `rgba(57, 197, 187, ${this.opacity})`;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-            }
-        }
-        // 移动端减少粒子数量以提升性能
-        const particleCount = window.innerWidth < 768 ? 40 : 100;
-        for(let i=0; i<particleCount; i++) particles.push(new Particle());
+            Particle.prototype.update = function() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if(this.y < 0) { this.y = pHeight; this.x = Math.random() * pWidth; }
+            };
+            Particle.prototype.draw = function() {
+                pCtx.fillStyle = 'rgba(57, 197, 187, ' + this.opacity + ')';
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                pCtx.fill();
+            };
 
-        function animateParticles() {
-            ctx.clearRect(0, 0, width, height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animateParticles);
-        }
-        animateParticles();
+            var particleCount = Math.min(70, Math.round(window.innerWidth / 18));
+            for(var pi=0; pi<particleCount; pi++) particles.push(new Particle());
 
-        const bgm = document.getElementById('bgm');
-        const record = document.getElementById('record');
-        const bars = document.querySelectorAll('.bar');
-        let isPlaying = false; let visualizerInterval; let playPromise;
+            function animateParticles(time) {
+                if (document.hidden) {
+                    particleFrame = requestAnimationFrame(animateParticles);
+                    return;
+                }
+                pCtx.clearRect(0, 0, pWidth, pHeight);
+                for(var pi=0; pi<particles.length; pi++) { particles[pi].update(); particles[pi].draw(); }
+                particleFrame = requestAnimationFrame(animateParticles);
+            }
+            particleFrame = requestAnimationFrame(animateParticles);
+        }
+        runWhenIdle(initParticles, 2200);
+
+        // Music
+        var bgm = document.getElementById('bgm');
+        var record = document.getElementById('record');
+        var bars = document.querySelectorAll('.bar');
+        var isPlaying = false;
+        var visualizerInterval;
+        var playPromise;
 
         function toggleMusic() {
             if(isPlaying) {
                 isPlaying = false;
                 record.classList.remove('playing');
                 clearInterval(visualizerInterval);
-                bars.forEach(bar => bar.style.height = '20%');
-                if (playPromise !== undefined) { playPromise.then(() => { bgm.pause(); }).catch(e => console.error(e)); } 
-                else { bgm.pause(); }
+                for(var bi=0; bi<bars.length; bi++) bars[bi].style.height = '20%';
+                if (playPromise !== undefined) {
+                    playPromise.then(function() { bgm.pause(); }).catch(function(e) { console.error(e); });
+                } else {
+                    bgm.pause();
+                }
             } else {
                 isPlaying = true;
                 record.classList.add('playing');
-                visualizerInterval = setInterval(() => {
-                    bars.forEach(bar => { bar.style.height = `${Math.random() * 80 + 20}%`; });
+                visualizerInterval = setInterval(function() {
+                    for(var bi=0; bi<bars.length; bi++) {
+                        bars[bi].style.height = (Math.random() * 80 + 20) + '%';
+                    }
                 }, 150);
                 playPromise = bgm.play();
                 if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        isPlaying = false; record.classList.remove('playing');
-                        clearInterval(visualizerInterval); bars.forEach(bar => bar.style.height = '20%');
+                    playPromise.catch(function(error) {
+                        isPlaying = false;
+                        record.classList.remove('playing');
+                        clearInterval(visualizerInterval);
+                        for(var bi=0; bi<bars.length; bi++) bars[bi].style.height = '20%';
                     });
                 }
             }
