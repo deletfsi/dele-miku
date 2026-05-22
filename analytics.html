@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Manga Bill Analytics</title>
+    <style>
+        :root {
+            --bg: #02070b;
+            --panel: rgba(8, 22, 31, 0.82);
+            --panel-strong: rgba(12, 34, 48, 0.96);
+            --line: rgba(57, 197, 187, 0.24);
+            --text: #e8fbff;
+            --muted: #8eabb7;
+            --miku: #39c5bb;
+            --blue: #7dcfff;
+            --warn: #ffca7a;
+            --danger: #ff7d91;
+            --good: #78f0b2;
+            color-scheme: dark;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 18% 12%, rgba(57, 197, 187, 0.16), transparent 34rem),
+                radial-gradient(circle at 86% 6%, rgba(125, 207, 255, 0.12), transparent 28rem),
+                linear-gradient(180deg, #031019 0%, var(--bg) 46%, #020406 100%);
+            color: var(--text);
+            font-family: "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+        }
+
+        button, input, select {
+            font: inherit;
+        }
+
+        .page {
+            width: min(1440px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 48px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .eyebrow {
+            color: var(--miku);
+            font-size: 12px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+        }
+
+        h1, h2, h3, p {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: clamp(30px, 5vw, 68px);
+            line-height: 0.92;
+            letter-spacing: -0.03em;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 14px;
+        }
+
+        h3 {
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            margin-bottom: 12px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--good);
+            box-shadow: 0 0 18px rgba(120, 240, 178, 0.9);
+        }
+
+        .login-shell {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .login-card {
+            width: min(460px, 100%);
+            padding: 34px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: rgba(5, 18, 26, 0.88);
+            box-shadow: 0 34px 100px rgba(0, 0, 0, 0.48);
+        }
+
+        .login-card h1 {
+            font-size: 40px;
+            margin: 10px 0 14px;
+        }
+
+        .login-card p {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            height: 44px;
+            border: 1px solid rgba(143, 194, 211, 0.22);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.045);
+            color: var(--text);
+            padding: 0 12px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--miku);
+            box-shadow: 0 0 0 3px rgba(57, 197, 187, 0.14);
+        }
+
+        option {
+            background: #07141d;
+            color: var(--text);
+        }
+
+        .button {
+            height: 44px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--miku);
+            color: #001315;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .button.secondary {
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            align-items: end;
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--panel);
+            margin-bottom: 18px;
+        }
+
+        .quick-ranges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            grid-column: 1 / -1;
+        }
+
+        .chip {
+            border: 1px solid rgba(57, 197, 187, 0.26);
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: rgba(57, 197, 187, 0.07);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .chip.is-active {
+            background: rgba(57, 197, 187, 0.24);
+            border-color: var(--miku);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .card, .panel {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--panel);
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.25);
+        }
+
+        .card {
+            padding: 18px;
+            min-height: 118px;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: clamp(28px, 4vw, 44px);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            margin-top: 12px;
+        }
+
+        .metric-note {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .grid.thirds {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .panel {
+            padding: 18px;
+            min-height: 260px;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 240px;
+        }
+
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rank-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .rank-label {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text);
+        }
+
+        .rank-count {
+            color: var(--miku);
+            font-weight: 800;
+        }
+
+        .bar-track {
+            grid-column: 1 / -1;
+            height: 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--miku), var(--blue));
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+
+        th, td {
+            padding: 11px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: left;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        th {
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.035);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        td {
+            color: #d8eef5;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+        }
+
+        .small-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mini-button {
+            height: 34px;
+            padding: 0 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.055);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .notice {
+            display: none;
+            border: 1px solid rgba(255, 125, 145, 0.28);
+            background: rgba(255, 125, 145, 0.1);
+            color: #ffd6de;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-top: 14px;
+            line-height: 1.5;
+        }
+
+        .notice.is-visible { display: block; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 1100px) {
+            .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .grid, .grid.thirds { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 700px) {
+            .page { width: min(100% - 20px, 1440px); padding-top: 18px; }
+            .topbar { align-items: flex-start; flex-direction: column; }
+            .filters { grid-template-columns: 1fr; }
+            .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .card { min-height: 100px; padding: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <main id="login" class="login-shell">
+        <section class="login-card">
+            <div class="eyebrow">Internal dashboard</div>
+            <h1>Manga Bill Analytics</h1>
+            <p>后台统计页。公开网页不会显示任何统计状态，数据只在验证后读取。</p>
+            <form id="login-form" class="field">
+                <label for="password">Access password</label>
+                <input id="password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="输入内部访问密码">
+                <button id="login-button" class="button" type="submit">进入后台</button>
+            </form>
+            <div id="login-error" class="notice"></div>
+        </section>
+    </main>
+
+    <main id="dashboard" class="page hidden">
+        <header class="topbar">
+            <div class="brand">
+                <div class="eyebrow">Manga Bill / dele-miku</div>
+                <h1>Analytics Console</h1>
+            </div>
+            <div class="status">
+                <span class="dot"></span>
+                <span id="range-label">等待数据</span>
+                <button id="logout" class="mini-button" type="button">退出</button>
+            </div>
+        </header>
+
+        <section class="filters" aria-label="统计筛选">
+            <div class="quick-ranges">
+                <button class="chip" type="button" data-range="today">今天</button>
+                <button class="chip" type="button" data-range="yesterday">昨天</button>
+                <button class="chip is-active" type="button" data-range="7d">近 7 天</button>
+                <button class="chip" type="button" data-range="30d">近 30 天</button>
+                <button class="chip" type="button" data-range="month">本月</button>
+                <button class="chip" type="button" data-range="all">全部</button>
+            </div>
+            <div class="field">
+                <label for="start-date">开始日期</label>
+                <input id="start-date" type="date">
+            </div>
+            <div class="field">
+                <label for="end-date">结束日期</label>
+                <input id="end-date" type="date">
+            </div>
+            <div class="field">
+                <label for="source-filter">来源</label>
+                <select id="source-filter">
+                    <option value="">全部来源</option>
+                    <option value="qr_ticket">扫码 / qr_ticket</option>
+                    <option value="direct">直接访问 / direct</option>
+                    <option value="codex_test">测试记录</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="path-filter">路径包含</label>
+                <input id="path-filter" type="text" placeholder="/ 或 src=qr">
+            </div>
+            <div class="field">
+                <label for="custom-dimension">自定义分组</label>
+                <select id="custom-dimension">
+                    <option value="source">来源</option>
+                    <option value="day">日期</option>
+                    <option value="hour">小时</option>
+                    <option value="device">设备</option>
+                    <option value="path">页面路径</option>
+                    <option value="referrer">来源页面</option>
+                    <option value="language">语言</option>
+                    <option value="timezone">时区</option>
+                    <option value="qr">二维码批次</option>
+                    <option value="campaign">活动 Campaign</option>
+                    <option value="connection">网络类型</option>
+                    <option value="platform">系统平台</option>
+                    <option value="viewport">视口宽度</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="custom-limit">返回数量</label>
+                <input id="custom-limit" type="number" min="1" max="200" value="50">
+            </div>
+            <button id="refresh" class="button" type="button">刷新数据</button>
+        </section>
+
+        <section class="cards">
+            <article class="card">
+                <div class="metric-label">Page Views</div>
+                <div id="metric-pv" class="metric-value">0</div>
+                <div class="metric-note">访问次数</div>
+            </article>
+            <article class="card">
+                <div class="metric-label">Visitors</div>
+                <div id="metric-uv" class="metric-value">0</div>
+                <div class="metric-note">估算独立访客</div>
+            </article>
+            <article class="card">
+                <div class="metric-label">Sessions</div>
+                <div id="metric-session" class="metric-value">0</div>
+                <div class="metric-note">浏览会话</div>
+            </article>
+            <article class="card">
+                <div class="metric-label">QR Views</div>
+                <div id="metric-qr" class="metric-value">0</div>
+                <div class="metric-note">扫码来源</div>
+            </article>
+            <article class="card">
+                <div class="metric-label">Mobile</div>
+                <div id="metric-mobile" class="metric-value">0</div>
+                <div class="metric-note">移动端访问</div>
+            </article>
+            <article class="card">
+                <div class="metric-label">QR Ratio</div>
+                <div id="metric-ratio" class="metric-value">0%</div>
+                <div class="metric-note">扫码占比</div>
+            </article>
+        </section>
+
+        <section class="grid">
+            <article class="panel">
+                <div class="panel-header">
+                    <h2>按日期趋势</h2>
+                    <div class="small-actions">
+                        <button class="mini-button" data-export="day_series" type="button">导出 CSV</button>
+                    </div>
+                </div>
+                <canvas id="day-chart" width="900" height="280"></canvas>
+            </article>
+            <article class="panel">
+                <h2>24 小时分布</h2>
+                <canvas id="hour-chart" width="520" height="280"></canvas>
+            </article>
+        </section>
+
+        <section class="grid thirds">
+            <article class="panel">
+                <h2>来源分布</h2>
+                <div id="source-list" class="rank-list"></div>
+            </article>
+            <article class="panel">
+                <h2>设备分布</h2>
+                <div id="device-list" class="rank-list"></div>
+            </article>
+            <article class="panel">
+                <h2>二维码 / Campaign</h2>
+                <div id="qr-list" class="rank-list"></div>
+            </article>
+        </section>
+
+        <section class="grid thirds">
+            <article class="panel">
+                <h2>热门路径</h2>
+                <div id="path-list" class="rank-list"></div>
+            </article>
+            <article class="panel">
+                <h2>语言与时区</h2>
+                <div id="locale-list" class="rank-list"></div>
+            </article>
+            <article class="panel">
+                <h2>网络与平台</h2>
+                <div id="tech-list" class="rank-list"></div>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2>自定义查询结果</h2>
+                <div class="small-actions">
+                    <button class="mini-button" data-export="custom" type="button">导出 CSV</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>分组</th>
+                            <th>访问次数</th>
+                            <th>访客</th>
+                            <th>会话</th>
+                        </tr>
+                    </thead>
+                    <tbody id="custom-table"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel" style="margin-top: 14px;">
+            <div class="panel-header">
+                <h2>最近访问记录</h2>
+                <div class="small-actions">
+                    <button class="mini-button" data-export="recent" type="button">导出 CSV</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>来源</th>
+                            <th>设备</th>
+                            <th>路径</th>
+                            <th>语言</th>
+                            <th>时区</th>
+                            <th>二维码</th>
+                            <th>Campaign</th>
+                            <th>网络</th>
+                            <th>平台</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-table"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div id="dashboard-error" class="notice"></div>
+    </main>
+
+    <script>
+        const API_URL = 'https://auhhtzamzojyhqkbwzgs.supabase.co/functions/v1/miku-analytics-admin';
+        const TOKEN_KEY = 'dele_miku_analytics_token';
+        const state = { token: sessionStorage.getItem(TOKEN_KEY), data: null, activeRange: '7d' };
+
+        const $ = (selector) => document.querySelector(selector);
+        const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+        const fmt = (value) => new Intl.NumberFormat('zh-CN').format(Number(value || 0));
+        const pct = (value, total) => total ? Math.round((Number(value || 0) / total) * 100) + '%' : '0%';
+
+        function toDateInput(date) {
+            const offset = date.getTimezoneOffset();
+            const local = new Date(date.getTime() - offset * 60000);
+            return local.toISOString().slice(0, 10);
+        }
+
+        function fromDateInput(value) {
+            return new Date(value + 'T00:00:00+08:00');
+        }
+
+        function addDays(date, days) {
+            const next = new Date(date);
+            next.setDate(next.getDate() + days);
+            return next;
+        }
+
+        function setRange(range) {
+            state.activeRange = range;
+            const now = new Date();
+            const today = fromDateInput(toDateInput(now));
+            let start = today;
+            let end = today;
+
+            if (range === 'yesterday') {
+                start = addDays(today, -1);
+                end = addDays(today, -1);
+            } else if (range === '7d') {
+                start = addDays(today, -6);
+            } else if (range === '30d') {
+                start = addDays(today, -29);
+            } else if (range === 'month') {
+                start = new Date(today);
+                start.setDate(1);
+            } else if (range === 'all') {
+                start = new Date('2026-01-01T00:00:00+08:00');
+            }
+
+            $('#start-date').value = toDateInput(start);
+            $('#end-date').value = toDateInput(end);
+            $$('.chip').forEach((button) => button.classList.toggle('is-active', button.dataset.range === range));
+        }
+
+        function getRequestRange() {
+            const start = fromDateInput($('#start-date').value);
+            const endExclusive = addDays(fromDateInput($('#end-date').value), 1);
+            return { start: start.toISOString(), end: endExclusive.toISOString() };
+        }
+
+        async function api(payload) {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const json = await response.json().catch(() => ({}));
+            if (!response.ok || json.error) {
+                throw new Error(json.error || '请求失败');
+            }
+            return json;
+        }
+
+        function showError(target, message) {
+            const el = $(target);
+            el.textContent = message;
+            el.classList.add('is-visible');
+        }
+
+        function clearError(target) {
+            const el = $(target);
+            el.textContent = '';
+            el.classList.remove('is-visible');
+        }
+
+        async function login(password) {
+            clearError('#login-error');
+            $('#login-button').disabled = true;
+            try {
+                const result = await api({ action: 'login', password });
+                state.token = result.token;
+                sessionStorage.setItem(TOKEN_KEY, state.token);
+                $('#login').classList.add('hidden');
+                $('#dashboard').classList.remove('hidden');
+                await loadReport();
+            } catch (error) {
+                showError('#login-error', '验证失败，请确认密码。');
+            } finally {
+                $('#login-button').disabled = false;
+            }
+        }
+
+        async function loadReport() {
+            if (!state.token) return;
+            clearError('#dashboard-error');
+            $('#refresh').disabled = true;
+            try {
+                const range = getRequestRange();
+                const result = await api({
+                    action: 'report',
+                    token: state.token,
+                    start: range.start,
+                    end: range.end,
+                    source: $('#source-filter').value || null,
+                    path: $('#path-filter').value || null,
+                    dimension: $('#custom-dimension').value,
+                    limit: Number($('#custom-limit').value || 50)
+                });
+                state.data = result.report;
+                render();
+            } catch (error) {
+                if (/unauthorized|expired/i.test(error.message)) {
+                    sessionStorage.removeItem(TOKEN_KEY);
+                    state.token = null;
+                    $('#dashboard').classList.add('hidden');
+                    $('#login').classList.remove('hidden');
+                    showError('#login-error', '登录已过期，请重新输入密码。');
+                } else {
+                    showError('#dashboard-error', error.message || '读取统计数据失败。');
+                }
+            } finally {
+                $('#refresh').disabled = false;
+            }
+        }
+
+        function render() {
+            const data = state.data || {};
+            const totals = data.totals || {};
+            const pv = Number(totals.page_views || 0);
+            $('#metric-pv').textContent = fmt(totals.page_views);
+            $('#metric-uv').textContent = fmt(totals.visitors);
+            $('#metric-session').textContent = fmt(totals.sessions);
+            $('#metric-qr').textContent = fmt(totals.qr_views);
+            $('#metric-mobile').textContent = fmt(totals.mobile_views);
+            $('#metric-ratio').textContent = pct(totals.qr_views, pv);
+            $('#range-label').textContent = `${data.range?.start || ''} - ${data.range?.end || ''}`;
+
+            drawLineChart($('#day-chart'), data.day_series || []);
+            drawHourChart($('#hour-chart'), data.hour_distribution || []);
+            renderRank('#source-list', data.sources || []);
+            renderRank('#device-list', data.devices || []);
+            renderRank('#qr-list', [...(data.qr_codes || []), ...(data.campaigns || [])].slice(0, 12));
+            renderRank('#path-list', data.paths || []);
+            renderRank('#locale-list', [...(data.languages || []), ...(data.timezones || [])].slice(0, 12));
+            renderRank('#tech-list', [...(data.connections || []), ...(data.platforms || []), ...(data.viewports || [])].slice(0, 12));
+            renderCustom(data.custom || []);
+            renderRecent(data.recent || []);
+        }
+
+        function resizeCanvas(canvas) {
+            const ratio = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.max(320, Math.floor(rect.width * ratio));
+            canvas.height = Math.floor(240 * ratio);
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            return { ctx, width: rect.width, height: 240 };
+        }
+
+        function drawLineChart(canvas, rows) {
+            const { ctx, width, height } = resizeCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            const pad = 32;
+            const max = Math.max(1, ...rows.map((row) => Number(row.page_views || 0)));
+            drawGrid(ctx, width, height, pad);
+            if (!rows.length) return drawEmpty(ctx, width, height);
+
+            const points = rows.map((row, index) => {
+                const x = pad + (rows.length === 1 ? 0 : (index / (rows.length - 1)) * (width - pad * 2));
+                const y = height - pad - (Number(row.page_views || 0) / max) * (height - pad * 2);
+                return { x, y, row };
+            });
+
+            ctx.strokeStyle = '#39c5bb';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
+            ctx.stroke();
+
+            ctx.fillStyle = '#39c5bb';
+            points.forEach((point) => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.fillStyle = '#8eabb7';
+            ctx.font = '11px Arial';
+            const first = points[0]?.row?.label || '';
+            const last = points[points.length - 1]?.row?.label || '';
+            ctx.fillText(first, pad, height - 8);
+            ctx.textAlign = 'right';
+            ctx.fillText(last, width - pad, height - 8);
+            ctx.textAlign = 'left';
+        }
+
+        function drawHourChart(canvas, rows) {
+            const { ctx, width, height } = resizeCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            const pad = 28;
+            const hours = Array.from({ length: 24 }, (_, i) => {
+                const match = rows.find((row) => Number(row.label) === i);
+                return { label: i, page_views: Number(match?.page_views || 0) };
+            });
+            const max = Math.max(1, ...hours.map((row) => row.page_views));
+            drawGrid(ctx, width, height, pad);
+            const gap = 3;
+            const barWidth = (width - pad * 2 - gap * 23) / 24;
+            hours.forEach((row, index) => {
+                const barHeight = (row.page_views / max) * (height - pad * 2);
+                const x = pad + index * (barWidth + gap);
+                const y = height - pad - barHeight;
+                ctx.fillStyle = row.page_views ? '#39c5bb' : 'rgba(255,255,255,0.08)';
+                ctx.fillRect(x, y, barWidth, barHeight || 2);
+            });
+            ctx.fillStyle = '#8eabb7';
+            ctx.font = '11px Arial';
+            ctx.fillText('00:00', pad, height - 8);
+            ctx.textAlign = 'right';
+            ctx.fillText('23:00', width - pad, height - 8);
+            ctx.textAlign = 'left';
+        }
+
+        function drawGrid(ctx, width, height, pad) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 4; i += 1) {
+                const y = pad + (i / 3) * (height - pad * 2);
+                ctx.beginPath();
+                ctx.moveTo(pad, y);
+                ctx.lineTo(width - pad, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawEmpty(ctx, width, height) {
+            ctx.fillStyle = '#8eabb7';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('当前范围暂无数据', width / 2, height / 2);
+            ctx.textAlign = 'left';
+        }
+
+        function renderRank(selector, rows) {
+            const root = $(selector);
+            const max = Math.max(1, ...rows.map((row) => Number(row.page_views || 0)));
+            root.innerHTML = rows.length ? rows.map((row) => `
+                <div class="rank-row">
+                    <div class="rank-label" title="${escapeHtml(row.label)}">${escapeHtml(row.label)}</div>
+                    <div class="rank-count">${fmt(row.page_views)}</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, (Number(row.page_views || 0) / max) * 100)}%"></div></div>
+                </div>
+            `).join('') : '<div class="metric-note">暂无数据</div>';
+        }
+
+        function renderCustom(rows) {
+            $('#custom-table').innerHTML = rows.map((row) => `
+                <tr>
+                    <td>${escapeHtml(row.label)}</td>
+                    <td>${fmt(row.page_views)}</td>
+                    <td>${fmt(row.visitors)}</td>
+                    <td>${fmt(row.sessions)}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="4">暂无数据</td></tr>';
+        }
+
+        function renderRecent(rows) {
+            $('#recent-table').innerHTML = rows.map((row) => `
+                <tr>
+                    <td>${escapeHtml(row.local_time)}</td>
+                    <td>${escapeHtml(row.source)}</td>
+                    <td>${escapeHtml(row.device)}</td>
+                    <td>${escapeHtml(row.path)}</td>
+                    <td>${escapeHtml(row.language)}</td>
+                    <td>${escapeHtml(row.timezone)}</td>
+                    <td>${escapeHtml(row.qr)}</td>
+                    <td>${escapeHtml(row.campaign)}</td>
+                    <td>${escapeHtml(row.connection)}</td>
+                    <td>${escapeHtml(row.platform)}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="10">暂无数据</td></tr>';
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        function exportCsv(key) {
+            if (!state.data) return;
+            const rows = state.data[key] || [];
+            if (!rows.length) return;
+            const headers = Object.keys(rows[0]);
+            const csv = [headers.join(',')].concat(rows.map((row) => headers.map((header) => {
+                const value = String(row[header] ?? '').replace(/"/g, '""');
+                return `"${value}"`;
+            }).join(','))).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `dele-miku-${key}-${Date.now()}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        $('#login-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            login($('#password').value);
+        });
+        $('#refresh').addEventListener('click', loadReport);
+        $('#logout').addEventListener('click', () => {
+            sessionStorage.removeItem(TOKEN_KEY);
+            state.token = null;
+            $('#dashboard').classList.add('hidden');
+            $('#login').classList.remove('hidden');
+        });
+        $$('.chip').forEach((button) => button.addEventListener('click', () => {
+            setRange(button.dataset.range);
+            loadReport();
+        }));
+        ['start-date', 'end-date', 'source-filter', 'custom-dimension', 'custom-limit'].forEach((id) => {
+            $('#' + id).addEventListener('change', loadReport);
+        });
+        $('#path-filter').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') loadReport();
+        });
+        $$('[data-export]').forEach((button) => {
+            button.addEventListener('click', () => exportCsv(button.dataset.export));
+        });
+        window.addEventListener('resize', () => state.data && render());
+
+        setRange('7d');
+        if (state.token) {
+            $('#login').classList.add('hidden');
+            $('#dashboard').classList.remove('hidden');
+            loadReport();
+        }
+    </script>
+</body>
+</html>

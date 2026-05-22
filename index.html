@@ -1501,6 +1501,48 @@
             return 'direct';
         }
 
+        function getAnalyticsParam(name, limit) {
+            try {
+                return clampAnalyticsValue(new URLSearchParams(window.location.search).get(name), limit || 80);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function getConnectionSnapshot() {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!connection) return {};
+            return {
+                connection: clampAnalyticsValue(connection.effectiveType || connection.type, 40),
+                downlink: typeof connection.downlink === 'number' ? connection.downlink : null,
+                rtt: typeof connection.rtt === 'number' ? connection.rtt : null,
+                save_data: Boolean(connection.saveData)
+            };
+        }
+
+        function getDeviceSnapshot() {
+            const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+            const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+            const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            return {
+                qr: getAnalyticsParam('qr', 80),
+                utm_source: getAnalyticsParam('utm_source', 80),
+                utm_medium: getAnalyticsParam('utm_medium', 80),
+                utm_campaign: getAnalyticsParam('utm_campaign', 120),
+                utm_content: getAnalyticsParam('utm_content', 120),
+                utm_term: getAnalyticsParam('utm_term', 120),
+                platform: clampAnalyticsValue(navigator.platform, 80),
+                vendor: clampAnalyticsValue(navigator.vendor, 120),
+                pixel_ratio: window.devicePixelRatio || 1,
+                touch_points: navigator.maxTouchPoints || 0,
+                coarse_pointer: Boolean(coarsePointer),
+                standalone: Boolean(standalone),
+                color_scheme: darkMode ? 'dark' : 'light',
+                page_title: clampAnalyticsValue(document.title, 160),
+                ...getConnectionSnapshot()
+            };
+        }
+
         function trackPageView() {
             if (!window.fetch) return;
             try {
@@ -1523,7 +1565,8 @@
                     screen_height: window.screen ? window.screen.height : null,
                     viewport_width: window.innerWidth || null,
                     viewport_height: window.innerHeight || null,
-                    user_agent: clampAnalyticsValue(navigator.userAgent, 500)
+                    user_agent: clampAnalyticsValue(navigator.userAgent, 500),
+                    extra: getDeviceSnapshot()
                 };
 
                 fetch(analyticsUrl, {
