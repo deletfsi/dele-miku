@@ -1543,43 +1543,63 @@
             };
         }
 
-        function trackPageView() {
-            if (!window.fetch) return;
+        function getSafeAnalyticsStorage(name) {
             try {
-                const analyticsUrl = 'https://auhhtzamzojyhqkbwzgs.supabase.co/rest/v1/site_events';
-                const analyticsKey = 'sb_publishable_1eG-3p5hNmy-CwaaOKfoXw_XEqPFaJ9';
-                const visitorId = getStoredAnalyticsId(window.localStorage, 'dele_miku_visitor_id', 'v');
-                const sessionId = getStoredAnalyticsId(window.sessionStorage, 'dele_miku_session_id', 's');
+                return window[name];
+            } catch (error) {
+                return { getItem: function() { return null; }, setItem: function() {} };
+            }
+        }
+
+        const analyticsEndpoint = 'https://auhhtzamzojyhqkbwzgs.supabase.co/functions/v1/miku-track';
+        const analyticsVisitorId = getStoredAnalyticsId(getSafeAnalyticsStorage('localStorage'), 'dele_miku_visitor_id', 'v');
+        const analyticsSessionId = getStoredAnalyticsId(getSafeAnalyticsStorage('sessionStorage'), 'dele_miku_session_id', 's');
+        const analyticsStartedAt = window.performance && performance.now ? performance.now() : Date.now();
+        let analyticsVisibleStartedAt = document.visibilityState === 'hidden' ? null : analyticsStartedAt;
+        let analyticsVisibleMs = 0;
+        let analyticsEngagementSent = false;
+
+        function getBaseAnalyticsPayload(eventName) {
+            let timezone = null;
+            try {
+                timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch (error) {}
+            return {
+                event_name: eventName,
+                source: getTrafficSource(),
+                visitor_id: clampAnalyticsValue(analyticsVisitorId, 80),
+                session_id: clampAnalyticsValue(analyticsSessionId, 80),
+                path: clampAnalyticsValue(window.location.pathname + window.location.search, 500),
+                referrer: clampAnalyticsValue(document.referrer, 500),
+                language: clampAnalyticsValue(navigator.language, 80),
+                timezone: clampAnalyticsValue(timezone, 80),
+                screen_width: window.screen ? window.screen.width : null,
+                screen_height: window.screen ? window.screen.height : null,
+                viewport_width: window.innerWidth || null,
+                viewport_height: window.innerHeight || null,
+                user_agent: clampAnalyticsValue(navigator.userAgent, 500),
+                extra: getDeviceSnapshot()
+            };
+        }
+
+        function sendAnalyticsEvent(payload, options) {
+            if (!analyticsEndpoint) return;
+            try {
+                const body = JSON.stringify(payload);
+                if (options && options.beacon && navigator.sendBeacon) {
+                    const blob = new Blob([body], { type: 'application/json' });
+                    if (navigator.sendBeacon(analyticsEndpoint, blob)) return;
+                }
+                if (!window.fetch) return;
                 const controller = window.AbortController ? new AbortController() : null;
                 const timeoutId = controller ? setTimeout(function() { controller.abort(); }, 1600) : null;
-                const payload = {
-                    event_name: 'page_view',
-                    source: getTrafficSource(),
-                    visitor_id: clampAnalyticsValue(visitorId, 80),
-                    session_id: clampAnalyticsValue(sessionId, 80),
-                    path: clampAnalyticsValue(window.location.pathname + window.location.search, 500),
-                    referrer: clampAnalyticsValue(document.referrer, 500),
-                    language: clampAnalyticsValue(navigator.language, 80),
-                    timezone: clampAnalyticsValue(Intl.DateTimeFormat().resolvedOptions().timeZone, 80),
-                    screen_width: window.screen ? window.screen.width : null,
-                    screen_height: window.screen ? window.screen.height : null,
-                    viewport_width: window.innerWidth || null,
-                    viewport_height: window.innerHeight || null,
-                    user_agent: clampAnalyticsValue(navigator.userAgent, 500),
-                    extra: getDeviceSnapshot()
-                };
-
-                fetch(analyticsUrl, {
+                fetch(analyticsEndpoint, {
                     method: 'POST',
                     mode: 'cors',
                     credentials: 'omit',
-                    keepalive: true,
-                    headers: {
-                        apikey: analyticsKey,
-                        'Content-Type': 'application/json',
-                        Prefer: 'return=minimal'
-                    },
-                    body: JSON.stringify(payload),
+                    keepalive: Boolean(options && options.keepalive),
+                    headers: { 'Content-Type': 'application/json' },
+                    body,
                     signal: controller ? controller.signal : undefined
                 }).then(function() {
                     if (timeoutId) clearTimeout(timeoutId);
@@ -1589,12 +1609,43 @@
             } catch (error) {}
         }
 
+        function trackPageView() {
+            sendAnalyticsEvent(getBaseAnalyticsPayload('page_view'), { keepalive: true });
+        }
+
+        function updateVisibleEngagement() {
+            if (analyticsVisibleStartedAt === null) return;
+            const now = window.performance && performance.now ? performance.now() : Date.now();
+            analyticsVisibleMs += Math.max(0, now - analyticsVisibleStartedAt);
+            analyticsVisibleStartedAt = null;
+        }
+
+        function trackPageEngagement() {
+            if (analyticsEngagementSent) return;
+            analyticsEngagementSent = true;
+            updateVisibleEngagement();
+            const now = window.performance && performance.now ? performance.now() : Date.now();
+            const payload = getBaseAnalyticsPayload('page_engagement');
+            payload.duration_ms = Math.round(Math.max(0, now - analyticsStartedAt));
+            payload.engagement_ms = Math.round(Math.max(0, analyticsVisibleMs));
+            sendAnalyticsEvent(payload, { keepalive: true, beacon: true });
+        }
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                trackPageEngagement();
+            } else if (analyticsVisibleStartedAt === null && !analyticsEngagementSent) {
+                analyticsVisibleStartedAt = window.performance && performance.now ? performance.now() : Date.now();
+            }
+        });
+        window.addEventListener('pagehide', trackPageEngagement, { capture: true });
+
         function schedulePageViewTracking() {
-            const send = function() { runWhenIdle(trackPageView, 2500); };
-            if (document.readyState === 'complete') {
-                send();
+            const send = function() { runWhenIdle(trackPageView, 1200); };
+            if (document.readyState === 'loading') {
+                window.addEventListener('DOMContentLoaded', send, { once: true });
             } else {
-                window.addEventListener('load', send, { once: true });
+                send();
             }
         }
         schedulePageViewTracking();

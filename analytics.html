@@ -18,6 +18,8 @@
             --warn: #ffca7a;
             --danger: #ff7d91;
             --good: #78f0b2;
+            --violet: #b9a5ff;
+            --gold: #f7d08a;
             color-scheme: dark;
         }
 
@@ -26,12 +28,25 @@
         body {
             margin: 0;
             min-height: 100vh;
+            overflow-x: hidden;
             background:
                 radial-gradient(circle at 18% 12%, rgba(57, 197, 187, 0.16), transparent 34rem),
                 radial-gradient(circle at 86% 6%, rgba(125, 207, 255, 0.12), transparent 28rem),
                 linear-gradient(180deg, #031019 0%, var(--bg) 46%, #020406 100%);
             color: var(--text);
             font-family: "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.7), transparent 82%);
         }
 
         button, input, select {
@@ -50,12 +65,35 @@
             align-items: center;
             gap: 16px;
             margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            padding: 24px;
+            border: 1px solid rgba(57, 197, 187, 0.24);
+            border-radius: 22px;
+            background:
+                linear-gradient(135deg, rgba(57, 197, 187, 0.16), rgba(125, 207, 255, 0.04) 45%, rgba(5, 18, 26, 0.86)),
+                rgba(5, 18, 26, 0.72);
+            box-shadow: 0 28px 100px rgba(0, 0, 0, 0.32);
+            backdrop-filter: blur(18px);
+        }
+
+        .topbar::after {
+            content: "";
+            position: absolute;
+            right: -120px;
+            top: -160px;
+            width: 360px;
+            height: 360px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(57, 197, 187, 0.24), transparent 64%);
         }
 
         .brand {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
         }
 
         .eyebrow {
@@ -73,6 +111,12 @@
             font-size: clamp(30px, 5vw, 68px);
             line-height: 0.92;
             letter-spacing: -0.03em;
+        }
+
+        .brand p {
+            max-width: 740px;
+            color: var(--muted);
+            line-height: 1.7;
         }
 
         h2 {
@@ -95,6 +139,12 @@
             color: var(--muted);
             font-size: 13px;
             text-align: right;
+            position: relative;
+            z-index: 1;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.18);
         }
 
         .dot {
@@ -197,6 +247,7 @@
             border-radius: 16px;
             background: var(--panel);
             margin-bottom: 18px;
+            backdrop-filter: blur(16px);
         }
 
         .quick-ranges {
@@ -222,7 +273,7 @@
 
         .cards {
             display: grid;
-            grid-template-columns: repeat(6, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 18px;
         }
@@ -237,6 +288,22 @@
         .card {
             padding: 18px;
             min-height: 118px;
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 100% 0%, rgba(57, 197, 187, 0.18), transparent 52%),
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                var(--panel);
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: auto 14px 12px 14px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--miku), transparent);
+            opacity: 0.7;
         }
 
         .metric-label {
@@ -251,6 +318,7 @@
             font-weight: 900;
             letter-spacing: -0.04em;
             margin-top: 12px;
+            font-variant-numeric: tabular-nums;
         }
 
         .metric-note {
@@ -268,6 +336,10 @@
 
         .grid.thirds {
             grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .grid.feature {
+            grid-template-columns: 0.9fr 1.1fr;
         }
 
         .panel {
@@ -293,6 +365,9 @@
             grid-template-columns: minmax(0, 1fr) auto;
             gap: 12px;
             align-items: center;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.025);
         }
 
         .rank-label {
@@ -320,6 +395,43 @@
             height: 100%;
             border-radius: 999px;
             background: linear-gradient(90deg, var(--miku), var(--blue));
+        }
+
+        .geo-stack {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .geo-stack > div:first-child {
+            grid-row: span 2;
+        }
+
+        .duration-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .duration-chip {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .duration-chip strong {
+            display: block;
+            color: var(--text);
+            font-size: 20px;
+            margin-top: 6px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .duration-chip span {
+            color: var(--muted);
+            font-size: 12px;
         }
 
         .table-wrap {
@@ -400,7 +512,9 @@
         @media (max-width: 1100px) {
             .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .grid, .grid.thirds { grid-template-columns: 1fr; }
+            .grid, .grid.thirds, .grid.feature { grid-template-columns: 1fr; }
+            .geo-stack { grid-template-columns: 1fr; }
+            .geo-stack > div:first-child { grid-row: auto; }
         }
 
         @media (max-width: 700px) {
@@ -409,6 +523,8 @@
             .filters { grid-template-columns: 1fr; }
             .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .card { min-height: 100px; padding: 14px; }
+            .duration-summary { grid-template-columns: 1fr; }
+            .status { border-radius: 14px; align-items: flex-start; flex-wrap: wrap; text-align: left; }
         }
     </style>
 </head>
@@ -432,6 +548,7 @@
             <div class="brand">
                 <div class="eyebrow">Manga Bill / dele-miku</div>
                 <h1>Analytics Console</h1>
+                <p>内部数据驾驶舱：查看扫码访问、来源、设备、地区、停留时间和自定义分组。公开页面只做静默写入，不会向访客展示统计状态。</p>
             </div>
             <div class="status">
                 <span class="dot"></span>
@@ -486,6 +603,10 @@
                     <option value="connection">网络类型</option>
                     <option value="platform">系统平台</option>
                     <option value="viewport">视口宽度</option>
+                    <option value="country">国家 / 地区</option>
+                    <option value="region">省份 / 区域</option>
+                    <option value="city">城市</option>
+                    <option value="duration">停留时长</option>
                 </select>
             </div>
             <div class="field">
@@ -526,6 +647,26 @@
                 <div id="metric-ratio" class="metric-value">0%</div>
                 <div class="metric-note">扫码占比</div>
             </article>
+            <article class="card">
+                <div class="metric-label">Avg Stay</div>
+                <div id="metric-avg-stay" class="metric-value">0s</div>
+                <div class="metric-note">平均停留时间</div>
+            </article>
+            <article class="card">
+                <div class="metric-label">Visible Time</div>
+                <div id="metric-visible" class="metric-value">0s</div>
+                <div class="metric-note">平均可见时间</div>
+            </article>
+            <article class="card">
+                <div class="metric-label">Median Stay</div>
+                <div id="metric-median" class="metric-value">0s</div>
+                <div class="metric-note">停留中位数</div>
+            </article>
+            <article class="card">
+                <div class="metric-label">Timed Sessions</div>
+                <div id="metric-timed" class="metric-value">0</div>
+                <div class="metric-note">已捕获停留会话</div>
+            </article>
         </section>
 
         <section class="grid">
@@ -541,6 +682,45 @@
             <article class="panel">
                 <h2>24 小时分布</h2>
                 <canvas id="hour-chart" width="520" height="280"></canvas>
+            </article>
+        </section>
+
+        <section class="grid feature">
+            <article class="panel">
+                <div class="panel-header">
+                    <h2>地区分布</h2>
+                    <div class="small-actions">
+                        <button class="mini-button" data-export="countries" type="button">导出 CSV</button>
+                    </div>
+                </div>
+                <div class="geo-stack">
+                    <div>
+                        <h3>Country / Region</h3>
+                        <div id="country-list" class="rank-list"></div>
+                    </div>
+                    <div>
+                        <h3>Province</h3>
+                        <div id="region-list" class="rank-list"></div>
+                    </div>
+                    <div>
+                        <h3>City</h3>
+                        <div id="city-list" class="rank-list"></div>
+                    </div>
+                </div>
+            </article>
+            <article class="panel">
+                <div class="panel-header">
+                    <h2>停留时间分布</h2>
+                    <div class="small-actions">
+                        <button class="mini-button" data-export="durations" type="button">导出 CSV</button>
+                    </div>
+                </div>
+                <canvas id="duration-chart" width="760" height="280"></canvas>
+                <div class="duration-summary">
+                    <div class="duration-chip"><span>平均停留</span><strong id="summary-avg-stay">0s</strong></div>
+                    <div class="duration-chip"><span>中位停留</span><strong id="summary-median-stay">0s</strong></div>
+                    <div class="duration-chip"><span>短停留次数</span><strong id="summary-short-stays">0</strong></div>
+                </div>
             </article>
         </section>
 
@@ -589,6 +769,7 @@
                             <th>访问次数</th>
                             <th>访客</th>
                             <th>会话</th>
+                            <th>平均停留</th>
                         </tr>
                     </thead>
                     <tbody id="custom-table"></tbody>
@@ -613,6 +794,7 @@
                             <th>路径</th>
                             <th>语言</th>
                             <th>时区</th>
+                            <th>地区</th>
                             <th>二维码</th>
                             <th>Campaign</th>
                             <th>网络</th>
@@ -636,6 +818,17 @@
         const $$ = (selector) => Array.from(document.querySelectorAll(selector));
         const fmt = (value) => new Intl.NumberFormat('zh-CN').format(Number(value || 0));
         const pct = (value, total) => total ? Math.round((Number(value || 0) / total) * 100) + '%' : '0%';
+        const fmtDuration = (ms) => {
+            const seconds = Math.max(0, Math.round(Number(ms || 0) / 1000));
+            if (seconds < 60) return `${seconds}s`;
+            const minutes = Math.floor(seconds / 60);
+            const rest = seconds % 60;
+            if (minutes < 60) return rest ? `${minutes}m ${rest}s` : `${minutes}m`;
+            const hours = Math.floor(minutes / 60);
+            const minuteRest = minutes % 60;
+            return minuteRest ? `${hours}h ${minuteRest}m` : `${hours}h`;
+        };
+        const rowCount = (row, preferred) => Number(row?.[preferred] ?? row?.page_views ?? row?.sessions ?? row?.count ?? 0);
 
         function toDateInput(date) {
             const offset = date.getTimezoneOffset();
@@ -772,10 +965,21 @@
             $('#metric-qr').textContent = fmt(totals.qr_views);
             $('#metric-mobile').textContent = fmt(totals.mobile_views);
             $('#metric-ratio').textContent = pct(totals.qr_views, pv);
+            $('#metric-avg-stay').textContent = fmtDuration(totals.avg_duration_ms);
+            $('#metric-visible').textContent = fmtDuration(totals.avg_engagement_ms);
+            $('#metric-median').textContent = fmtDuration(totals.median_duration_ms);
+            $('#metric-timed').textContent = fmt(totals.timed_sessions);
+            $('#summary-avg-stay').textContent = fmtDuration(totals.avg_duration_ms);
+            $('#summary-median-stay').textContent = fmtDuration(totals.median_duration_ms);
+            $('#summary-short-stays').textContent = fmt(totals.short_stays);
             $('#range-label').textContent = `${data.range?.start || ''} - ${data.range?.end || ''}`;
 
             drawLineChart($('#day-chart'), data.day_series || []);
             drawHourChart($('#hour-chart'), data.hour_distribution || []);
+            drawDurationChart($('#duration-chart'), data.durations || []);
+            renderRank('#country-list', data.countries || []);
+            renderRank('#region-list', data.regions || []);
+            renderRank('#city-list', data.cities || []);
             renderRank('#source-list', data.sources || []);
             renderRank('#device-list', data.devices || []);
             renderRank('#qr-list', [...(data.qr_codes || []), ...(data.campaigns || [])].slice(0, 12));
@@ -860,6 +1064,39 @@
             ctx.textAlign = 'left';
         }
 
+        function drawDurationChart(canvas, rows) {
+            const { ctx, width, height } = resizeCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            const pad = 34;
+            drawGrid(ctx, width, height, pad);
+            if (!rows.length) return drawEmpty(ctx, width, height);
+
+            const normalized = rows.slice(0, 8).map((row) => ({
+                label: row.label || 'unknown',
+                count: rowCount(row, 'sessions')
+            }));
+            const max = Math.max(1, ...normalized.map((row) => row.count));
+            const gap = 10;
+            const barWidth = Math.max(20, (width - pad * 2 - gap * (normalized.length - 1)) / normalized.length);
+            normalized.forEach((row, index) => {
+                const barHeight = (row.count / max) * (height - pad * 2);
+                const x = pad + index * (barWidth + gap);
+                const y = height - pad - barHeight;
+                const gradient = ctx.createLinearGradient(0, y, 0, height - pad);
+                gradient.addColorStop(0, '#7dcfff');
+                gradient.addColorStop(1, '#39c5bb');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, barWidth, Math.max(3, barHeight));
+                ctx.fillStyle = '#8eabb7';
+                ctx.font = '11px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(String(row.label).slice(0, 12), x + barWidth / 2, height - 8);
+                ctx.fillStyle = '#e8fbff';
+                ctx.fillText(fmt(row.count), x + barWidth / 2, Math.max(14, y - 8));
+            });
+            ctx.textAlign = 'left';
+        }
+
         function drawGrid(ctx, width, height, pad) {
             ctx.strokeStyle = 'rgba(255,255,255,0.07)';
             ctx.lineWidth = 1;
@@ -880,14 +1117,14 @@
             ctx.textAlign = 'left';
         }
 
-        function renderRank(selector, rows) {
+        function renderRank(selector, rows, preferredCount) {
             const root = $(selector);
-            const max = Math.max(1, ...rows.map((row) => Number(row.page_views || 0)));
+            const max = Math.max(1, ...rows.map((row) => rowCount(row, preferredCount || 'page_views')));
             root.innerHTML = rows.length ? rows.map((row) => `
                 <div class="rank-row">
                     <div class="rank-label" title="${escapeHtml(row.label)}">${escapeHtml(row.label)}</div>
-                    <div class="rank-count">${fmt(row.page_views)}</div>
-                    <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, (Number(row.page_views || 0) / max) * 100)}%"></div></div>
+                    <div class="rank-count">${fmt(rowCount(row, preferredCount || 'page_views'))}</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, (rowCount(row, preferredCount || 'page_views') / max) * 100)}%"></div></div>
                 </div>
             `).join('') : '<div class="metric-note">暂无数据</div>';
         }
@@ -899,8 +1136,9 @@
                     <td>${fmt(row.page_views)}</td>
                     <td>${fmt(row.visitors)}</td>
                     <td>${fmt(row.sessions)}</td>
+                    <td>${fmtDuration(row.avg_duration_ms)}</td>
                 </tr>
-            `).join('') || '<tr><td colspan="4">暂无数据</td></tr>';
+            `).join('') || '<tr><td colspan="5">暂无数据</td></tr>';
         }
 
         function renderRecent(rows) {
@@ -912,12 +1150,13 @@
                     <td>${escapeHtml(row.path)}</td>
                     <td>${escapeHtml(row.language)}</td>
                     <td>${escapeHtml(row.timezone)}</td>
+                    <td>${escapeHtml([row.country, row.region, row.city].filter((item) => item && item !== 'unknown').join(' / ') || row.country || 'unknown')}</td>
                     <td>${escapeHtml(row.qr)}</td>
                     <td>${escapeHtml(row.campaign)}</td>
                     <td>${escapeHtml(row.connection)}</td>
                     <td>${escapeHtml(row.platform)}</td>
                 </tr>
-            `).join('') || '<tr><td colspan="10">暂无数据</td></tr>';
+            `).join('') || '<tr><td colspan="11">暂无数据</td></tr>';
         }
 
         function escapeHtml(value) {
