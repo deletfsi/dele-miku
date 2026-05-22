@@ -1465,6 +1465,97 @@
             }
         }
 
+        function clampAnalyticsValue(value, limit) {
+            if (value === null || value === undefined) return null;
+            const normalized = String(value).trim();
+            return normalized ? normalized.slice(0, limit) : null;
+        }
+
+        function createAnalyticsId(prefix) {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return prefix + '-' + window.crypto.randomUUID();
+            }
+            return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+        }
+
+        function getStoredAnalyticsId(storage, key, prefix) {
+            try {
+                let value = storage.getItem(key);
+                if (!value) {
+                    value = createAnalyticsId(prefix);
+                    storage.setItem(key, value);
+                }
+                return value;
+            } catch (error) {
+                return createAnalyticsId(prefix);
+            }
+        }
+
+        function getTrafficSource() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const explicitSource = params.get('src') || params.get('utm_source') || params.get('source');
+                if (explicitSource) return clampAnalyticsValue(explicitSource, 80);
+                if (/dqr\.cn/i.test(document.referrer || '')) return 'qr_ticket';
+            } catch (error) {}
+            return 'direct';
+        }
+
+        function trackPageView() {
+            if (!window.fetch) return;
+            try {
+                const analyticsUrl = 'https://auhhtzamzojyhqkbwzgs.supabase.co/rest/v1/site_events';
+                const analyticsKey = 'sb_publishable_1eG-3p5hNmy-CwaaOKfoXw_XEqPFaJ9';
+                const visitorId = getStoredAnalyticsId(window.localStorage, 'dele_miku_visitor_id', 'v');
+                const sessionId = getStoredAnalyticsId(window.sessionStorage, 'dele_miku_session_id', 's');
+                const controller = window.AbortController ? new AbortController() : null;
+                const timeoutId = controller ? setTimeout(function() { controller.abort(); }, 1600) : null;
+                const payload = {
+                    event_name: 'page_view',
+                    source: getTrafficSource(),
+                    visitor_id: clampAnalyticsValue(visitorId, 80),
+                    session_id: clampAnalyticsValue(sessionId, 80),
+                    path: clampAnalyticsValue(window.location.pathname + window.location.search, 500),
+                    referrer: clampAnalyticsValue(document.referrer, 500),
+                    language: clampAnalyticsValue(navigator.language, 80),
+                    timezone: clampAnalyticsValue(Intl.DateTimeFormat().resolvedOptions().timeZone, 80),
+                    screen_width: window.screen ? window.screen.width : null,
+                    screen_height: window.screen ? window.screen.height : null,
+                    viewport_width: window.innerWidth || null,
+                    viewport_height: window.innerHeight || null,
+                    user_agent: clampAnalyticsValue(navigator.userAgent, 500)
+                };
+
+                fetch(analyticsUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    keepalive: true,
+                    headers: {
+                        apikey: analyticsKey,
+                        'Content-Type': 'application/json',
+                        Prefer: 'return=minimal'
+                    },
+                    body: JSON.stringify(payload),
+                    signal: controller ? controller.signal : undefined
+                }).then(function() {
+                    if (timeoutId) clearTimeout(timeoutId);
+                }).catch(function() {
+                    if (timeoutId) clearTimeout(timeoutId);
+                });
+            } catch (error) {}
+        }
+
+        function schedulePageViewTracking() {
+            const send = function() { runWhenIdle(trackPageView, 2500); };
+            if (document.readyState === 'complete') {
+                send();
+            } else {
+                window.addEventListener('load', send, { once: true });
+            }
+        }
+        schedulePageViewTracking();
+
         function preloadImage(src) {
             const img = new Image();
             img.decoding = 'async';
