@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "node scripts/verify-player.js",
+    "test:music-assets": "node scripts/verify-player.js --strict-assets"
+  }
+}

@@ -170,6 +170,239 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .visualizer { display: flex; gap: 3px; height: 15px; align-items: flex-end; margin-top: 4px; }
         .bar { width: 3px; background-color: #39C5BB; height: 20%; border-radius: 2px; transition: height 0.1s; }
+        #music-panel-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 160;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+            padding: 18px;
+            background: rgba(3, 7, 11, 0);
+            pointer-events: none;
+            transition: background 0.28s ease;
+        }
+        #music-panel-overlay.is-open {
+            background: rgba(3, 7, 11, 0.38);
+            pointer-events: auto;
+        }
+        #music-panel {
+            width: min(430px, calc(100vw - 36px));
+            max-height: min(720px, calc(100svh - 36px));
+            display: grid;
+            grid-template-rows: auto auto auto auto minmax(168px, 1fr);
+            gap: 18px;
+            padding: 18px;
+            border-radius: 24px;
+            border: 1px solid rgba(57, 197, 187, 0.26);
+            background: rgba(5, 12, 17, 0.92);
+            color: #fff;
+            box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 36px rgba(57,197,187,0.13);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            opacity: 0;
+            transform: translate3d(18px, 22px, 0) scale(0.94);
+            transform-origin: bottom right;
+            transition: opacity 0.28s ease, transform 0.28s cubic-bezier(.215,.61,.355,1);
+        }
+        #music-panel-overlay.is-open #music-panel {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+        .music-panel-top {
+            display: grid;
+            grid-template-columns: 86px minmax(0, 1fr) 34px;
+            gap: 14px;
+            align-items: center;
+        }
+        .music-panel-record {
+            width: 86px;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #111;
+            box-shadow: inset 0 0 0 18px rgba(0,0,0,0.28), 0 14px 34px rgba(0,0,0,0.38);
+            animation: spin 9s linear infinite;
+            animation-play-state: paused;
+        }
+        .music-panel-record.playing { animation-play-state: running; }
+        .music-panel-record::after {
+            content: "";
+            display: block;
+            width: 20px;
+            height: 20px;
+            margin: 30px auto;
+            border-radius: 50%;
+            background: #05080b;
+            border: 1px solid rgba(255,255,255,0.22);
+        }
+        .music-title { min-width: 0; }
+        .music-title strong {
+            display: block;
+            font-size: 18px;
+            line-height: 1.25;
+            letter-spacing: 0;
+            overflow-wrap: anywhere;
+        }
+        .music-title span,
+        .music-status {
+            display: block;
+            margin-top: 6px;
+            font-size: 11px;
+            line-height: 1.4;
+            color: rgba(255,255,255,0.62);
+            letter-spacing: 0.04em;
+        }
+        .music-panel-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 22px;
+            line-height: 1;
+        }
+        .music-progress { display: grid; gap: 8px; }
+        .music-time-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: rgba(255,255,255,0.56);
+            font-family: var(--font-display);
+        }
+        #music-progress {
+            width: 100%;
+            accent-color: #39C5BB;
+        }
+        .music-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr 1fr;
+            gap: 8px;
+        }
+        .music-controls button,
+        .track-list button {
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            border-radius: 999px;
+            min-height: 42px;
+            padding: 0 12px;
+            font-size: 12px;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+        .music-controls button:hover,
+        .track-list button:hover {
+            background: rgba(57,197,187,0.16);
+            border-color: rgba(57,197,187,0.42);
+        }
+        #music-toggle {
+            background: #39C5BB;
+            color: #03070b;
+            border-color: transparent;
+            font-weight: 800;
+        }
+        .music-source-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            min-height: 38px;
+            margin-top: -4px;
+            padding: 8px 10px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.055);
+        }
+        .music-source-hint {
+            min-width: 0;
+            font-size: 10.5px;
+            line-height: 1.35;
+            color: rgba(255,255,255,0.58);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .music-source-link,
+        .track-source-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+            border-radius: 999px;
+            border: 1px solid rgba(57,197,187,0.32);
+            background: rgba(57,197,187,0.12);
+            color: #8ff5ed;
+            font-size: 10px;
+            line-height: 1;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .music-source-link { padding: 0 10px; }
+        .music-source-link.is-disabled,
+        .track-source-link.is-disabled {
+            opacity: 0.42;
+            pointer-events: none;
+            border-color: rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.06);
+        }
+        .track-list {
+            min-height: 0;
+            overflow-y: auto;
+            display: grid;
+            gap: 8px;
+            padding-right: 2px;
+        }
+        .track-list button {
+            min-height: 54px;
+            border-radius: 14px;
+            text-align: left;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            align-items: center;
+            gap: 8px;
+        }
+        .track-list button.is-active {
+            background: rgba(57,197,187,0.18);
+            border-color: rgba(57,197,187,0.62);
+        }
+        .track-name {
+            display: block;
+            min-width: 0;
+            font-size: 13px;
+            font-weight: 700;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .track-meta {
+            display: block;
+            margin-top: 4px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.56);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .track-badge {
+            flex: 0 0 auto;
+            border-radius: 999px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.66);
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        .track-list button.is-active .track-badge {
+            background: rgba(57,197,187,0.2);
+            color: #8ff5ed;
+        }
+        .track-source-link {
+            width: 30px;
+            padding: 0;
+        }
 
         .tilt-wrapper { perspective: 1000px; transform-style: preserve-3d; }
         .tilt-card { transition: transform 0.1s ease; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
@@ -768,12 +1001,38 @@
             .cursor-dot, .cursor-outline { display: none !important; }
             .glass-card,
             #music-player,
+            #music-panel,
+            #music-panel-overlay,
             #audio-prompt,
             #audio-prompt-overlay,
             .archive-preview-backdrop {
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
             }
+            #music-panel-overlay {
+                align-items: flex-end;
+                justify-content: center;
+                padding: 12px;
+            }
+            #music-panel {
+                width: calc(100vw - 24px);
+                max-height: min(650px, calc(100svh - 24px));
+                border-radius: 20px;
+                gap: 14px;
+                padding: 14px;
+            }
+            .music-panel-top {
+                grid-template-columns: 70px minmax(0, 1fr) 34px;
+                gap: 12px;
+            }
+            .music-panel-record { width: 70px; }
+            .music-panel-record::after {
+                width: 16px;
+                height: 16px;
+                margin: 24px auto;
+            }
+            .music-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .track-list button { min-height: 50px; }
             .glass-card { background: rgba(255, 255, 255, 0.035); }
             .mobile-audio-nudge { display: flex; }
             body.archive-light .mobile-audio-nudge,
@@ -948,20 +1207,53 @@
     <canvas id="particles-canvas"></canvas>
 
     <!-- 音乐播放器 -->
-    <div id="music-player" class="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[100] flex items-center gap-3 p-2 md:p-3 pr-4 md:pr-5 rounded-full cursor-pointer md:cursor-none hover-target" onclick="toggleMusic()">
+    <button id="music-player" type="button" aria-label="打开音乐播放器" class="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[100] flex items-center gap-3 p-2 md:p-3 pr-4 md:pr-5 rounded-full cursor-pointer md:cursor-none hover-target" onclick="openMusicPanel()">
         <div class="record-cover w-10 h-10 md:w-12 md:h-12 rounded-full" id="record"></div>
-        <div class="flex-col hidden sm:flex">
+        <div class="flex-col hidden sm:flex text-left min-w-0">
             <span class="text-[10px] md:text-xs text-gray-400 font-display tracking-wider">NOW PLAYING</span>
-            <span class="text-xs md:text-sm font-bold text-white tracking-wide truncate max-w-[120px] md:max-w-none">世界第一的公主殿下</span>
+            <span id="mini-track-title" class="text-xs md:text-sm font-bold text-white tracking-wide truncate max-w-[120px] md:max-w-[190px]">世界第一的公主殿下</span>
             <div class="visualizer" id="visualizer">
                 <div class="bar"></div><div class="bar"></div><div class="bar"></div>
                 <div class="bar"></div><div class="bar"></div>
             </div>
         </div>
-        <audio id="bgm" loop preload="none">
-            <source src="assets/bgm.mp3" type="audio/mpeg">
-        </audio>
+    </button>
+
+    <div id="music-panel-overlay" aria-hidden="true">
+        <section id="music-panel" role="dialog" aria-modal="true" aria-labelledby="music-panel-title">
+            <div class="music-panel-top">
+                <div class="music-panel-record" id="panel-record"></div>
+                <div class="music-title">
+                    <strong id="music-panel-title">世界第一的公主殿下</strong>
+                    <span id="music-panel-meta">ryo (supercell) / 初音未来</span>
+                    <span id="music-status" class="music-status">准备播放</span>
+                </div>
+                <button class="music-panel-close hover-target" type="button" aria-label="收起播放器" onclick="closeMusicPanel()">×</button>
+            </div>
+            <div class="music-progress">
+                <input id="music-progress" type="range" min="0" max="0" value="0" step="0.1" aria-label="播放进度">
+                <div class="music-time-row">
+                    <span id="music-current-time">0:00</span>
+                    <span id="music-duration">0:00</span>
+                </div>
+            </div>
+            <div class="music-controls">
+                <button type="button" class="hover-target" onclick="previousTrack()">上一首</button>
+                <button type="button" class="hover-target" id="music-toggle" onclick="togglePlayback()">播放</button>
+                <button type="button" class="hover-target" onclick="nextTrack()">下一首</button>
+                <button type="button" class="hover-target" id="music-mode" onclick="togglePlayMode()">顺序</button>
+            </div>
+            <div class="music-source-row" id="music-source-row">
+                <span class="music-source-hint" id="music-source-hint">音源：assets/bgm.mp3</span>
+                <a class="music-source-link hover-target" id="music-source-link" href="https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a" target="_blank" rel="noopener">合法来源</a>
+            </div>
+            <div class="track-list" id="track-list" aria-label="初音未来曲库"></div>
+        </section>
     </div>
+
+    <audio id="bgm" preload="metadata">
+        <source src="assets/bgm.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="main-content">
         <!-- 阶段 4: UI 元素导航栏，加载完毕后由 GSAP 上浮展现 -->
@@ -2396,7 +2688,7 @@
                 prompt.classList.remove('scale-100');
                 prompt.classList.add('scale-95');
             }
-            if(playMusic && !isPlaying) { toggleMusic(); }
+            if(playMusic && !isPlaying) { playTrack(currentTrackIndex, true); }
         }
 
         const isMobileRuntime = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
@@ -2591,43 +2883,439 @@
         runWhenIdle(initParticles, 2200);
 
         // Music
+        var mikuTracks = [
+            {
+                id: 'world-is-mine',
+                title: '世界第一的公主殿下',
+                producer: 'ryo (supercell)',
+                vocal: '初音未来',
+                audioSources: ['assets/bgm.mp3'],
+                coverSrc: 'assets/player-cover.webp',
+                quality: '本地音源',
+                sourceUrl: 'https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a'
+            },
+            {
+                id: 'mousou-kanshou-daishou-renmei',
+                title: '妄想感伤代偿连盟',
+                producer: 'DECO*27',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/mousou-kanshou-daishou-renmei',
+                coverSrc: 'assets/player.png',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://ototoy.jp/_/default/p/67624'
+            },
+            {
+                id: 'senbonzakura',
+                title: '千本樱',
+                producer: '黒うさP',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/senbonzakura',
+                coverSrc: 'assets/1.webp',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://ototoy.jp/_/default/p/26309'
+            },
+            {
+                id: 'melt',
+                title: 'Melt',
+                producer: 'ryo (supercell)',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/melt',
+                coverSrc: 'assets/2.webp',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://www.qobuz.com/us-en/album/supercell-feat-hatsune-miku-supercell/hh7pe4wnyoisb'
+            },
+            {
+                id: 'tell-your-world',
+                title: 'Tell Your World',
+                producer: 'kz (livetune)',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/tell-your-world',
+                coverSrc: 'assets/3.webp',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://karent.jp/album/1615'
+            },
+            {
+                id: 'romeo-and-cinderella',
+                title: '罗密欧与灰姑娘',
+                producer: 'doriko',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/romeo-and-cinderella',
+                coverSrc: 'assets/4.webp',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://karent.jp/album/58'
+            },
+            {
+                id: 'disappearance-of-hatsune-miku',
+                title: '初音未来的消失',
+                producer: 'cosMo@暴走P',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/disappearance-of-hatsune-miku',
+                coverSrc: 'assets/5.webp',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://karent.jp/album/1098'
+            },
+            {
+                id: 'ai-kotoba',
+                title: '爱言叶',
+                producer: 'DECO*27',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/ai-kotoba',
+                coverSrc: 'assets/6.webp',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://ototoy.jp/_/default/p/39207'
+            },
+            {
+                id: 'sand-planet',
+                title: '砂之惑星',
+                producer: 'HACHI',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/sand-planet',
+                coverSrc: 'assets/7.webp',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://karent.jp/cd/magical2017'
+            },
+            {
+                id: 'odds-and-ends',
+                title: 'ODDS&ENDS',
+                producer: 'ryo (supercell)',
+                vocal: '初音未来',
+                audioBase: 'assets/audio/odds-and-ends',
+                coverSrc: 'assets/hero.webp',
+                quality: '支持 FLAC/WAV/MP3',
+                sourceUrl: 'https://karent.jp/cd/magical2014'
+            }
+        ];
+        var audioExtensionOrder = ['flac', 'wav', 'mp3'];
+        var audioMimeTypes = {
+            flac: 'audio/flac',
+            wav: 'audio/wav',
+            mp3: 'audio/mpeg'
+        };
+
         var bgm = document.getElementById('bgm');
+        var miniPlayer = document.getElementById('music-player');
+        var panelOverlay = document.getElementById('music-panel-overlay');
+        var panel = document.getElementById('music-panel');
         var record = document.getElementById('record');
+        var panelRecord = document.getElementById('panel-record');
+        var miniTrackTitle = document.getElementById('mini-track-title');
+        var panelTitle = document.getElementById('music-panel-title');
+        var panelMeta = document.getElementById('music-panel-meta');
+        var musicStatus = document.getElementById('music-status');
+        var musicSourceHint = document.getElementById('music-source-hint');
+        var musicSourceLink = document.getElementById('music-source-link');
+        var progress = document.getElementById('music-progress');
+        var currentTimeLabel = document.getElementById('music-current-time');
+        var durationLabel = document.getElementById('music-duration');
+        var trackList = document.getElementById('track-list');
+        var toggleButton = document.getElementById('music-toggle');
+        var modeButton = document.getElementById('music-mode');
         var bars = document.querySelectorAll('.bar');
+        var currentTrackIndex = 0;
+        var playMode = 'sequence';
         var isPlaying = false;
+        var isSeeking = false;
         var visualizerInterval;
         var playPromise;
 
-        function toggleMusic() {
-            if(isPlaying) {
-                isPlaying = false;
-                record.classList.remove('playing');
-                clearInterval(visualizerInterval);
-                for(var bi=0; bi<bars.length; bi++) bars[bi].style.height = '20%';
-                if (playPromise !== undefined) {
-                    playPromise.then(function() { bgm.pause(); }).catch(function(e) { console.error(e); });
-                } else {
-                    bgm.pause();
-                }
+        function getCurrentTrack() {
+            return mikuTracks[currentTrackIndex];
+        }
+
+        function getTrackSources(track) {
+            if (track.audioSources) return track.audioSources;
+            return audioExtensionOrder.map(function(ext) {
+                return track.audioBase + '.' + ext;
+            });
+        }
+
+        function getAudioMime(src) {
+            var ext = src.split('.').pop().toLowerCase();
+            return audioMimeTypes[ext] || 'audio/mpeg';
+        }
+
+        function getSourceHint(track) {
+            return getTrackSources(track).join(' 或 ');
+        }
+
+        function updateSourceLink(link, track) {
+            if (!link) return;
+            if (track.sourceUrl) {
+                link.href = track.sourceUrl;
+                link.textContent = '合法来源';
+                link.classList.remove('is-disabled');
+                link.setAttribute('aria-label', '打开 ' + track.title + ' 的合法音源来源');
             } else {
-                isPlaying = true;
-                record.classList.add('playing');
-                visualizerInterval = setInterval(function() {
-                    for(var bi=0; bi<bars.length; bi++) {
-                        bars[bi].style.height = (Math.random() * 80 + 20) + '%';
-                    }
-                }, 150);
-                playPromise = bgm.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(function(error) {
-                        isPlaying = false;
-                        record.classList.remove('playing');
-                        clearInterval(visualizerInterval);
-                        for(var bi=0; bi<bars.length; bi++) bars[bi].style.height = '20%';
-                    });
-                }
+                link.removeAttribute('href');
+                link.textContent = '来源';
+                link.classList.add('is-disabled');
+                link.setAttribute('aria-label', track.title + ' 暂无来源链接');
             }
         }
+
+        function getTrackAssetHint(track) {
+            if (track.audioSources) return track.audioSources.join(' / ');
+            return track.audioBase.replace('assets/audio/', '') + '.flac / .wav / .mp3';
+        }
+
+        function formatTime(seconds) {
+            if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+            var minutes = Math.floor(seconds / 60);
+            var rest = Math.floor(seconds % 60);
+            return minutes + ':' + String(rest).padStart(2, '0');
+        }
+
+        function setStatus(text) {
+            if (musicStatus) musicStatus.textContent = text;
+        }
+
+        function setRecordCover(src) {
+            var cover = "url('" + src + "')";
+            if (record) record.style.backgroundImage = cover;
+            if (panelRecord) panelRecord.style.backgroundImage = cover;
+        }
+
+        function startVisualizer() {
+            clearInterval(visualizerInterval);
+            visualizerInterval = setInterval(function() {
+                for(var bi=0; bi<bars.length; bi++) {
+                    bars[bi].style.height = (Math.random() * 80 + 20) + '%';
+                }
+            }, 150);
+        }
+
+        function stopVisualizer() {
+            clearInterval(visualizerInterval);
+            for(var bi=0; bi<bars.length; bi++) bars[bi].style.height = '20%';
+        }
+
+        function updatePlaybackState() {
+            if (toggleButton) toggleButton.textContent = isPlaying ? '暂停' : '播放';
+            if (record) record.classList.toggle('playing', isPlaying);
+            if (panelRecord) panelRecord.classList.toggle('playing', isPlaying);
+            if (miniPlayer) miniPlayer.setAttribute('aria-label', isPlaying ? '打开音乐播放器，当前正在播放' : '打开音乐播放器');
+            if (isPlaying) {
+                startVisualizer();
+            } else {
+                stopVisualizer();
+            }
+        }
+
+        function updateTrackList() {
+            var items = trackList ? trackList.querySelectorAll('button[data-track-index]') : [];
+            for (var i = 0; i < items.length; i++) {
+                items[i].classList.toggle('is-active', Number(items[i].dataset.trackIndex) === currentTrackIndex);
+            }
+        }
+
+        function renderTrackList() {
+            if (!trackList) return;
+            trackList.innerHTML = '';
+            for (var i = 0; i < mikuTracks.length; i++) {
+                var track = mikuTracks[i];
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'hover-target';
+                button.dataset.trackIndex = String(i);
+                button.setAttribute('aria-label', '播放 ' + track.title);
+
+                var copy = document.createElement('span');
+                copy.style.minWidth = '0';
+
+                var title = document.createElement('span');
+                title.className = 'track-name';
+                title.textContent = track.title;
+
+                var meta = document.createElement('span');
+                meta.className = 'track-meta';
+                meta.textContent = track.producer + ' / ' + track.vocal;
+
+                var badge = document.createElement('span');
+                badge.className = 'track-badge';
+                badge.textContent = track.audioSources ? '已接入' : '待文件';
+
+                var sourceLink = document.createElement('a');
+                sourceLink.className = 'track-source-link hover-target';
+                sourceLink.target = '_blank';
+                sourceLink.rel = 'noopener';
+                sourceLink.textContent = '源';
+                sourceLink.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+                updateSourceLink(sourceLink, track);
+
+                copy.appendChild(title);
+                copy.appendChild(meta);
+                button.appendChild(copy);
+                button.appendChild(badge);
+                button.appendChild(sourceLink);
+                button.addEventListener('click', function(event) {
+                    var index = Number(event.currentTarget.dataset.trackIndex);
+                    playTrack(index, true);
+                });
+                trackList.appendChild(button);
+            }
+            updateTrackList();
+        }
+
+        function setTrack(index, shouldResetTime) {
+            if (!mikuTracks[index]) return;
+            currentTrackIndex = index;
+            var track = getCurrentTrack();
+            if (miniTrackTitle) miniTrackTitle.textContent = track.title;
+            if (panelTitle) panelTitle.textContent = track.title;
+            if (panelMeta) panelMeta.textContent = track.producer + ' / ' + track.vocal + ' / ' + track.quality;
+            if (musicSourceHint) musicSourceHint.textContent = '音源文件：' + getTrackAssetHint(track);
+            updateSourceLink(musicSourceLink, track);
+            setRecordCover(track.coverSrc);
+            updateTrackList();
+            bgm.pause();
+            bgm.removeAttribute('src');
+            bgm.innerHTML = '';
+            getTrackSources(track).forEach(function(src) {
+                var source = document.createElement('source');
+                source.src = src;
+                source.type = getAudioMime(src);
+                bgm.appendChild(source);
+            });
+            bgm.load();
+            if (shouldResetTime) {
+                progress.value = 0;
+                progress.max = 0;
+                currentTimeLabel.textContent = '0:00';
+                durationLabel.textContent = '0:00';
+            }
+            setStatus(track.audioSources ? '准备播放' : '等待音源文件');
+        }
+
+        function playMusic() {
+            var track = getCurrentTrack();
+            if (!track || (!track.audioSources && !track.audioBase)) {
+                setStatus('缺少音频路径');
+                return;
+            }
+            isPlaying = true;
+            updatePlaybackState();
+            setStatus('加载中');
+            playPromise = bgm.play();
+            if (playPromise !== undefined) {
+                playPromise.then(function() {
+                    setStatus('播放中');
+                }).catch(function() {
+                    isPlaying = false;
+                    updatePlaybackState();
+                    setStatus('音源无法播放，请检查: ' + getSourceHint(track));
+                });
+            }
+        }
+
+        function pauseMusic() {
+            isPlaying = false;
+            bgm.pause();
+            updatePlaybackState();
+            setStatus('已暂停');
+        }
+
+        function playTrack(index, shouldPlay) {
+            var wasPlaying = shouldPlay || isPlaying;
+            pauseMusic();
+            setTrack(index, true);
+            if (wasPlaying) playMusic();
+        }
+
+        function getAdjacentTrackIndex(direction) {
+            if (mikuTracks.length <= 1) return currentTrackIndex;
+            if (playMode === 'shuffle') {
+                var nextIndex = currentTrackIndex;
+                while (nextIndex === currentTrackIndex) {
+                    nextIndex = Math.floor(Math.random() * mikuTracks.length);
+                }
+                return nextIndex;
+            }
+            return (currentTrackIndex + direction + mikuTracks.length) % mikuTracks.length;
+        }
+
+        function togglePlayback() {
+            if (isPlaying) {
+                pauseMusic();
+            } else {
+                playMusic();
+            }
+        }
+
+        function previousTrack() {
+            playTrack(getAdjacentTrackIndex(-1), isPlaying);
+        }
+
+        function nextTrack(forcePlay) {
+            playTrack(getAdjacentTrackIndex(1), forcePlay === true || isPlaying);
+        }
+
+        function togglePlayMode() {
+            playMode = playMode === 'sequence' ? 'shuffle' : 'sequence';
+            if (modeButton) modeButton.textContent = playMode === 'sequence' ? '顺序' : '随机';
+            setStatus(playMode === 'sequence' ? '顺序播放' : '随机播放');
+        }
+
+        function openMusicPanel() {
+            if (!panelOverlay) return;
+            panelOverlay.classList.add('is-open');
+            panelOverlay.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeMusicPanel() {
+            if (!panelOverlay) return;
+            panelOverlay.classList.remove('is-open');
+            panelOverlay.setAttribute('aria-hidden', 'true');
+        }
+
+        if (panelOverlay) {
+            panelOverlay.addEventListener('click', function(event) {
+                if (event.target === panelOverlay) closeMusicPanel();
+            });
+        }
+        if (panel) {
+            panel.addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+        }
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closeMusicPanel();
+        });
+        if (progress) {
+            progress.addEventListener('input', function() {
+                isSeeking = true;
+                currentTimeLabel.textContent = formatTime(Number(progress.value));
+            });
+            progress.addEventListener('change', function() {
+                if (Number.isFinite(bgm.duration)) {
+                    bgm.currentTime = Number(progress.value);
+                }
+                isSeeking = false;
+            });
+        }
+        bgm.addEventListener('loadedmetadata', function() {
+            var duration = Number.isFinite(bgm.duration) ? bgm.duration : 0;
+            progress.max = String(duration);
+            durationLabel.textContent = formatTime(duration);
+        });
+        bgm.addEventListener('timeupdate', function() {
+            if (isSeeking) return;
+            progress.value = String(bgm.currentTime || 0);
+            currentTimeLabel.textContent = formatTime(bgm.currentTime || 0);
+        });
+        bgm.addEventListener('ended', function() {
+            nextTrack(true);
+        });
+        bgm.addEventListener('error', function() {
+            isPlaying = false;
+            updatePlaybackState();
+            setStatus('音源无法播放，请检查: ' + getSourceHint(getCurrentTrack()));
+        });
+
+        renderTrackList();
+        setTrack(0, true);
+        updatePlaybackState();
     </script>
 </body>
 </html>
