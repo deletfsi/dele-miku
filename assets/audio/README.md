@@ -17,3 +17,11 @@ Expected first-pass playlist filename stems:
 - `odds-and-ends`
 
 Quality target: FLAC/WAV when legally available, otherwise 320kbps MP3. The first track currently uses `../bgm.mp3`.
+
+To import authorized files from a local download/purchase folder:
+
+```shell
+npm run import:music-assets -- --from "D:\path\to\authorized-audio"
+```
+
+The import script accepts `.flac`, `.wav`, and `.mp3`, prefers them in that order, and copies matched files into this directory with the exact stems above. Use `--overwrite` when replacing an existing file.

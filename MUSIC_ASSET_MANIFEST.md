@@ -22,3 +22,11 @@ npm run test:music-assets
 ```
 
 该命令只有在 10 首歌都有可用音频文件时才会通过。
+
+授权文件导入命令：
+
+```shell
+npm run import:music-assets -- --from "D:\path\to\authorized-audio"
+```
+
+脚本会识别常见中日英歌名别名，并复制为播放器约定的文件名。不要导入盗链、网盘搬运、P2P 或规避 DRM 得到的音频。
