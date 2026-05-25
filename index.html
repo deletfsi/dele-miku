@@ -1245,7 +1245,7 @@
             </div>
             <div class="music-source-row" id="music-source-row">
                 <span class="music-source-hint" id="music-source-hint">音源：assets/bgm.mp3</span>
-                <a class="music-source-link hover-target" id="music-source-link" href="https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a" target="_blank" rel="noopener">合法来源</a>
+                <a class="music-source-link hover-target" id="music-source-link" href="https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a" target="_blank" rel="noopener">音源页</a>
             </div>
             <div class="track-list" id="track-list" aria-label="初音未来曲库"></div>
         </section>
@@ -3042,9 +3042,9 @@
             if (!link) return;
             if (track.sourceUrl) {
                 link.href = track.sourceUrl;
-                link.textContent = '合法来源';
+                link.textContent = '音源页';
                 link.classList.remove('is-disabled');
-                link.setAttribute('aria-label', '打开 ' + track.title + ' 的合法音源来源');
+                link.setAttribute('aria-label', '打开 ' + track.title + ' 的音源页面');
             } else {
                 link.removeAttribute('href');
                 link.textContent = '来源';
@@ -3132,7 +3132,7 @@
 
                 var badge = document.createElement('span');
                 badge.className = 'track-badge';
-                badge.textContent = track.audioSources ? '已接入' : '待文件';
+                badge.textContent = track.audioSources ? '本地' : '待补';
 
                 var sourceLink = document.createElement('a');
                 sourceLink.className = 'track-source-link hover-target';

@@ -1,10 +1,10 @@
-# 初音未来曲库合法音源来源记录
+# 初音未来曲库音源来源记录
 
 本项目不从盗链、网盘搬运、P2P 或规避 DRM 的来源下载音乐。音源进入 `assets/audio/` 前，需要确认来源允许下载并保留购买或授权记录。
 
 ## 已列入播放器的曲目
 
-| 曲目 | 制作者 | 当前接入 | 合法来源入口 |
+| 曲目 | 制作者 | 当前接入 | 来源入口 |
 | --- | --- | --- | --- |
 | 世界第一的公主殿下 | ryo (supercell) | `assets/bgm.mp3` | https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a |
 | 妄想感伤代偿连盟 | DECO*27 | 待放入 `assets/audio/` | https://ototoy.jp/_/default/p/67624 |

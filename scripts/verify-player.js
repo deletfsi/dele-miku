@@ -123,14 +123,14 @@ if (html.includes('panelOverlay.addEventListener') && html.includes('event.targe
 }
 
 if (html.includes('music-source-link') && html.includes('music-source-hint')) {
-  pass('player exposes legal source link and expected asset hint');
+  pass('player exposes source link and expected asset hint');
 } else {
   fail('player is missing source link or expected asset hint');
 }
 
 const missingSourceUrls = tracks.filter((track) => !track.sourceUrl).map((track) => track.title);
 if (missingSourceUrls.length === 0) {
-  pass('all tracks have legal source links');
+  pass('all tracks have source links');
 } else {
   fail(`missing source links for ${missingSourceUrls.join(', ')}`);
 }
