@@ -3003,6 +3003,7 @@
             wav: 'audio/wav',
             mp3: 'audio/mpeg'
         };
+        var remoteAudioOrigin = 'https://dele-miku.vercel.app/';
 
         var bgm = document.getElementById('bgm');
         var miniPlayer = document.getElementById('music-player');
@@ -3035,10 +3036,14 @@
         }
 
         function getTrackSources(track) {
-            if (track.audioSources) return track.audioSources;
-            return audioExtensionOrder.map(function(ext) {
+            var sources = track.audioSources ? track.audioSources : audioExtensionOrder.map(function(ext) {
                 return track.audioBase + '.' + ext;
             });
+            return sources.concat(sources.filter(function(src) {
+                return src.indexOf('assets/') === 0;
+            }).map(function(src) {
+                return remoteAudioOrigin + src;
+            }));
         }
 
         function getAudioMime(src) {
