@@ -1444,7 +1444,7 @@
         </section>
     </div>
 
-    <audio id="bgm" preload="metadata">
+    <audio id="bgm" preload="auto">
         <source src="assets/bgm.mp3" type="audio/mpeg">
     </audio>
 
@@ -3406,10 +3406,6 @@
 
         function warmNextAudio() {
             if (!audioWarmupQueue.length) return;
-            if (isPlaying) {
-                scheduleWarmNextAudio(2600);
-                return;
-            }
             var src = audioWarmupQueue.shift();
             if (!src || audioWarmupFetched[src] || audioWarmupActive[src]) {
                 warmNextAudio();
@@ -3429,19 +3425,20 @@
                 if (didFetch) audioWarmupFetched[src] = true;
             }).finally(function() {
                 delete audioWarmupActive[src];
-                scheduleWarmNextAudio(isPlaying ? 2600 : 260);
+                if (audioWarmupQueue.length) scheduleWarmNextAudio(isPlaying ? 900 : 180);
             });
         }
 
         function warmAudioCache(priorityIndex) {
             if (isSaveDataMode()) return;
+            primeAudioPrefetchLinks(priorityIndex);
             var nextQueue = buildAudioWarmupQueue(priorityIndex);
             if (!isPlaying && nextQueue[0]) addAudioPrefetch(nextQueue[0]);
             audioWarmupQueue = audioWarmupQueue.concat(nextQueue).filter(function(src, index, arr) {
                 return arr.indexOf(src) === index;
             });
             if (audioWarmupStarted) {
-                if (audioWarmupQueue.length) scheduleWarmNextAudio(isPlaying ? 2600 : 260);
+                if (audioWarmupQueue.length) scheduleWarmNextAudio(isPlaying ? 900 : 180);
                 return;
             }
             audioWarmupStarted = true;
@@ -3605,7 +3602,6 @@
             isPlaying = true;
             updatePlaybackState();
             setLoadingStatus();
-            cancelAudioWarmupFetch();
             warmAudioCache(currentTrackIndex);
             schedulePlaybackFallback(track, requestId);
             playPromise = bgm.play();
@@ -3740,6 +3736,10 @@
         renderTrackList();
         setTrack(0, true);
         updatePlaybackState();
+        primeAudioPrefetchLinks(0);
+        runWhenIdle(function() {
+            warmAudioCache(0);
+        }, 800);
     </script>
 </body>
 </html>

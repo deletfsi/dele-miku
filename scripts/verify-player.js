@@ -187,6 +187,17 @@ if (missingMangabillAssets.length === 0) {
   fail(`missing MangaBill static assets: ${missingMangabillAssets.map((assetPath) => path.relative(root, assetPath)).join(', ')}`);
 }
 
+const mangabillHtml = fs.existsSync(mangabillIndexPath) ? fs.readFileSync(mangabillIndexPath, 'utf8') : '';
+if (
+  mangabillHtml.includes('function unlockSheetScroll') &&
+  mangabillHtml.includes("document.body.classList.remove('sheet-open')") &&
+  mangabillHtml.includes("window.addEventListener('hashchange'")
+) {
+  pass('MangaBill releases WeChat sheet scroll lock on route changes');
+} else {
+  fail('MangaBill should release sheet-open scroll lock when leaving a post');
+}
+
 if (
   !html.includes('音源无法播放') &&
   !html.includes('请检查') &&
@@ -213,6 +224,17 @@ if (
   pass('player warms audio cache with prefetch and same-origin fetch');
 } else {
   fail('player audio cache warmup is incomplete');
+}
+
+if (
+  html.includes('<audio id="bgm" preload="auto">') &&
+  html.includes('primeAudioPrefetchLinks(0);') &&
+  html.includes('warmAudioCache(0);') &&
+  !html.includes('scheduleWarmNextAudio(2600)')
+) {
+  pass('player eagerly preloads playlist audio beyond the default track');
+} else {
+  fail('player should keep warming the full playlist, including while audio is playing');
 }
 
 if (
