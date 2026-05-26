@@ -3107,6 +3107,7 @@
                 producer: 'ryo (supercell)',
                 vocal: '初音未来',
                 audioSources: ['assets/bgm.mp3'],
+                duration: 253.5675,
                 coverSrc: 'assets/player-cover.webp',
                 quality: 'MP3',
                 sourceUrl: 'https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a'
@@ -3117,6 +3118,7 @@
                 producer: 'DECO*27',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/mousou-kanshou-daishou-renmei.mp3'],
+                duration: 263.765333,
                 coverSrc: 'assets/player.png',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://ototoy.jp/_/default/p/67624'
@@ -3127,6 +3129,7 @@
                 producer: '黒うさP',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/senbonzakura.mp3'],
+                duration: 244.096,
                 coverSrc: 'assets/1.webp',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://ototoy.jp/_/default/p/26309'
@@ -3137,6 +3140,7 @@
                 producer: 'ryo (supercell)',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/melt.mp3'],
+                duration: 183.189333,
                 coverSrc: 'assets/2.webp',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://www.qobuz.com/us-en/album/supercell-feat-hatsune-miku-supercell/hh7pe4wnyoisb'
@@ -3147,6 +3151,7 @@
                 producer: 'kz (livetune)',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/tell-your-world.mp3'],
+                duration: 249.941333,
                 coverSrc: 'assets/3.webp',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://karent.jp/album/1615'
@@ -3157,6 +3162,7 @@
                 producer: 'doriko',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/romeo-and-cinderella.mp3'],
+                duration: 280.961451,
                 coverSrc: 'assets/4.webp',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://karent.jp/album/58'
@@ -3167,6 +3173,7 @@
                 producer: 'cosMo@暴走P',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/disappearance-of-hatsune-miku.mp3'],
+                duration: 301.673651,
                 coverSrc: 'assets/5.webp',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://karent.jp/album/1098'
@@ -3177,6 +3184,7 @@
                 producer: 'DECO*27',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/ai-kotoba.mp3'],
+                duration: 219.008,
                 coverSrc: 'assets/6.webp',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://ototoy.jp/_/default/p/39207'
@@ -3187,6 +3195,7 @@
                 producer: 'HACHI',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/sand-planet.mp3'],
+                duration: 249.856,
                 coverSrc: 'assets/7.webp',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://karent.jp/cd/magical2017'
@@ -3197,6 +3206,7 @@
                 producer: 'ryo (supercell)',
                 vocal: '初音未来',
                 audioSources: ['assets/audio/odds-and-ends.mp3'],
+                duration: 347.84,
                 coverSrc: 'assets/hero.webp',
                 quality: '支持 FLAC/WAV/MP3',
                 sourceUrl: 'https://karent.jp/cd/magical2014'
@@ -3253,6 +3263,11 @@
         var playbackFallbackTimer = 0;
         var playbackObjectUrl = '';
         var loadingStatusIndex = 0;
+        var seekRequestId = 0;
+        var seekCommitTimer = 0;
+        var seekResumeTimer = 0;
+        var pendingSeekSeconds = null;
+        var pendingSeekPrecise = false;
         var loadingStatusMessages = ['加载中', '正在缓冲', '马上就好', '正在准备播放'];
 
         function getCurrentTrack() {
@@ -3294,6 +3309,36 @@
         function getCachedAudioSource(src) {
             if (!src) return '';
             return audioBlobUrls[src] || src;
+        }
+
+        function getTrackDuration(track) {
+            return track && Number.isFinite(track.duration) && track.duration > 0 ? track.duration : 0;
+        }
+
+        function getKnownDuration() {
+            var mediaDuration = Number.isFinite(bgm.duration) && bgm.duration > 0 ? bgm.duration : 0;
+            return mediaDuration || getTrackDuration(getCurrentTrack());
+        }
+
+        function clampSeekSeconds(seconds) {
+            var duration = getKnownDuration();
+            var value = Number(seconds);
+            if (!Number.isFinite(value) || value < 0) value = 0;
+            if (duration > 0) value = Math.min(value, duration);
+            return value;
+        }
+
+        function setProgressDuration(duration) {
+            var safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+            progress.max = String(safeDuration);
+            durationLabel.textContent = formatTime(safeDuration);
+        }
+
+        function setProgressPosition(seconds) {
+            var value = clampSeekSeconds(seconds);
+            progress.value = String(value);
+            currentTimeLabel.textContent = formatTime(value);
+            return value;
         }
 
         function getNextWarmupIndex(index) {
@@ -3405,7 +3450,7 @@
             if (!src) return;
             playbackFallbackTimer = window.setTimeout(function() {
                 playbackFallbackTimer = 0;
-                if (requestId !== playbackRequestId || bgm.readyState >= 3 || bgm.currentTime > 0.05 || bgm.error) return;
+                if (requestId !== playbackRequestId || isSeeking || pendingSeekSeconds !== null || bgm.readyState >= 3 || bgm.currentTime > 0.05 || bgm.error) return;
                 var cachePromise = audioWarmupPromises[src] || fetchAudioToCache(src);
                 cachePromise.then(function(didFetch) {
                     if (!didFetch || requestId !== playbackRequestId || bgm.readyState >= 3 || bgm.currentTime > 0.05) return;
@@ -3484,6 +3529,66 @@
             }
             audioWarmupStarted = true;
             warmNextAudio();
+        }
+
+        function pauseBackgroundForInteractiveAudio(keepSrc) {
+            cancelAudioWarmupFetch(keepSrc);
+            audioWarmupQueue = [];
+            audioWarmupStarted = false;
+        }
+
+        function resumeWarmupAfterInteractiveDelay(delay) {
+            if (seekResumeTimer) window.clearTimeout(seekResumeTimer);
+            seekResumeTimer = window.setTimeout(function() {
+                seekResumeTimer = 0;
+                warmAudioCache(getBackgroundWarmupIndex(currentTrackIndex));
+            }, delay || 1800);
+        }
+
+        function finishSeekInteraction() {
+            if (pendingSeekSeconds !== null && Math.abs((bgm.currentTime || 0) - pendingSeekSeconds) > 1.2) return;
+            isSeeking = false;
+            pendingSeekSeconds = null;
+            pendingSeekPrecise = false;
+            if (isPlaying && bgm.readyState < 3) setLoadingStatus();
+            else setStatus('');
+            resumeWarmupAfterInteractiveDelay(1800);
+        }
+
+        function applyPendingSeek(requestId) {
+            if (requestId !== seekRequestId || pendingSeekSeconds === null) return;
+            var target = clampSeekSeconds(pendingSeekSeconds);
+            if (bgm.readyState < 1 && !(Number.isFinite(bgm.duration) && bgm.duration > 0)) {
+                bgm.load();
+                setLoadingStatus();
+                return;
+            }
+            try {
+                if (!pendingSeekPrecise && typeof bgm.fastSeek === 'function') bgm.fastSeek(target);
+                else bgm.currentTime = target;
+                setProgressPosition(target);
+                if (isPlaying && bgm.readyState < 3) setLoadingStatus();
+            } catch (error) {
+                setLoadingStatus();
+            }
+        }
+
+        function commitSeek(seconds, immediate) {
+            if (seekCommitTimer) {
+                window.clearTimeout(seekCommitTimer);
+                seekCommitTimer = 0;
+            }
+            var target = setProgressPosition(seconds);
+            pendingSeekSeconds = target;
+            pendingSeekPrecise = Boolean(immediate);
+            isSeeking = true;
+            pauseBackgroundForInteractiveAudio();
+            var requestId = ++seekRequestId;
+            var delay = immediate ? 0 : 120;
+            seekCommitTimer = window.setTimeout(function() {
+                seekCommitTimer = 0;
+                applyPendingSeek(requestId);
+            }, delay);
         }
 
         function formatTime(seconds) {
@@ -3601,6 +3706,14 @@
 
         function setTrack(index, shouldResetTime) {
             if (!mikuTracks[index]) return;
+            seekRequestId++;
+            pendingSeekSeconds = null;
+            pendingSeekPrecise = false;
+            isSeeking = false;
+            if (seekCommitTimer) {
+                window.clearTimeout(seekCommitTimer);
+                seekCommitTimer = 0;
+            }
             currentTrackIndex = index;
             var track = getCurrentTrack();
             if (miniTrackTitle) miniTrackTitle.textContent = track.title;
@@ -3625,9 +3738,8 @@
             setAudioElementSource(track);
             if (shouldResetTime) {
                 progress.value = 0;
-                progress.max = 0;
+                setProgressDuration(getTrackDuration(track));
                 currentTimeLabel.textContent = '0:00';
-                durationLabel.textContent = '0:00';
             }
             setStatus('');
         }
@@ -3747,25 +3859,35 @@
         });
         if (progress) {
             progress.addEventListener('input', function() {
-                isSeeking = true;
-                currentTimeLabel.textContent = formatTime(Number(progress.value));
+                commitSeek(Number(progress.value), false);
             });
             progress.addEventListener('change', function() {
-                if (Number.isFinite(bgm.duration)) {
-                    bgm.currentTime = Number(progress.value);
-                }
-                isSeeking = false;
+                commitSeek(Number(progress.value), true);
             });
         }
         bgm.addEventListener('loadedmetadata', function() {
-            var duration = Number.isFinite(bgm.duration) ? bgm.duration : 0;
-            progress.max = String(duration);
-            durationLabel.textContent = formatTime(duration);
+            var duration = Number.isFinite(bgm.duration) ? bgm.duration : getTrackDuration(getCurrentTrack());
+            setProgressDuration(duration);
+            if (pendingSeekSeconds !== null) applyPendingSeek(seekRequestId);
         });
         bgm.addEventListener('timeupdate', function() {
             if (isSeeking) return;
-            progress.value = String(bgm.currentTime || 0);
-            currentTimeLabel.textContent = formatTime(bgm.currentTime || 0);
+            setProgressPosition(bgm.currentTime || 0);
+        });
+        bgm.addEventListener('seeked', function() {
+            finishSeekInteraction();
+        });
+        bgm.addEventListener('canplay', function() {
+            finishSeekInteraction();
+        });
+        bgm.addEventListener('playing', function() {
+            finishSeekInteraction();
+        });
+        bgm.addEventListener('waiting', function() {
+            if (isPlaying) setLoadingStatus();
+        });
+        bgm.addEventListener('stalled', function() {
+            if (isPlaying) setLoadingStatus();
         });
         bgm.addEventListener('ended', function() {
             nextTrack(true);

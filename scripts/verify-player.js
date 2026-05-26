@@ -99,6 +99,11 @@ for (const track of tracks) {
   else fail(`track vocal is not marked as Hatsune Miku: ${track.title}`);
 }
 
+for (const track of tracks) {
+  if (Number.isFinite(track.duration) && track.duration > 0) pass(`track has known duration for immediate seeking: ${track.title}`);
+  else fail(`track missing known duration for immediate seeking: ${track.title}`);
+}
+
 for (const fn of requiredFunctions) {
   if (html.includes(`function ${fn}(`)) pass(`player function present: ${fn}`);
   else fail(`missing player function: ${fn}`);
@@ -266,6 +271,23 @@ if (
   pass('player guards stale play callbacks during rapid switching');
 } else {
   fail('player should guard stale play callbacks during rapid switching');
+}
+
+if (
+  html.includes('seekRequestId') &&
+  html.includes('pendingSeekSeconds') &&
+  html.includes('function commitSeek') &&
+  html.includes('function applyPendingSeek') &&
+  html.includes('typeof bgm.fastSeek') &&
+  html.includes('bgm.currentTime = target') &&
+  html.includes('pauseBackgroundForInteractiveAudio') &&
+  html.includes('resumeWarmupAfterInteractiveDelay') &&
+  html.includes("progress.addEventListener('input'") &&
+  html.includes("progress.addEventListener('change'")
+) {
+  pass('player prioritizes rapid seek interactions over background caching');
+} else {
+  fail('player should debounce seeks, guard stale seek requests, and pause background caching while seeking');
 }
 
 const missingAssets = [];
