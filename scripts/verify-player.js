@@ -167,6 +167,17 @@ if (
 }
 
 if (
+  html.includes('function schedulePlaybackFallback') &&
+  html.includes('URL.createObjectURL') &&
+  html.includes('playbackObjectUrl') &&
+  html.includes("fetch(url.href, { cache: 'force-cache' })")
+) {
+  pass('player can fall back to cached blob playback when media loading stalls');
+} else {
+  fail('player missing stalled media playback fallback');
+}
+
+if (
   html.includes('playbackRequestId') &&
   html.includes('var requestId = ++playbackRequestId') &&
   html.includes('requestId !== playbackRequestId')

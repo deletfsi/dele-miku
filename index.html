@@ -3071,6 +3071,8 @@
         var audioWarmupElements = [];
         var audioWarmupController = null;
         var audioWarmupTimer = 0;
+        var playbackFallbackTimer = 0;
+        var playbackObjectUrl = '';
 
         function getCurrentTrack() {
             return mikuTracks[currentTrackIndex];
@@ -3164,6 +3166,44 @@
                 audioWarmupElements[i].load();
             }
             audioWarmupElements = [];
+        }
+
+        function clearPlaybackFallback(revokeObjectUrl) {
+            if (playbackFallbackTimer) {
+                window.clearTimeout(playbackFallbackTimer);
+                playbackFallbackTimer = 0;
+            }
+            if (revokeObjectUrl && playbackObjectUrl) {
+                URL.revokeObjectURL(playbackObjectUrl);
+                playbackObjectUrl = '';
+            }
+        }
+
+        function schedulePlaybackFallback(track, requestId) {
+            clearPlaybackFallback(false);
+            var src = getWarmupSource(track);
+            if (!src) return;
+            playbackFallbackTimer = window.setTimeout(function() {
+                playbackFallbackTimer = 0;
+                if (requestId !== playbackRequestId || bgm.readyState > 0 || bgm.currentTime > 0.05 || bgm.error) return;
+                var url = new URL(src, window.location.href);
+                if (url.origin !== window.location.origin) return;
+                fetch(url.href, { cache: 'force-cache' })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('audio fallback failed');
+                        return response.blob();
+                    })
+                    .then(function(blob) {
+                        if (requestId !== playbackRequestId || bgm.readyState > 0 || bgm.currentTime > 0.05) return;
+                        clearPlaybackFallback(true);
+                        playbackObjectUrl = URL.createObjectURL(blob);
+                        bgm.pause();
+                        bgm.src = playbackObjectUrl;
+                        bgm.load();
+                        return bgm.play();
+                    })
+                    .catch(function() {});
+            }, 3500);
         }
 
         function fetchAudioToCache(src) {
@@ -3359,6 +3399,7 @@
                 }, 360);
             }
             updateTrackList();
+            clearPlaybackFallback(true);
             bgm.pause();
             bgm.removeAttribute('src');
             bgm.innerHTML = '';
@@ -3386,6 +3427,7 @@
             setStatus('');
             cancelAudioWarmupFetch();
             warmAudioCache(currentTrackIndex);
+            schedulePlaybackFallback(track, requestId);
             playPromise = bgm.play();
             if (playPromise !== undefined) {
                 playPromise.then(function() {
@@ -3402,6 +3444,7 @@
 
         function pauseMusic(skipWarmup) {
             playbackRequestId++;
+            clearPlaybackFallback(false);
             isPlaying = false;
             bgm.pause();
             updatePlaybackState();
