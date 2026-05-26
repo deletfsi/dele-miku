@@ -3775,9 +3775,6 @@
             updateTrackList();
             clearPlaybackFallback(true);
             bgm.pause();
-            bgm.removeAttribute('src');
-            bgm.innerHTML = '';
-            bgm.load();
             setAudioElementSource(track);
             if (shouldResetTime) {
                 progress.value = 0;
