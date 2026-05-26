@@ -127,6 +127,18 @@ if (
   fail('player UI controls are incomplete');
 }
 
+if (
+  html.includes('height: min(720px, calc(100svh - 36px));') &&
+  html.includes('height: min(650px, calc(100dvh - 24px));') &&
+  html.includes('grid-template-rows: auto auto auto auto minmax(0, 1fr);') &&
+  html.includes('-webkit-overflow-scrolling: touch;') &&
+  html.includes('touch-action: pan-y;')
+) {
+  pass('player track list has a constrained mobile scroll area');
+} else {
+  fail('player track list should scroll inside the mobile panel');
+}
+
 if (html.includes('panelOverlay.addEventListener') && html.includes('event.target === panelOverlay')) {
   pass('outside click closes the player window');
 } else {
