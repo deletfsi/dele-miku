@@ -3399,20 +3399,21 @@
             }
         }
 
-        function pauseMusic() {
+        function pauseMusic(skipWarmup) {
             playbackRequestId++;
             isPlaying = false;
             bgm.pause();
             updatePlaybackState();
             setStatus('');
-            warmAudioCache(currentTrackIndex);
+            if (!skipWarmup) warmAudioCache(currentTrackIndex);
         }
 
         function playTrack(index, shouldPlay) {
             var wasPlaying = shouldPlay || isPlaying;
-            pauseMusic();
+            pauseMusic(true);
             setTrack(index, true);
             if (wasPlaying) playMusic();
+            else warmAudioCache(currentTrackIndex);
         }
 
         function getAdjacentTrackIndex(direction) {
