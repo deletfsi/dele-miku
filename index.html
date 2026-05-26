@@ -3496,8 +3496,12 @@
             return audioWarmupPromises[src];
         }
 
+        function getAudioWarmupConcurrency() {
+            return isPlaying ? 1 : audioWarmupConcurrency;
+        }
+
         function warmNextAudio() {
-            if (!audioWarmupQueue.length || audioWarmupRunning >= audioWarmupConcurrency) return;
+            if (!audioWarmupQueue.length || audioWarmupRunning >= getAudioWarmupConcurrency()) return;
             var src = audioWarmupQueue.shift();
             if (!src || audioWarmupFetched[src] || audioWarmupActive[src]) {
                 warmNextAudio();
@@ -3834,6 +3838,7 @@
             panelOverlay.classList.add('is-open');
             panelOverlay.setAttribute('aria-hidden', 'false');
             runWhenIdle(function() {
+                if (isPlaying) return;
                 warmAudioCache(getBackgroundWarmupIndex(currentTrackIndex));
             }, 900);
         }
@@ -3903,6 +3908,7 @@
         updatePlaybackState();
         primeAudioPrefetchLinks(getBackgroundWarmupIndex(0), audioPrefetchLinkLimit);
         runWhenIdle(function() {
+            if (isPlaying) return;
             warmAudioCache(getBackgroundWarmupIndex(0));
         }, 800);
     </script>
