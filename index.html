@@ -3118,10 +3118,13 @@
             document.head.appendChild(link);
         }
 
-        function primeAudioPrefetchLinks() {
+        function primeAudioPrefetchLinks(priorityIndex, limit) {
             if (isSaveDataMode()) return;
-            for (var i = 0; i < mikuTracks.length; i++) {
-                addAudioPrefetch(getWarmupSource(mikuTracks[i]));
+            var start = Number.isFinite(priorityIndex) ? priorityIndex : currentTrackIndex;
+            var count = Number.isFinite(limit) ? Math.min(limit, mikuTracks.length) : mikuTracks.length;
+            for (var step = 0; step < count; step++) {
+                var index = (start + step) % mikuTracks.length;
+                addAudioPrefetch(getWarmupSource(mikuTracks[index]));
             }
         }
 
@@ -3155,6 +3158,12 @@
                 window.clearTimeout(audioWarmupTimer);
                 audioWarmupTimer = 0;
             }
+            for (var i = 0; i < audioWarmupElements.length; i++) {
+                audioWarmupElements[i].pause();
+                audioWarmupElements[i].removeAttribute('src');
+                audioWarmupElements[i].load();
+            }
+            audioWarmupElements = [];
         }
 
         function fetchAudioToCache(src) {
@@ -3211,8 +3220,8 @@
 
         function warmAudioCache(priorityIndex) {
             if (isSaveDataMode()) return;
-            primeAudioPrefetchLinks();
             var nextQueue = buildAudioWarmupQueue(priorityIndex);
+            if (!isPlaying && nextQueue[0]) addAudioPrefetch(nextQueue[0]);
             audioWarmupQueue = audioWarmupQueue.concat(nextQueue).filter(function(src, index, arr) {
                 return arr.indexOf(src) === index;
             });
