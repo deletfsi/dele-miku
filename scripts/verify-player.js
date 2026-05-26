@@ -153,6 +153,20 @@ if (!html.includes('music-source-link') && !html.includes('music-source-row') &&
 }
 
 if (
+  !html.includes('音源无法播放') &&
+  !html.includes('请检查') &&
+  !html.includes('缺少音频') &&
+  !html.includes('等待音源') &&
+  html.includes('loadingStatusMessages') &&
+  html.includes('加载中') &&
+  html.includes('正在缓冲')
+) {
+  pass('player uses user-friendly loading status copy instead of debug errors');
+} else {
+  fail('player should not expose debug audio error copy');
+}
+
+if (
   html.includes('function warmAudioCache') &&
   html.includes('function primeAudioPrefetchLinks') &&
   html.includes("link.rel = 'prefetch'") &&

@@ -3073,6 +3073,8 @@
         var audioWarmupTimer = 0;
         var playbackFallbackTimer = 0;
         var playbackObjectUrl = '';
+        var loadingStatusIndex = 0;
+        var loadingStatusMessages = ['加载中', '正在缓冲', '马上就好', '正在准备播放'];
 
         function getCurrentTrack() {
             return mikuTracks[currentTrackIndex];
@@ -3283,8 +3285,13 @@
         function setStatus(text) {
             if (!musicStatus) return;
             musicStatus.textContent = text || '';
-            var shouldShow = text && /无法|缺少|检查|失败/.test(text);
-            musicStatus.classList.toggle('has-message', Boolean(shouldShow));
+            musicStatus.classList.toggle('has-message', Boolean(text));
+        }
+
+        function setLoadingStatus() {
+            var text = loadingStatusMessages[loadingStatusIndex % loadingStatusMessages.length];
+            loadingStatusIndex++;
+            setStatus(text);
         }
 
         function setRecordCover(src) {
@@ -3412,19 +3419,19 @@
                 currentTimeLabel.textContent = '0:00';
                 durationLabel.textContent = '0:00';
             }
-            setStatus(track.audioSources ? '准备播放' : '等待音源文件');
+            setStatus('');
         }
 
         function playMusic() {
             var track = getCurrentTrack();
             if (!track || (!track.audioSources && !track.audioBase)) {
-                setStatus('缺少音频路径');
+                setLoadingStatus();
                 return;
             }
             var requestId = ++playbackRequestId;
             isPlaying = true;
             updatePlaybackState();
-            setStatus('');
+            setLoadingStatus();
             cancelAudioWarmupFetch();
             warmAudioCache(currentTrackIndex);
             schedulePlaybackFallback(track, requestId);
@@ -3437,7 +3444,7 @@
                     if (requestId !== playbackRequestId) return;
                     isPlaying = false;
                     updatePlaybackState();
-                    setStatus('音源无法播放，请检查: ' + getSourceHint(track));
+                    setLoadingStatus();
                 });
             }
         }
@@ -3554,7 +3561,7 @@
         bgm.addEventListener('error', function() {
             isPlaying = false;
             updatePlaybackState();
-            setStatus('音源无法播放，请检查: ' + getSourceHint(getCurrentTrack()));
+            setLoadingStatus();
         });
 
         renderTrackList();
