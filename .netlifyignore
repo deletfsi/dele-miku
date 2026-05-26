@@ -3,4 +3,6 @@
 .netlify
 .codex-cache
 node_modules
+mangabill/source-assets
+deploy-*.zip
 npm-debug.log*
