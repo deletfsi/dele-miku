@@ -303,50 +303,76 @@
             border-color: transparent;
             font-weight: 800;
         }
-        .music-source-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+        .now-playing-strip {
+            display: flex;
             align-items: center;
             gap: 10px;
-            min-height: 38px;
+            min-height: 42px;
             margin-top: -4px;
-            padding: 8px 10px;
+            padding: 9px 12px;
             border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.055);
+            border: 1px solid rgba(57,197,187,0.18);
+            background: linear-gradient(135deg, rgba(57,197,187,0.12), rgba(255,255,255,0.055));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         }
-        .music-source-hint {
+        .now-playing-copy {
             min-width: 0;
-            font-size: 10.5px;
-            line-height: 1.35;
-            color: rgba(255,255,255,0.58);
+            display: grid;
+            gap: 2px;
+        }
+        .now-playing-label {
+            font-size: 9px;
+            line-height: 1;
+            color: rgba(255,255,255,0.44);
+            letter-spacing: 0.12em;
+            font-family: var(--font-display);
+        }
+        .now-playing-title {
+            min-width: 0;
+            font-size: 12px;
+            line-height: 1.25;
+            color: rgba(255,255,255,0.88);
+            font-weight: 800;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
-        .music-source-link,
-        .track-source-link {
+        .now-playing-wave,
+        .track-playing-indicator {
+            width: 24px;
+            height: 18px;
+            flex: 0 0 24px;
             display: inline-flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
-            min-height: 28px;
-            border-radius: 999px;
-            border: 1px solid rgba(57,197,187,0.32);
-            background: rgba(57,197,187,0.12);
-            color: #8ff5ed;
-            font-size: 10px;
-            line-height: 1;
-            text-decoration: none;
-            white-space: nowrap;
+            gap: 3px;
         }
-        .music-source-link { padding: 0 10px; }
-        .music-source-link.is-disabled,
-        .track-source-link.is-disabled {
-            opacity: 0.42;
-            pointer-events: none;
-            border-color: rgba(255,255,255,0.12);
-            color: rgba(255,255,255,0.5);
-            background: rgba(255,255,255,0.06);
+        .now-playing-wave span,
+        .track-playing-indicator span {
+            width: 3px;
+            min-height: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #bafff8 0%, #39C5BB 72%, #1d8f88 100%);
+            opacity: 0.38;
+            animation: musicBeat 0.86s ease-in-out infinite;
+            animation-play-state: paused;
+            transform-origin: bottom;
+        }
+        .now-playing-wave span:nth-child(2),
+        .track-playing-indicator span:nth-child(2) { animation-delay: 0.12s; }
+        .now-playing-wave span:nth-child(3),
+        .track-playing-indicator span:nth-child(3) { animation-delay: 0.24s; }
+        .now-playing-wave span:nth-child(4),
+        .track-playing-indicator span:nth-child(4) { animation-delay: 0.36s; }
+        .now-playing-strip.is-playing .now-playing-wave span,
+        .track-list button.is-playing .track-playing-indicator span {
+            opacity: 1;
+            animation-play-state: running;
+        }
+        @keyframes musicBeat {
+            0%, 100% { height: 5px; }
+            38% { height: 18px; }
+            68% { height: 9px; }
         }
         .track-list {
             min-height: 0;
@@ -360,9 +386,9 @@
             border-radius: 14px;
             text-align: left;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto auto;
+            grid-template-columns: 24px minmax(0, 1fr);
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
         .track-list button.is-active {
             background: rgba(57,197,187,0.18);
@@ -385,23 +411,6 @@
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
-        }
-        .track-badge {
-            flex: 0 0 auto;
-            border-radius: 999px;
-            padding: 4px 8px;
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.66);
-            font-size: 10px;
-            white-space: nowrap;
-        }
-        .track-list button.is-active .track-badge {
-            background: rgba(57,197,187,0.2);
-            color: #8ff5ed;
-        }
-        .track-source-link {
-            width: 30px;
-            padding: 0;
         }
 
         .tilt-wrapper { perspective: 1000px; transform-style: preserve-3d; }
@@ -1243,9 +1252,12 @@
                 <button type="button" class="hover-target" onclick="nextTrack()">下一首</button>
                 <button type="button" class="hover-target" id="music-mode" onclick="togglePlayMode()">顺序</button>
             </div>
-            <div class="music-source-row" id="music-source-row">
-                <span class="music-source-hint" id="music-source-hint">音源：assets/bgm.mp3</span>
-                <a class="music-source-link hover-target" id="music-source-link" href="https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a" target="_blank" rel="noopener">音源页</a>
+            <div class="now-playing-strip" id="now-playing-strip" aria-live="polite">
+                <span class="now-playing-wave" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+                <span class="now-playing-copy">
+                    <span class="now-playing-label">NOW PLAYING</span>
+                    <span class="now-playing-title" id="now-playing-title">世界第一的公主殿下</span>
+                </span>
             </div>
             <div class="track-list" id="track-list" aria-label="初音未来曲库"></div>
         </section>
@@ -2891,7 +2903,7 @@
                 vocal: '初音未来',
                 audioSources: ['assets/bgm.mp3'],
                 coverSrc: 'assets/player-cover.webp',
-                quality: '本地音源',
+                quality: 'MP3',
                 sourceUrl: 'https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a'
             },
             {
@@ -3002,8 +3014,8 @@
         var panelTitle = document.getElementById('music-panel-title');
         var panelMeta = document.getElementById('music-panel-meta');
         var musicStatus = document.getElementById('music-status');
-        var musicSourceHint = document.getElementById('music-source-hint');
-        var musicSourceLink = document.getElementById('music-source-link');
+        var nowPlayingStrip = document.getElementById('now-playing-strip');
+        var nowPlayingTitle = document.getElementById('now-playing-title');
         var progress = document.getElementById('music-progress');
         var currentTimeLabel = document.getElementById('music-current-time');
         var durationLabel = document.getElementById('music-duration');
@@ -3036,26 +3048,6 @@
 
         function getSourceHint(track) {
             return getTrackSources(track).join(' 或 ');
-        }
-
-        function updateSourceLink(link, track) {
-            if (!link) return;
-            if (track.sourceUrl) {
-                link.href = track.sourceUrl;
-                link.textContent = '音源页';
-                link.classList.remove('is-disabled');
-                link.setAttribute('aria-label', '打开 ' + track.title + ' 的音源页面');
-            } else {
-                link.removeAttribute('href');
-                link.textContent = '来源';
-                link.classList.add('is-disabled');
-                link.setAttribute('aria-label', track.title + ' 暂无来源链接');
-            }
-        }
-
-        function getTrackAssetHint(track) {
-            if (track.audioSources) return track.audioSources.join(' / ');
-            return track.audioBase.replace('assets/audio/', '') + '.flac / .wav / .mp3';
         }
 
         function formatTime(seconds) {
@@ -3093,18 +3085,21 @@
             if (toggleButton) toggleButton.textContent = isPlaying ? '暂停' : '播放';
             if (record) record.classList.toggle('playing', isPlaying);
             if (panelRecord) panelRecord.classList.toggle('playing', isPlaying);
+            if (nowPlayingStrip) nowPlayingStrip.classList.toggle('is-playing', isPlaying);
             if (miniPlayer) miniPlayer.setAttribute('aria-label', isPlaying ? '打开音乐播放器，当前正在播放' : '打开音乐播放器');
             if (isPlaying) {
                 startVisualizer();
             } else {
                 stopVisualizer();
             }
+            updateTrackList();
         }
 
         function updateTrackList() {
             var items = trackList ? trackList.querySelectorAll('button[data-track-index]') : [];
             for (var i = 0; i < items.length; i++) {
                 items[i].classList.toggle('is-active', Number(items[i].dataset.trackIndex) === currentTrackIndex);
+                items[i].classList.toggle('is-playing', Number(items[i].dataset.trackIndex) === currentTrackIndex && isPlaying);
             }
         }
 
@@ -3119,6 +3114,13 @@
                 button.dataset.trackIndex = String(i);
                 button.setAttribute('aria-label', '播放 ' + track.title);
 
+                var indicator = document.createElement('span');
+                indicator.className = 'track-playing-indicator';
+                indicator.setAttribute('aria-hidden', 'true');
+                for (var wi = 0; wi < 4; wi++) {
+                    indicator.appendChild(document.createElement('span'));
+                }
+
                 var copy = document.createElement('span');
                 copy.style.minWidth = '0';
 
@@ -3130,25 +3132,10 @@
                 meta.className = 'track-meta';
                 meta.textContent = track.producer + ' / ' + track.vocal;
 
-                var badge = document.createElement('span');
-                badge.className = 'track-badge';
-                badge.textContent = track.audioSources ? '本地' : '待补';
-
-                var sourceLink = document.createElement('a');
-                sourceLink.className = 'track-source-link hover-target';
-                sourceLink.target = '_blank';
-                sourceLink.rel = 'noopener';
-                sourceLink.textContent = '源';
-                sourceLink.addEventListener('click', function(event) {
-                    event.stopPropagation();
-                });
-                updateSourceLink(sourceLink, track);
-
                 copy.appendChild(title);
                 copy.appendChild(meta);
+                button.appendChild(indicator);
                 button.appendChild(copy);
-                button.appendChild(badge);
-                button.appendChild(sourceLink);
                 button.addEventListener('click', function(event) {
                     var index = Number(event.currentTarget.dataset.trackIndex);
                     playTrack(index, true);
@@ -3164,9 +3151,8 @@
             var track = getCurrentTrack();
             if (miniTrackTitle) miniTrackTitle.textContent = track.title;
             if (panelTitle) panelTitle.textContent = track.title;
-            if (panelMeta) panelMeta.textContent = track.producer + ' / ' + track.vocal + ' / ' + track.quality;
-            if (musicSourceHint) musicSourceHint.textContent = '音源文件：' + getTrackAssetHint(track);
-            updateSourceLink(musicSourceLink, track);
+            if (panelMeta) panelMeta.textContent = track.producer + ' / ' + track.vocal;
+            if (nowPlayingTitle) nowPlayingTitle.textContent = track.title;
             setRecordCover(track.coverSrc);
             updateTrackList();
             bgm.pause();

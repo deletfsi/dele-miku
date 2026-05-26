@@ -122,17 +122,16 @@ if (html.includes('panelOverlay.addEventListener') && html.includes('event.targe
   fail('outside click close behavior is missing');
 }
 
-if (html.includes('music-source-link') && html.includes('music-source-hint')) {
-  pass('player exposes source link and expected asset hint');
+if (html.includes('now-playing-strip') && html.includes('track-playing-indicator') && html.includes('musicBeat')) {
+  pass('player exposes animated now-playing indicators');
 } else {
-  fail('player is missing source link or expected asset hint');
+  fail('player is missing animated now-playing indicators');
 }
 
-const missingSourceUrls = tracks.filter((track) => !track.sourceUrl).map((track) => track.title);
-if (missingSourceUrls.length === 0) {
-  pass('all tracks have source links');
+if (!html.includes('music-source-link') && !html.includes('music-source-row') && !html.includes('track-badge')) {
+  pass('player omits source links and local/pending badges');
 } else {
-  fail(`missing source links for ${missingSourceUrls.join(', ')}`);
+  fail('player should not render source links or local/pending badges');
 }
 
 const missingAssets = [];

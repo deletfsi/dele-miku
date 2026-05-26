@@ -7,15 +7,15 @@
 | 曲目 | 制作者 | 当前接入 | 来源入口 |
 | --- | --- | --- | --- |
 | 世界第一的公主殿下 | ryo (supercell) | `assets/bgm.mp3` | https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a |
-| 妄想感伤代偿连盟 | DECO*27 | 待放入 `assets/audio/` | https://ototoy.jp/_/default/p/67624 |
-| 千本樱 | 黒うさP | 待放入 `assets/audio/` | https://ototoy.jp/_/default/p/26309 |
-| Melt | ryo (supercell) | 待放入 `assets/audio/` | https://www.qobuz.com/us-en/album/supercell-feat-hatsune-miku-supercell/hh7pe4wnyoisb |
-| Tell Your World | kz (livetune) | 待放入 `assets/audio/` | https://karent.jp/album/1615 |
-| 罗密欧与灰姑娘 | doriko | 待放入 `assets/audio/` | https://karent.jp/album/58 |
-| 初音未来的消失 | cosMo@暴走P | 待放入 `assets/audio/` | https://karent.jp/album/1098 |
-| 爱言叶 | DECO*27 | 待放入 `assets/audio/` | https://ototoy.jp/_/default/p/39207 |
-| 砂之惑星 | HACHI | 待放入 `assets/audio/` | https://karent.jp/cd/magical2017 |
-| ODDS&ENDS | ryo (supercell) | 待放入 `assets/audio/` | https://karent.jp/cd/magical2014 |
+| 妄想感伤代偿连盟 | DECO*27 | `assets/audio/mousou-kanshou-daishou-renmei.mp3` | https://ototoy.jp/_/default/p/67624 |
+| 千本樱 | 黒うさP | `assets/audio/senbonzakura.mp3` | https://ototoy.jp/_/default/p/26309 |
+| Melt | ryo (supercell) | `assets/audio/melt.mp3` | https://www.qobuz.com/us-en/album/supercell-feat-hatsune-miku-supercell/hh7pe4wnyoisb |
+| Tell Your World | kz (livetune) | `assets/audio/tell-your-world.mp3` | https://karent.jp/album/1615 |
+| 罗密欧与灰姑娘 | doriko | `assets/audio/romeo-and-cinderella.mp3` | https://karent.jp/album/58 |
+| 初音未来的消失 | cosMo@暴走P | `assets/audio/disappearance-of-hatsune-miku.mp3` | https://karent.jp/album/1098 |
+| 爱言叶 | DECO*27 | `assets/audio/ai-kotoba.mp3` | https://ototoy.jp/_/default/p/39207 |
+| 砂之惑星 | HACHI | `assets/audio/sand-planet.mp3` | https://karent.jp/cd/magical2017 |
+| ODDS&ENDS | ryo (supercell) | `assets/audio/odds-and-ends.mp3` | https://karent.jp/cd/magical2014 |
 
 ## 接入约定
 
