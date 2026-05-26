@@ -228,8 +228,14 @@ if (
 
 if (
   html.includes('<audio id="bgm" preload="auto">') &&
-  html.includes('primeAudioPrefetchLinks(0);') &&
+  html.includes('primeAudioPrefetchLinks(0, audioPrefetchLinkLimit);') &&
   html.includes('warmAudioCache(0);') &&
+  html.includes('audioBlobUrls') &&
+  html.includes('audioWarmupControllers') &&
+  html.includes('audioWarmupConcurrency') &&
+  html.includes('audioPrefetchLinkLimit') &&
+  html.includes('function prioritizeAudioWarmup') &&
+  html.includes('audioWarmupQueue = nextQueue.concat(audioWarmupQueue)') &&
   !html.includes('scheduleWarmNextAudio(2600)')
 ) {
   pass('player eagerly preloads playlist audio beyond the default track');
@@ -240,8 +246,11 @@ if (
 if (
   html.includes('function schedulePlaybackFallback') &&
   html.includes('URL.createObjectURL') &&
-  html.includes('playbackObjectUrl') &&
-  html.includes("fetch(url.href, { cache: 'force-cache' })")
+  html.includes('audioBlobUrls') &&
+  html.includes('getCachedAudioSource') &&
+  html.includes('var cachePromise = fetchAudioToCache(src);') &&
+  html.includes('}, 1200);') &&
+  html.includes("fetch(url.href, { cache: 'force-cache'")
 ) {
   pass('player can fall back to cached blob playback when media loading stalls');
 } else {

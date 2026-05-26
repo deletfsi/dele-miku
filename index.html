@@ -3240,6 +3240,12 @@
         var audioWarmupQueue = [];
         var audioWarmupFetched = {};
         var audioWarmupActive = {};
+        var audioBlobUrls = {};
+        var audioWarmupPromises = {};
+        var audioWarmupControllers = {};
+        var audioWarmupRunning = 0;
+        var audioWarmupConcurrency = 2;
+        var audioPrefetchLinkLimit = 3;
         var audioWarmupLinks = {};
         var audioWarmupElements = [];
         var audioWarmupController = null;
@@ -3285,6 +3291,19 @@
             return mp3Source || sources[0];
         }
 
+        function getCachedAudioSource(src) {
+            if (!src) return '';
+            return audioBlobUrls[src] || src;
+        }
+
+        function setAudioElementSource(track) {
+            var src = getWarmupSource(track);
+            bgm.dataset.sourceKey = src || '';
+            bgm.src = getCachedAudioSource(src);
+            bgm.load();
+            return src;
+        }
+
         function addAudioPrefetch(src) {
             if (!src || audioWarmupLinks[src]) return;
             audioWarmupLinks[src] = true;
@@ -3298,7 +3317,7 @@
         function primeAudioPrefetchLinks(priorityIndex, limit) {
             if (isSaveDataMode()) return;
             var start = Number.isFinite(priorityIndex) ? priorityIndex : currentTrackIndex;
-            var count = Number.isFinite(limit) ? Math.min(limit, mikuTracks.length) : mikuTracks.length;
+            var count = Number.isFinite(limit) ? Math.min(limit, mikuTracks.length) : Math.min(audioPrefetchLinkLimit, mikuTracks.length);
             for (var step = 0; step < count; step++) {
                 var index = (start + step) % mikuTracks.length;
                 addAudioPrefetch(getWarmupSource(mikuTracks[index]));
@@ -3323,14 +3342,21 @@
             audioWarmupTimer = window.setTimeout(function() {
                 audioWarmupTimer = 0;
                 warmNextAudio();
-            }, delay || 260);
+            }, delay || 80);
         }
 
-        function cancelAudioWarmupFetch() {
-            if (audioWarmupController) {
-                audioWarmupController.abort();
-                audioWarmupController = null;
+        function cancelAudioWarmupFetch(keepSrc) {
+            var activeControllers = Object.keys(audioWarmupControllers);
+            for (var ci = 0; ci < activeControllers.length; ci++) {
+                var controllerSrc = activeControllers[ci];
+                if (keepSrc && controllerSrc === keepSrc) continue;
+                audioWarmupControllers[controllerSrc].abort();
+                delete audioWarmupControllers[controllerSrc];
+                delete audioWarmupPromises[controllerSrc];
+                delete audioWarmupActive[controllerSrc];
             }
+            audioWarmupRunning = Object.keys(audioWarmupActive).length;
+            audioWarmupController = keepSrc ? audioWarmupControllers[keepSrc] || null : null;
             if (audioWarmupTimer) {
                 window.clearTimeout(audioWarmupTimer);
                 audioWarmupTimer = 0;
@@ -3341,6 +3367,12 @@
                 audioWarmupElements[i].load();
             }
             audioWarmupElements = [];
+        }
+
+        function prioritizeAudioWarmup(src) {
+            cancelAudioWarmupFetch(src);
+            audioWarmupQueue = src && !audioWarmupFetched[src] && !audioWarmupActive[src] ? [src] : [];
+            audioWarmupStarted = false;
         }
 
         function clearPlaybackFallback(revokeObjectUrl) {
@@ -3358,41 +3390,40 @@
             clearPlaybackFallback(false);
             var src = getWarmupSource(track);
             if (!src) return;
+            var cachePromise = fetchAudioToCache(src);
             playbackFallbackTimer = window.setTimeout(function() {
                 playbackFallbackTimer = 0;
-                if (requestId !== playbackRequestId || bgm.readyState > 0 || bgm.currentTime > 0.05 || bgm.error) return;
-                var url = new URL(src, window.location.href);
-                if (url.origin !== window.location.origin) return;
-                fetch(url.href, { cache: 'force-cache' })
-                    .then(function(response) {
-                        if (!response.ok) throw new Error('audio fallback failed');
-                        return response.blob();
-                    })
-                    .then(function(blob) {
-                        if (requestId !== playbackRequestId || bgm.readyState > 0 || bgm.currentTime > 0.05) return;
-                        clearPlaybackFallback(true);
-                        playbackObjectUrl = URL.createObjectURL(blob);
-                        bgm.pause();
-                        bgm.src = playbackObjectUrl;
-                        bgm.load();
-                        return bgm.play();
-                    })
-                    .catch(function() {});
-            }, 3500);
+                if (requestId !== playbackRequestId || bgm.readyState >= 3 || bgm.currentTime > 0.05 || bgm.error) return;
+                cachePromise.then(function(didFetch) {
+                    if (!didFetch || requestId !== playbackRequestId || bgm.readyState >= 3 || bgm.currentTime > 0.05) return;
+                    clearPlaybackFallback(false);
+                    bgm.pause();
+                    bgm.src = getCachedAudioSource(src);
+                    bgm.dataset.sourceKey = src;
+                    bgm.load();
+                    return bgm.play();
+                }).catch(function() {});
+            }, 1200);
         }
 
         function fetchAudioToCache(src) {
+            if (audioBlobUrls[src]) return Promise.resolve(true);
+            if (audioWarmupPromises[src]) return audioWarmupPromises[src];
             var url = new URL(src, window.location.href);
             if (url.origin !== window.location.origin) return Promise.resolve();
             var controller = new AbortController();
             audioWarmupController = controller;
+            audioWarmupControllers[src] = controller;
             var timeout = window.setTimeout(function() { controller.abort(); }, 25000);
-            return fetch(url.href, { cache: 'force-cache', signal: controller.signal })
+            audioWarmupPromises[src] = fetch(url.href, { cache: 'force-cache', signal: controller.signal })
                 .then(function(response) {
                     if (!response.ok) throw new Error('audio prefetch failed');
                     return response.blob();
                 })
-                .then(function() {
+                .then(function(blob) {
+                    if (blob && blob.size > 0 && !audioBlobUrls[src]) {
+                        audioBlobUrls[src] = URL.createObjectURL(blob);
+                    }
                     return true;
                 })
                 .catch(function() {
@@ -3400,23 +3431,27 @@
                 })
                 .finally(function() {
                     if (audioWarmupController === controller) audioWarmupController = null;
+                    if (audioWarmupControllers[src] === controller) delete audioWarmupControllers[src];
+                    delete audioWarmupPromises[src];
                     window.clearTimeout(timeout);
                 });
+            return audioWarmupPromises[src];
         }
 
         function warmNextAudio() {
-            if (!audioWarmupQueue.length) return;
+            if (!audioWarmupQueue.length || audioWarmupRunning >= audioWarmupConcurrency) return;
             var src = audioWarmupQueue.shift();
             if (!src || audioWarmupFetched[src] || audioWarmupActive[src]) {
                 warmNextAudio();
                 return;
             }
             audioWarmupActive[src] = true;
+            audioWarmupRunning++;
             addAudioPrefetch(src);
 
             var audio = new Audio();
             audio.preload = 'auto';
-            audio.src = src;
+            audio.src = getCachedAudioSource(src);
             audio.load();
             audioWarmupElements.push(audio);
             if (audioWarmupElements.length > 4) audioWarmupElements.shift();
@@ -3424,17 +3459,18 @@
             fetchAudioToCache(src).then(function(didFetch) {
                 if (didFetch) audioWarmupFetched[src] = true;
             }).finally(function() {
+                audioWarmupRunning = Math.max(0, audioWarmupRunning - 1);
                 delete audioWarmupActive[src];
-                if (audioWarmupQueue.length) scheduleWarmNextAudio(isPlaying ? 900 : 180);
+                warmNextAudio();
             });
+            warmNextAudio();
         }
 
         function warmAudioCache(priorityIndex) {
-            if (isSaveDataMode()) return;
-            primeAudioPrefetchLinks(priorityIndex);
+            primeAudioPrefetchLinks(priorityIndex, audioPrefetchLinkLimit);
             var nextQueue = buildAudioWarmupQueue(priorityIndex);
             if (!isPlaying && nextQueue[0]) addAudioPrefetch(nextQueue[0]);
-            audioWarmupQueue = audioWarmupQueue.concat(nextQueue).filter(function(src, index, arr) {
+            audioWarmupQueue = nextQueue.concat(audioWarmupQueue).filter(function(src, index, arr) {
                 return arr.indexOf(src) === index;
             });
             if (audioWarmupStarted) {
@@ -3581,8 +3617,7 @@
             bgm.removeAttribute('src');
             bgm.innerHTML = '';
             bgm.load();
-            bgm.src = getWarmupSource(track);
-            bgm.load();
+            setAudioElementSource(track);
             if (shouldResetTime) {
                 progress.value = 0;
                 progress.max = 0;
@@ -3630,7 +3665,10 @@
 
         function playTrack(index, shouldPlay) {
             var wasPlaying = shouldPlay || isPlaying;
+            var priorityTrack = mikuTracks[index];
+            var prioritySrc = priorityTrack ? getWarmupSource(priorityTrack) : '';
             pauseMusic(true);
+            prioritizeAudioWarmup(prioritySrc);
             setTrack(index, true);
             if (wasPlaying) playMusic();
             else warmAudioCache(currentTrackIndex);
@@ -3736,7 +3774,7 @@
         renderTrackList();
         setTrack(0, true);
         updatePlaybackState();
-        primeAudioPrefetchLinks(0);
+        primeAudioPrefetchLinks(0, audioPrefetchLinkLimit);
         runWhenIdle(function() {
             warmAudioCache(0);
         }, 800);
