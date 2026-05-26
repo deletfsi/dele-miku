@@ -132,7 +132,13 @@ if (
   html.includes('height: min(650px, calc(100dvh - 24px));') &&
   html.includes('grid-template-rows: auto auto auto auto minmax(0, 1fr);') &&
   html.includes('-webkit-overflow-scrolling: touch;') &&
-  html.includes('touch-action: pan-y;')
+  html.includes('touch-action: pan-y;') &&
+  html.includes('function bindTrackListScroll') &&
+  html.includes("trackList.addEventListener('wheel'") &&
+  html.includes("trackList.addEventListener('touchmove'") &&
+  html.includes('function dismissUnveilLayers') &&
+  html.includes('#unveil-loader.is-dismissed') &&
+  html.includes('z-index: 10030;')
 ) {
   pass('player track list has a constrained mobile scroll area');
 } else {

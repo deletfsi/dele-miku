@@ -37,6 +37,11 @@
             position: fixed; inset: 0; z-index: 9998;
             background-color: #fafafa; pointer-events: none;
         }
+        #unveil-loader.is-dismissed,
+        #unveil-mask.is-dismissed {
+            display: none !important;
+            pointer-events: none !important;
+        }
 
         /* 顶部导航隐藏状态 (待 GSAP 驱动 slide up) */
         .unveil-nav-item { opacity: 0; transform: translateY(75%); }
@@ -322,7 +327,7 @@
         #music-panel-overlay {
             position: fixed;
             inset: 0;
-            z-index: 160;
+            z-index: 10030;
             display: flex;
             align-items: flex-end;
             justify-content: flex-end;
@@ -331,6 +336,7 @@
             pointer-events: none;
             transition: background 0.28s ease;
         }
+        #music-player { z-index: 10020; }
         #music-panel-overlay.is-open {
             background: rgba(3, 7, 11, 0.38);
             pointer-events: auto;
@@ -2204,11 +2210,23 @@
             runWhenIdle(preloadNonCriticalAssets, 1500);
         }
 
-        function forceRevealExperience() {
+        function dismissUnveilLayers() {
             const loader = document.getElementById('unveil-loader');
             const mask = document.getElementById('unveil-mask');
-            if (loader) loader.style.display = 'none';
-            if (mask) mask.style.display = 'none';
+            if (loader) {
+                loader.classList.add('is-dismissed');
+                loader.style.pointerEvents = 'none';
+                loader.style.display = 'none';
+            }
+            if (mask) {
+                mask.classList.add('is-dismissed');
+                mask.style.pointerEvents = 'none';
+                mask.style.display = 'none';
+            }
+        }
+
+        function forceRevealExperience() {
+            dismissUnveilLayers();
             document.body.style.backgroundColor = '#03070b';
             const header = document.getElementById('main-header');
             if (header) header.style.opacity = '1';
@@ -2303,12 +2321,12 @@
             }, "-=1.0");
 
             tl.set(navLogo, { opacity: 1 });
-            tl.set([introLogo, '#unveil-loader'], { display: 'none' });
+            tl.set([introLogo, '#unveil-loader'], { display: 'none', pointerEvents: 'none' });
 
             tl.to('#unveil-mask', {
                 opacity: 0, duration: 0.75, ease: "power1.inOut",
                 onComplete: () => {
-                    document.getElementById('unveil-mask').style.display = 'none';
+                    dismissUnveilLayers();
                 }
             }, "-=0.5");
 
@@ -2903,6 +2921,7 @@
 
         function startExperience(playMusic) {
             audioPromptHandled = true;
+            dismissUnveilLayers();
             const overlay = document.getElementById('audio-prompt-overlay');
             const prompt = document.getElementById('audio-prompt');
             const nudge = document.getElementById('mobile-audio-nudge');
@@ -3880,6 +3899,7 @@
 
         function openMusicPanel() {
             if (!panelOverlay) return;
+            if (typeof dismissUnveilLayers === 'function') dismissUnveilLayers();
             panelOverlay.classList.add('is-open');
             panelOverlay.setAttribute('aria-hidden', 'false');
             runWhenIdle(function() {
@@ -3903,6 +3923,49 @@
             panel.addEventListener('click', function(event) {
                 event.stopPropagation();
             });
+        }
+        function bindTrackListScroll() {
+            if (!trackList || trackList.dataset.scrollBound === '1') return;
+            trackList.dataset.scrollBound = '1';
+            var touchY = 0;
+            var touchMoved = false;
+            function canScrollList() {
+                return trackList.scrollHeight > trackList.clientHeight + 1;
+            }
+            function scrollListBy(delta) {
+                if (!canScrollList()) return false;
+                var before = trackList.scrollTop;
+                trackList.scrollTop += delta;
+                return trackList.scrollTop !== before;
+            }
+            trackList.addEventListener('wheel', function(event) {
+                if (!canScrollList()) return;
+                scrollListBy(event.deltaY);
+                event.preventDefault();
+                event.stopPropagation();
+            }, { passive: false });
+            trackList.addEventListener('touchstart', function(event) {
+                if (!event.touches || !event.touches.length) return;
+                touchY = event.touches[0].clientY;
+                touchMoved = false;
+            }, { passive: true });
+            trackList.addEventListener('touchmove', function(event) {
+                if (!event.touches || !event.touches.length || !canScrollList()) return;
+                var nextY = event.touches[0].clientY;
+                var delta = touchY - nextY;
+                if (Math.abs(delta) > 1) touchMoved = true;
+                touchY = nextY;
+                if (scrollListBy(delta)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            }, { passive: false });
+            trackList.addEventListener('click', function(event) {
+                if (!touchMoved) return;
+                touchMoved = false;
+                event.preventDefault();
+                event.stopPropagation();
+            }, true);
         }
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') closeMusicPanel();
@@ -3949,6 +4012,7 @@
         });
 
         renderTrackList();
+        bindTrackListScroll();
         setTrack(0, true);
         updatePlaybackState();
         primeAudioPrefetchLinks(getBackgroundWarmupIndex(0), audioPrefetchLinkLimit);
