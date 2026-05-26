@@ -3362,12 +3362,7 @@
             bgm.pause();
             bgm.removeAttribute('src');
             bgm.innerHTML = '';
-            getTrackSources(track).forEach(function(src) {
-                var source = document.createElement('source');
-                source.src = src;
-                source.type = getAudioMime(src);
-                bgm.appendChild(source);
-            });
+            bgm.src = getWarmupSource(track);
             bgm.load();
             if (shouldResetTime) {
                 progress.value = 0;
