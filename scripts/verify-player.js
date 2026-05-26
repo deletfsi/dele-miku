@@ -153,6 +153,41 @@ if (!html.includes('music-source-link') && !html.includes('music-source-row') &&
 }
 
 if (
+  html.includes('href="mangabill/index.html"') &&
+  html.includes('查看更多 MangaBill') &&
+  html.includes('mangabill/generated/brand/logo-mark.webp') &&
+  html.includes('mangabill/generated/characters/elaina/thumb-01.webp')
+) {
+  pass('footer exposes a prominent MangaBill gallery link');
+} else {
+  fail('footer MangaBill gallery link is missing or incomplete');
+}
+
+const mangabillIndexPath = path.join(root, 'mangabill', 'index.html');
+const mangabillRequiredAssets = [
+  path.join(root, 'mangabill', 'assets'),
+  path.join(root, 'mangabill', 'generated', 'brand', 'logo-mark.webp'),
+  path.join(root, 'mangabill', 'generated', 'brand', 'wechat.png'),
+  path.join(root, 'mangabill', 'generated', 'characters', 'elaina', 'thumb-01.webp'),
+  path.join(root, 'mangabill', 'generated', 'characters', 'frieren', 'thumb-01.webp'),
+  path.join(root, 'mangabill', 'generated', 'characters', 'violet', 'thumb-01.webp'),
+  path.join(root, 'mangabill', 'generated', 'characters', 'columbina', 'thumb-01.webp'),
+];
+
+if (fs.existsSync(mangabillIndexPath) && fs.statSync(mangabillIndexPath).size > 0) {
+  pass('MangaBill static page exists at mangabill/index.html');
+} else {
+  fail('missing MangaBill static page at mangabill/index.html');
+}
+
+const missingMangabillAssets = mangabillRequiredAssets.filter((assetPath) => !fs.existsSync(assetPath));
+if (missingMangabillAssets.length === 0) {
+  pass('MangaBill static assets required by the footer link are present');
+} else {
+  fail(`missing MangaBill static assets: ${missingMangabillAssets.map((assetPath) => path.relative(root, assetPath)).join(', ')}`);
+}
+
+if (
   !html.includes('音源无法播放') &&
   !html.includes('请检查') &&
   !html.includes('缺少音频') &&
