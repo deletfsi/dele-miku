@@ -3428,7 +3428,7 @@
         }
 
         function prioritizeAudioWarmup(src) {
-            cancelAudioWarmupFetch(src);
+            cancelAudioWarmupFetch();
             audioWarmupQueue = [];
             audioWarmupStarted = false;
         }
@@ -3461,7 +3461,7 @@
                     bgm.load();
                     return bgm.play();
                 }).catch(function() {});
-            }, 1200);
+            }, 4500);
         }
 
         function fetchAudioToCache(src) {
@@ -3754,7 +3754,7 @@
             isPlaying = true;
             updatePlaybackState();
             setLoadingStatus();
-            warmAudioCache(getBackgroundWarmupIndex(currentTrackIndex));
+            pauseBackgroundForInteractiveAudio();
             schedulePlaybackFallback(track, requestId);
             playPromise = bgm.play();
             if (playPromise !== undefined) {
