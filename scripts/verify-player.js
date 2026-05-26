@@ -128,6 +128,18 @@ if (html.includes('now-playing-strip') && html.includes('track-playing-indicator
   fail('player is missing animated now-playing indicators');
 }
 
+if (html.includes('track-thumb') && html.includes("button.appendChild(thumb)") && html.includes('trackPulse')) {
+  pass('player uses visual track thumbnails and switch animation');
+} else {
+  fail('player is missing visual track thumbnails or switch animation');
+}
+
+if (html.includes('‹') && html.includes('▶') && html.includes('›') && html.includes('↻')) {
+  pass('player controls are icon-first');
+} else {
+  fail('player controls should be icon-first');
+}
+
 if (!html.includes('music-source-link') && !html.includes('music-source-row') && !html.includes('track-badge')) {
   pass('player omits source links and local/pending badges');
 } else {
