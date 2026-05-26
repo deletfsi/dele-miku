@@ -3245,7 +3245,7 @@
         var audioWarmupControllers = {};
         var audioWarmupRunning = 0;
         var audioWarmupConcurrency = 2;
-        var audioPrefetchLinkLimit = 3;
+        var audioPrefetchLinkLimit = 0;
         var audioWarmupLinks = {};
         var audioWarmupElements = [];
         var audioWarmupController = null;
@@ -3294,6 +3294,19 @@
         function getCachedAudioSource(src) {
             if (!src) return '';
             return audioBlobUrls[src] || src;
+        }
+
+        function getNextWarmupIndex(index) {
+            if (!mikuTracks.length) return 0;
+            var start = Number.isFinite(index) ? index : currentTrackIndex;
+            return (start + 1) % mikuTracks.length;
+        }
+
+        function getBackgroundWarmupIndex(index) {
+            var trackIndex = Number.isFinite(index) ? index : currentTrackIndex;
+            var track = mikuTracks[trackIndex];
+            var src = track ? getWarmupSource(track) : '';
+            return src && audioBlobUrls[src] ? trackIndex : getNextWarmupIndex(trackIndex);
         }
 
         function setAudioElementSource(track) {
@@ -3371,7 +3384,7 @@
 
         function prioritizeAudioWarmup(src) {
             cancelAudioWarmupFetch(src);
-            audioWarmupQueue = src && !audioWarmupFetched[src] && !audioWarmupActive[src] ? [src] : [];
+            audioWarmupQueue = [];
             audioWarmupStarted = false;
         }
 
@@ -3390,10 +3403,10 @@
             clearPlaybackFallback(false);
             var src = getWarmupSource(track);
             if (!src) return;
-            var cachePromise = fetchAudioToCache(src);
             playbackFallbackTimer = window.setTimeout(function() {
                 playbackFallbackTimer = 0;
                 if (requestId !== playbackRequestId || bgm.readyState >= 3 || bgm.currentTime > 0.05 || bgm.error) return;
+                var cachePromise = audioWarmupPromises[src] || fetchAudioToCache(src);
                 cachePromise.then(function(didFetch) {
                     if (!didFetch || requestId !== playbackRequestId || bgm.readyState >= 3 || bgm.currentTime > 0.05) return;
                     clearPlaybackFallback(false);
@@ -3447,14 +3460,6 @@
             }
             audioWarmupActive[src] = true;
             audioWarmupRunning++;
-            addAudioPrefetch(src);
-
-            var audio = new Audio();
-            audio.preload = 'auto';
-            audio.src = getCachedAudioSource(src);
-            audio.load();
-            audioWarmupElements.push(audio);
-            if (audioWarmupElements.length > 4) audioWarmupElements.shift();
 
             fetchAudioToCache(src).then(function(didFetch) {
                 if (didFetch) audioWarmupFetched[src] = true;
@@ -3469,7 +3474,7 @@
         function warmAudioCache(priorityIndex) {
             primeAudioPrefetchLinks(priorityIndex, audioPrefetchLinkLimit);
             var nextQueue = buildAudioWarmupQueue(priorityIndex);
-            if (!isPlaying && nextQueue[0]) addAudioPrefetch(nextQueue[0]);
+            if (audioPrefetchLinkLimit > 0 && !isPlaying && nextQueue[0]) addAudioPrefetch(nextQueue[0]);
             audioWarmupQueue = nextQueue.concat(audioWarmupQueue).filter(function(src, index, arr) {
                 return arr.indexOf(src) === index;
             });
@@ -3637,7 +3642,7 @@
             isPlaying = true;
             updatePlaybackState();
             setLoadingStatus();
-            warmAudioCache(currentTrackIndex);
+            warmAudioCache(getBackgroundWarmupIndex(currentTrackIndex));
             schedulePlaybackFallback(track, requestId);
             playPromise = bgm.play();
             if (playPromise !== undefined) {
@@ -3660,7 +3665,7 @@
             bgm.pause();
             updatePlaybackState();
             setStatus('');
-            if (!skipWarmup) warmAudioCache(currentTrackIndex);
+            if (!skipWarmup) warmAudioCache(getBackgroundWarmupIndex(currentTrackIndex));
         }
 
         function playTrack(index, shouldPlay) {
@@ -3671,7 +3676,7 @@
             prioritizeAudioWarmup(prioritySrc);
             setTrack(index, true);
             if (wasPlaying) playMusic();
-            else warmAudioCache(currentTrackIndex);
+            else warmAudioCache(getBackgroundWarmupIndex(currentTrackIndex));
         }
 
         function getAdjacentTrackIndex(direction) {
@@ -3717,7 +3722,7 @@
             panelOverlay.classList.add('is-open');
             panelOverlay.setAttribute('aria-hidden', 'false');
             runWhenIdle(function() {
-                warmAudioCache(currentTrackIndex);
+                warmAudioCache(getBackgroundWarmupIndex(currentTrackIndex));
             }, 900);
         }
 
@@ -3774,9 +3779,9 @@
         renderTrackList();
         setTrack(0, true);
         updatePlaybackState();
-        primeAudioPrefetchLinks(0, audioPrefetchLinkLimit);
+        primeAudioPrefetchLinks(getBackgroundWarmupIndex(0), audioPrefetchLinkLimit);
         runWhenIdle(function() {
-            warmAudioCache(0);
+            warmAudioCache(getBackgroundWarmupIndex(0));
         }, 800);
     </script>
 </body>

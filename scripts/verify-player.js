@@ -228,12 +228,13 @@ if (
 
 if (
   html.includes('<audio id="bgm" preload="auto">') &&
-  html.includes('primeAudioPrefetchLinks(0, audioPrefetchLinkLimit);') &&
-  html.includes('warmAudioCache(0);') &&
+  html.includes('primeAudioPrefetchLinks(getBackgroundWarmupIndex(0), audioPrefetchLinkLimit);') &&
+  html.includes('warmAudioCache(getBackgroundWarmupIndex(0));') &&
   html.includes('audioBlobUrls') &&
   html.includes('audioWarmupControllers') &&
   html.includes('audioWarmupConcurrency') &&
   html.includes('audioPrefetchLinkLimit') &&
+  html.includes('function getBackgroundWarmupIndex') &&
   html.includes('function prioritizeAudioWarmup') &&
   html.includes('audioWarmupQueue = nextQueue.concat(audioWarmupQueue)') &&
   !html.includes('scheduleWarmNextAudio(2600)')
@@ -248,7 +249,7 @@ if (
   html.includes('URL.createObjectURL') &&
   html.includes('audioBlobUrls') &&
   html.includes('getCachedAudioSource') &&
-  html.includes('var cachePromise = fetchAudioToCache(src);') &&
+  html.includes('audioWarmupPromises[src] || fetchAudioToCache(src)') &&
   html.includes('}, 1200);') &&
   html.includes("fetch(url.href, { cache: 'force-cache'")
 ) {
