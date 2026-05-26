@@ -1279,9 +1279,9 @@
                 </div>
             </div>
             <div class="music-controls">
-                <button type="button" class="hover-target" aria-label="上一首" title="上一首" onclick="previousTrack()">‹</button>
+                <button type="button" class="hover-target" aria-label="上一首" title="上一首" id="music-prev" onclick="previousTrack()">‹</button>
                 <button type="button" class="hover-target" aria-label="播放" title="播放" id="music-toggle" onclick="togglePlayback()">▶</button>
-                <button type="button" class="hover-target" aria-label="下一首" title="下一首" onclick="nextTrack()">›</button>
+                <button type="button" class="hover-target" aria-label="下一首" title="下一首" id="music-next" onclick="nextTrack()">›</button>
                 <button type="button" class="hover-target" aria-label="顺序播放" title="顺序播放" id="music-mode" onclick="togglePlayMode()">↻</button>
             </div>
             <div class="now-playing-strip" id="now-playing-strip" aria-live="polite">
@@ -3062,6 +3062,12 @@
         var isSeeking = false;
         var visualizerInterval;
         var playPromise;
+        var playbackRequestId = 0;
+        var audioWarmupStarted = false;
+        var audioWarmupQueue = [];
+        var audioWarmupFetched = {};
+        var audioWarmupLinks = {};
+        var audioWarmupElements = [];
 
         function getCurrentTrack() {
             return mikuTracks[currentTrackIndex];
@@ -3085,6 +3091,98 @@
 
         function getSourceHint(track) {
             return getTrackSources(track).join(' 或 ');
+        }
+
+        function isSaveDataMode() {
+            return Boolean(navigator.connection && navigator.connection.saveData);
+        }
+
+        function getWarmupSource(track) {
+            var sources = getTrackSources(track);
+            var mp3Source = sources.find(function(src) {
+                return /\.mp3($|\?)/i.test(src);
+            });
+            return mp3Source || sources[0];
+        }
+
+        function addAudioPrefetch(src) {
+            if (!src || audioWarmupLinks[src]) return;
+            audioWarmupLinks[src] = true;
+            var link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.as = 'audio';
+            link.href = src;
+            document.head.appendChild(link);
+        }
+
+        function primeAudioPrefetchLinks() {
+            if (isSaveDataMode()) return;
+            for (var i = 0; i < mikuTracks.length; i++) {
+                addAudioPrefetch(getWarmupSource(mikuTracks[i]));
+            }
+        }
+
+        function buildAudioWarmupQueue(priorityIndex) {
+            var order = [];
+            var start = Number.isFinite(priorityIndex) ? priorityIndex : currentTrackIndex;
+            for (var step = 0; step < mikuTracks.length; step++) {
+                order.push((start + step) % mikuTracks.length);
+            }
+            return order.map(function(index) {
+                return getWarmupSource(mikuTracks[index]);
+            }).filter(function(src, index, arr) {
+                return src && arr.indexOf(src) === index && !audioWarmupFetched[src];
+            });
+        }
+
+        function fetchAudioToCache(src) {
+            var url = new URL(src, window.location.href);
+            if (url.origin !== window.location.origin) return Promise.resolve();
+            var controller = new AbortController();
+            var timeout = window.setTimeout(function() { controller.abort(); }, 25000);
+            return fetch(url.href, { cache: 'force-cache', signal: controller.signal })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('audio prefetch failed');
+                    return response.blob();
+                })
+                .catch(function() {})
+                .finally(function() {
+                    window.clearTimeout(timeout);
+                });
+        }
+
+        function warmNextAudio() {
+            if (!audioWarmupQueue.length) return;
+            var src = audioWarmupQueue.shift();
+            if (!src || audioWarmupFetched[src]) {
+                warmNextAudio();
+                return;
+            }
+            audioWarmupFetched[src] = true;
+            addAudioPrefetch(src);
+
+            var audio = new Audio();
+            audio.preload = 'auto';
+            audio.src = src;
+            audio.load();
+            audioWarmupElements.push(audio);
+            if (audioWarmupElements.length > 4) audioWarmupElements.shift();
+
+            fetchAudioToCache(src).finally(function() {
+                window.setTimeout(warmNextAudio, 260);
+            });
+        }
+
+        function warmAudioCache(priorityIndex) {
+            if (isSaveDataMode()) return;
+            primeAudioPrefetchLinks();
+            var nextQueue = buildAudioWarmupQueue(priorityIndex);
+            audioWarmupQueue = audioWarmupQueue.concat(nextQueue).filter(function(src, index, arr) {
+                return arr.indexOf(src) === index;
+            });
+            if (audioWarmupStarted) return;
+            audioWarmupStarted = true;
+            warmNextAudio();
         }
 
         function formatTime(seconds) {
@@ -3238,14 +3336,18 @@
                 setStatus('缺少音频路径');
                 return;
             }
+            var requestId = ++playbackRequestId;
             isPlaying = true;
             updatePlaybackState();
-            setStatus('加载中');
+            setStatus('');
+            warmAudioCache(currentTrackIndex);
             playPromise = bgm.play();
             if (playPromise !== undefined) {
                 playPromise.then(function() {
-                    setStatus('播放中');
+                    if (requestId !== playbackRequestId) return;
+                    setStatus('');
                 }).catch(function() {
+                    if (requestId !== playbackRequestId) return;
                     isPlaying = false;
                     updatePlaybackState();
                     setStatus('音源无法播放，请检查: ' + getSourceHint(track));
@@ -3254,10 +3356,11 @@
         }
 
         function pauseMusic() {
+            playbackRequestId++;
             isPlaying = false;
             bgm.pause();
             updatePlaybackState();
-            setStatus('已暂停');
+            setStatus('');
         }
 
         function playTrack(index, shouldPlay) {
@@ -3309,6 +3412,9 @@
             if (!panelOverlay) return;
             panelOverlay.classList.add('is-open');
             panelOverlay.setAttribute('aria-hidden', 'false');
+            runWhenIdle(function() {
+                warmAudioCache(currentTrackIndex);
+            }, 900);
         }
 
         function closeMusicPanel() {

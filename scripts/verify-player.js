@@ -110,7 +110,13 @@ if (html.includes('audioExtensionOrder') && html.includes("'flac'") && html.incl
   fail('audio fallback order is incomplete');
 }
 
-if (html.includes('music-panel-overlay') && html.includes('track-list') && html.includes('music-progress')) {
+if (
+  html.includes('music-panel-overlay') &&
+  html.includes('track-list') &&
+  html.includes('music-progress') &&
+  html.includes('id="music-prev"') &&
+  html.includes('id="music-next"')
+) {
   pass('player window, track list, and progress controls exist');
 } else {
   fail('player UI controls are incomplete');
@@ -144,6 +150,30 @@ if (!html.includes('music-source-link') && !html.includes('music-source-row') &&
   pass('player omits source links and local/pending badges');
 } else {
   fail('player should not render source links or local/pending badges');
+}
+
+if (
+  html.includes('function warmAudioCache') &&
+  html.includes('function primeAudioPrefetchLinks') &&
+  html.includes("link.rel = 'prefetch'") &&
+  html.includes("link.as = 'audio'") &&
+  html.includes("cache: 'force-cache'") &&
+  html.includes('navigator.connection') &&
+  html.includes('saveData')
+) {
+  pass('player warms audio cache with prefetch and same-origin fetch');
+} else {
+  fail('player audio cache warmup is incomplete');
+}
+
+if (
+  html.includes('playbackRequestId') &&
+  html.includes('var requestId = ++playbackRequestId') &&
+  html.includes('requestId !== playbackRequestId')
+) {
+  pass('player guards stale play callbacks during rapid switching');
+} else {
+  fail('player should guard stale play callbacks during rapid switching');
 }
 
 const missingAssets = [];
