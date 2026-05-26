@@ -241,6 +241,8 @@ if (
   html.includes('audioPrefetchLinkLimit') &&
   html.includes('function getBackgroundWarmupIndex') &&
   html.includes('function prioritizeAudioWarmup') &&
+  html.includes('function shouldUseConservativeAudioLoading') &&
+  html.includes('if (shouldUseConservativeAudioLoading()) return;') &&
   html.includes('audioWarmupQueue = nextQueue.concat(audioWarmupQueue)') &&
   !html.includes('scheduleWarmNextAudio(2600)')
 ) {

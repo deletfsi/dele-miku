@@ -3298,6 +3298,13 @@
             return Boolean(navigator.connection && navigator.connection.saveData);
         }
 
+        function shouldUseConservativeAudioLoading() {
+            var connection = navigator.connection || {};
+            var connectionType = String(connection.effectiveType || '').toLowerCase();
+            var mobileLike = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
+            return isSaveDataMode() || mobileLike || connectionType === '2g' || connectionType === '3g' || connectionType === 'slow-2g';
+        }
+
         function getWarmupSource(track) {
             var sources = getTrackSources(track);
             var mp3Source = sources.find(function(src) {
@@ -3480,6 +3487,10 @@
             clearPlaybackFallback(false);
             var src = getWarmupSource(track);
             if (!src) return;
+            if (shouldUseConservativeAudioLoading()) {
+                switchToCachedAudio(track, requestId);
+                return;
+            }
             playbackFallbackTimer = window.setTimeout(function() {
                 playbackFallbackTimer = 0;
                 if (requestId !== playbackRequestId || isSeeking || pendingSeekSeconds !== null || bgm.readyState >= 3 || bgm.currentTime > 0.05 || bgm.error) return;
@@ -3548,6 +3559,7 @@
         }
 
         function warmAudioCache(priorityIndex) {
+            if (shouldUseConservativeAudioLoading()) return;
             primeAudioPrefetchLinks(priorityIndex, audioPrefetchLinkLimit);
             var nextQueue = buildAudioWarmupQueue(priorityIndex);
             if (audioPrefetchLinkLimit > 0 && !isPlaying && nextQueue[0]) addAudioPrefetch(nextQueue[0]);
