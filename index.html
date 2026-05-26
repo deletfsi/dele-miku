@@ -3428,7 +3428,7 @@
         }
 
         function prioritizeAudioWarmup(src) {
-            cancelAudioWarmupFetch();
+            cancelAudioWarmupFetch(src);
             audioWarmupQueue = [];
             audioWarmupStarted = false;
         }
@@ -3444,6 +3444,38 @@
             }
         }
 
+        function switchToCachedAudio(track, requestId) {
+            var src = getWarmupSource(track);
+            var cachedSrc = getCachedAudioSource(src);
+            if (!src || !cachedSrc || cachedSrc === src) return false;
+            if (requestId !== playbackRequestId || track !== getCurrentTrack()) return false;
+            if (bgm.readyState >= 3 || bgm.currentTime > 0.05) return false;
+            clearPlaybackFallback(false);
+            bgm.pause();
+            bgm.src = cachedSrc;
+            bgm.dataset.sourceKey = src;
+            bgm.load();
+            playPromise = bgm.play();
+            if (playPromise !== undefined) {
+                playPromise.then(function() {
+                    if (requestId !== playbackRequestId) return;
+                    setStatus('');
+                }).catch(function() {
+                    if (requestId !== playbackRequestId) return;
+                    setLoadingStatus();
+                });
+            }
+            return true;
+        }
+
+        function playCachedAudioWhenReady(track, requestId, cachePromise) {
+            if (!cachePromise) return;
+            cachePromise.then(function(didFetch) {
+                if (!didFetch || requestId !== playbackRequestId || track !== getCurrentTrack()) return;
+                switchToCachedAudio(track, requestId);
+            }).catch(function() {});
+        }
+
         function schedulePlaybackFallback(track, requestId) {
             clearPlaybackFallback(false);
             var src = getWarmupSource(track);
@@ -3454,14 +3486,9 @@
                 var cachePromise = audioWarmupPromises[src] || fetchAudioToCache(src);
                 cachePromise.then(function(didFetch) {
                     if (!didFetch || requestId !== playbackRequestId || bgm.readyState >= 3 || bgm.currentTime > 0.05) return;
-                    clearPlaybackFallback(false);
-                    bgm.pause();
-                    bgm.src = getCachedAudioSource(src);
-                    bgm.dataset.sourceKey = src;
-                    bgm.load();
-                    return bgm.play();
+                    return switchToCachedAudio(track, requestId);
                 }).catch(function() {});
-            }, 4500);
+            }, 2500);
         }
 
         function fetchAudioToCache(src) {
@@ -3754,11 +3781,13 @@
                 setLoadingStatus();
                 return;
             }
+            var src = getWarmupSource(track);
             var requestId = ++playbackRequestId;
             isPlaying = true;
             updatePlaybackState();
             setLoadingStatus();
-            pauseBackgroundForInteractiveAudio();
+            pauseBackgroundForInteractiveAudio(src);
+            playCachedAudioWhenReady(track, requestId, audioWarmupPromises[src]);
             schedulePlaybackFallback(track, requestId);
             playPromise = bgm.play();
             if (playPromise !== undefined) {

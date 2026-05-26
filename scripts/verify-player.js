@@ -255,7 +255,7 @@ if (
   html.includes('audioBlobUrls') &&
   html.includes('getCachedAudioSource') &&
   html.includes('audioWarmupPromises[src] || fetchAudioToCache(src)') &&
-  html.includes('}, 4500);') &&
+  html.includes('}, 2500);') &&
   html.includes("fetch(url.href, { cache: 'force-cache'")
 ) {
   pass('player can fall back to cached blob playback when media loading stalls');
