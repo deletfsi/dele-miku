@@ -343,10 +343,10 @@
         }
         #music-panel {
             width: min(430px, calc(100vw - 36px));
-            height: min(720px, calc(100svh - 36px));
-            max-height: calc(100svh - 36px);
+            height: auto;
+            max-height: min(720px, calc(100svh - 36px));
             display: grid;
-            grid-template-rows: auto auto auto auto minmax(0, 1fr);
+            grid-template-rows: auto auto auto auto auto;
             gap: 18px;
             padding: 18px;
             border-radius: 24px;
@@ -476,6 +476,11 @@
             font-size: 24px;
             box-shadow: 0 0 30px rgba(57,197,187,0.26);
         }
+        #music-prev,
+        #music-next,
+        #music-mode {
+            display: none;
+        }
         .now-playing-strip {
             display: flex;
             align-items: center;
@@ -543,6 +548,7 @@
         }
         .track-list {
             min-height: 0;
+            max-height: 64px;
             overflow-y: auto;
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
@@ -1218,7 +1224,7 @@
             }
             #music-panel {
                 width: calc(100vw - 24px);
-                height: min(650px, calc(100dvh - 24px));
+                height: auto;
                 max-height: calc(100dvh - 24px);
                 border-radius: 20px;
                 gap: 14px;
@@ -3137,105 +3143,6 @@
                 coverSrc: 'assets/player-cover.webp',
                 quality: 'MP3',
                 sourceUrl: 'https://www.qobuz.com/us-en/album/the-world-is-mine-feat-hatsune-miku-supercell/wxvvohi9kvk5a'
-            },
-            {
-                id: 'mousou-kanshou-daishou-renmei',
-                title: '妄想感伤代偿连盟',
-                producer: 'DECO*27',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/mousou-kanshou-daishou-renmei.mp3'],
-                duration: 263.765333,
-                coverSrc: 'assets/player.png',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://ototoy.jp/_/default/p/67624'
-            },
-            {
-                id: 'senbonzakura',
-                title: '千本樱',
-                producer: '黒うさP',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/senbonzakura.mp3'],
-                duration: 244.096,
-                coverSrc: 'assets/1.webp',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://ototoy.jp/_/default/p/26309'
-            },
-            {
-                id: 'melt',
-                title: 'Melt',
-                producer: 'ryo (supercell)',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/melt.mp3'],
-                duration: 183.189333,
-                coverSrc: 'assets/2.webp',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://www.qobuz.com/us-en/album/supercell-feat-hatsune-miku-supercell/hh7pe4wnyoisb'
-            },
-            {
-                id: 'tell-your-world',
-                title: 'Tell Your World',
-                producer: 'kz (livetune)',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/tell-your-world.mp3'],
-                duration: 249.941333,
-                coverSrc: 'assets/3.webp',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://karent.jp/album/1615'
-            },
-            {
-                id: 'romeo-and-cinderella',
-                title: '罗密欧与灰姑娘',
-                producer: 'doriko',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/romeo-and-cinderella.mp3'],
-                duration: 280.961451,
-                coverSrc: 'assets/4.webp',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://karent.jp/album/58'
-            },
-            {
-                id: 'disappearance-of-hatsune-miku',
-                title: '初音未来的消失',
-                producer: 'cosMo@暴走P',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/disappearance-of-hatsune-miku.mp3'],
-                duration: 301.673651,
-                coverSrc: 'assets/5.webp',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://karent.jp/album/1098'
-            },
-            {
-                id: 'ai-kotoba',
-                title: '爱言叶',
-                producer: 'DECO*27',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/ai-kotoba.mp3'],
-                duration: 219.008,
-                coverSrc: 'assets/6.webp',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://ototoy.jp/_/default/p/39207'
-            },
-            {
-                id: 'sand-planet',
-                title: '砂之惑星',
-                producer: 'HACHI',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/sand-planet.mp3'],
-                duration: 249.856,
-                coverSrc: 'assets/7.webp',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://karent.jp/cd/magical2017'
-            },
-            {
-                id: 'odds-and-ends',
-                title: 'ODDS&ENDS',
-                producer: 'ryo (supercell)',
-                vocal: '初音未来',
-                audioSources: ['assets/audio/odds-and-ends.mp3'],
-                duration: 347.84,
-                coverSrc: 'assets/hero.webp',
-                quality: '支持 FLAC/WAV/MP3',
-                sourceUrl: 'https://karent.jp/cd/magical2014'
             }
         ];
         var audioExtensionOrder = ['flac', 'wav', 'mp3'];

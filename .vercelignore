@@ -1,5 +1,4 @@
 .git
-.vercel
 .netlify
 .codex-cache
 node_modules

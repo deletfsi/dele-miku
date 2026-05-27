@@ -73,7 +73,6 @@ function existingSourceFor(track) {
 
 const html = fs.readFileSync(indexPath, 'utf8');
 const tracks = extractTracks(html);
-const requiredTitles = ['世界第一的公主殿下', '妄想感伤代偿连盟', '千本樱'];
 const requiredFunctions = [
   'openMusicPanel',
   'closeMusicPanel',
@@ -83,15 +82,19 @@ const requiredFunctions = [
   'togglePlayback',
 ];
 
-if (tracks.length >= 10 && tracks.length <= 16) pass(`playlist size is in range: ${tracks.length}`);
-else fail(`playlist should have 10-16 tracks, found ${tracks.length}`);
+if (tracks.length === 1) pass('playlist is single-track mode');
+else fail(`playlist should only contain 世界第一的公主殿下, found ${tracks.length} tracks`);
 
-if (tracks[0] && tracks[0].title === '世界第一的公主殿下') pass('default track is 世界第一的公主殿下');
-else fail('default track is not 世界第一的公主殿下');
+if (tracks[0] && tracks[0].id === 'world-is-mine' && tracks[0].audioSources?.[0] === 'assets/bgm.mp3') {
+  pass('single track is 世界第一的公主殿下 from assets/bgm.mp3');
+} else {
+  fail('single track is not configured as 世界第一的公主殿下 from assets/bgm.mp3');
+}
 
-for (const title of requiredTitles) {
-  if (tracks.some((track) => track.title === title)) pass(`required track present: ${title}`);
-  else fail(`missing required track: ${title}`);
+if (!tracks.some((track) => (track.audioSources || []).some((src) => src.startsWith('assets/audio/')))) {
+  pass('playlist does not include secondary audio directory tracks');
+} else {
+  fail('playlist should not include any assets/audio tracks');
 }
 
 for (const track of tracks) {
@@ -128,9 +131,13 @@ if (
 }
 
 if (
-  html.includes('height: min(720px, calc(100svh - 36px));') &&
-  html.includes('height: min(650px, calc(100dvh - 24px));') &&
-  html.includes('grid-template-rows: auto auto auto auto minmax(0, 1fr);') &&
+  html.includes('height: auto;') &&
+  html.includes('max-height: min(720px, calc(100svh - 36px));') &&
+  html.includes('max-height: calc(100dvh - 24px);') &&
+  html.includes('grid-template-rows: auto auto auto auto auto;') &&
+  html.includes('#music-prev,') &&
+  html.includes('#music-next,') &&
+  html.includes('#music-mode') &&
   html.includes('-webkit-overflow-scrolling: touch;') &&
   html.includes('touch-action: pan-y;') &&
   html.includes('function bindTrackListScroll') &&
@@ -140,9 +147,9 @@ if (
   html.includes('#unveil-loader.is-dismissed') &&
   html.includes('z-index: 10030;')
 ) {
-  pass('player track list has a constrained mobile scroll area');
+  pass('single-track player keeps compact controls and guarded scrolling');
 } else {
-  fail('player track list should scroll inside the mobile panel');
+  fail('single-track player should keep compact controls and guarded scrolling');
 }
 
 if (html.includes('panelOverlay.addEventListener') && html.includes('event.target === panelOverlay')) {
