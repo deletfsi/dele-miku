@@ -184,7 +184,7 @@ if (!html.includes('music-source-link') && !html.includes('music-source-row') &&
 
 if (
   html.includes('href="mangabill/index.html"') &&
-  html.includes('查看更多 MangaBill') &&
+  html.includes('点此查看更多 MangaBill') &&
   html.includes('mangabill/generated/brand/logo-mark.webp') &&
   html.includes('mangabill/generated/characters/elaina/thumb-01.webp')
 ) {
@@ -195,8 +195,8 @@ if (
 
 if (
   html.includes('class="top-gallery-link') &&
-  html.includes('更多 MangaBill 突击相册') &&
-  html.includes('compact-label">突击相册') &&
+  html.includes('点此查看更多 MangaBill') &&
+  html.includes('compact-label">查看更多') &&
   html.includes('body.music-panel-open .top-gallery-link') &&
   html.includes("document.body.classList.add('music-panel-open')") &&
   html.includes("document.body.classList.remove('music-panel-open')")
