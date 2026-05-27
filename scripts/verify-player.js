@@ -158,10 +158,10 @@ if (html.includes('panelOverlay.addEventListener') && html.includes('event.targe
   fail('outside click close behavior is missing');
 }
 
-if (html.includes('now-playing-strip') && html.includes('track-playing-indicator') && html.includes('musicBeat')) {
-  pass('player exposes animated now-playing indicators');
+if (!html.includes('now-playing-strip') && html.includes('track-playing-indicator') && html.includes('musicBeat')) {
+  pass('player exposes one animated track indicator without a duplicate now-playing row');
 } else {
-  fail('player is missing animated now-playing indicators');
+  fail('player should not render a duplicate now-playing row');
 }
 
 if (html.includes('track-thumb') && html.includes("button.appendChild(thumb)") && html.includes('trackPulse')) {
@@ -193,6 +193,19 @@ if (
   fail('footer MangaBill gallery link is missing or incomplete');
 }
 
+if (
+  html.includes('class="top-gallery-link') &&
+  html.includes('更多 MangaBill 突击相册') &&
+  html.includes('compact-label">突击相册') &&
+  html.includes('body.music-panel-open .top-gallery-link') &&
+  html.includes("document.body.classList.add('music-panel-open')") &&
+  html.includes("document.body.classList.remove('music-panel-open')")
+) {
+  pass('top nav exposes a MangaBill gallery shortcut above the player overlay');
+} else {
+  fail('top MangaBill gallery shortcut is missing');
+}
+
 const mangabillIndexPath = path.join(root, 'mangabill', 'index.html');
 const mangabillRequiredAssets = [
   path.join(root, 'mangabill', 'assets'),
@@ -218,6 +231,16 @@ if (missingMangabillAssets.length === 0) {
 }
 
 const mangabillHtml = fs.existsSync(mangabillIndexPath) ? fs.readFileSync(mangabillIndexPath, 'utf8') : '';
+if (
+  mangabillHtml.includes('class="miku-return-link"') &&
+  mangabillHtml.includes('href="../index.html"') &&
+  mangabillHtml.includes('返回初音未来')
+) {
+  pass('MangaBill page exposes a return link to the Miku page');
+} else {
+  fail('MangaBill page should expose a return link to the Miku page');
+}
+
 if (
   mangabillHtml.includes('function unlockSheetScroll') &&
   mangabillHtml.includes("document.body.classList.remove('sheet-open')") &&

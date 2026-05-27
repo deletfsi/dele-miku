@@ -176,6 +176,74 @@
         .visualizer { display: flex; gap: 3px; height: 15px; align-items: flex-end; margin-top: 4px; }
         .bar { width: 3px; background-color: #39C5BB; height: 20%; border-radius: 2px; transition: height 0.1s; }
 
+        .top-gallery-link {
+            position: fixed;
+            top: max(18px, calc(env(safe-area-inset-top) + 18px));
+            left: 50%;
+            z-index: 60;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 42px;
+            max-width: calc(100vw - 320px);
+            padding: 0 16px;
+            border: 1px solid rgba(57, 197, 187, 0.48);
+            border-radius: 999px;
+            color: #f5fffe;
+            text-decoration: none;
+            background: rgba(5, 12, 18, 0.76);
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.11);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            transform: translateX(-50%);
+            transition: transform 0.24s ease, border-color 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
+        }
+        .top-gallery-link::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #39C5BB;
+            box-shadow: 0 0 16px rgba(57, 197, 187, 0.86);
+        }
+        .top-gallery-link strong {
+            display: block;
+            overflow: hidden;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .top-gallery-link .compact-label { display: none; }
+        .top-gallery-link:hover,
+        .top-gallery-link:focus-visible {
+            border-color: rgba(244, 189, 25, 0.86);
+            background: rgba(7, 16, 23, 0.9);
+            box-shadow: 0 22px 58px rgba(244, 189, 25, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            transform: translateX(-50%) translateY(-2px);
+        }
+        .top-gallery-link:focus-visible {
+            outline: 2px solid rgba(244, 189, 25, 0.92);
+            outline-offset: 4px;
+        }
+        body.music-panel-open .top-gallery-link {
+            z-index: 10040;
+        }
+        @media (max-width: 900px) {
+            .top-gallery-link {
+                top: max(76px, calc(env(safe-area-inset-top) + 76px));
+                max-width: calc(100vw - 28px);
+                min-height: 38px;
+                padding: 0 14px;
+            }
+            .top-gallery-link strong { font-size: 11px; }
+            .top-gallery-link .full-label { display: none; }
+            .top-gallery-link .compact-label { display: block; }
+        }
+
         .mangabill-entry {
             position: relative;
             display: block;
@@ -481,35 +549,6 @@
         #music-mode {
             display: none;
         }
-        .now-playing-strip {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-height: 42px;
-            margin-top: -4px;
-            padding: 9px 12px;
-            border-radius: 14px;
-            border: 1px solid rgba(57,197,187,0.18);
-            background: linear-gradient(135deg, rgba(57,197,187,0.12), rgba(255,255,255,0.055));
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-        }
-        .now-playing-copy {
-            min-width: 0;
-            display: grid;
-            gap: 0;
-        }
-        .now-playing-label { display: none; }
-        .now-playing-title {
-            min-width: 0;
-            font-size: 13px;
-            line-height: 1.25;
-            color: rgba(255,255,255,0.88);
-            font-weight: 800;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
-        .now-playing-wave,
         .track-playing-indicator {
             width: 24px;
             height: 18px;
@@ -519,7 +558,6 @@
             justify-content: center;
             gap: 3px;
         }
-        .now-playing-wave span,
         .track-playing-indicator span {
             width: 3px;
             min-height: 4px;
@@ -530,13 +568,9 @@
             animation-play-state: paused;
             transform-origin: bottom;
         }
-        .now-playing-wave span:nth-child(2),
         .track-playing-indicator span:nth-child(2) { animation-delay: 0.12s; }
-        .now-playing-wave span:nth-child(3),
         .track-playing-indicator span:nth-child(3) { animation-delay: 0.24s; }
-        .now-playing-wave span:nth-child(4),
         .track-playing-indicator span:nth-child(4) { animation-delay: 0.36s; }
-        .now-playing-strip.is-playing .now-playing-wave span,
         .track-list button.is-playing .track-playing-indicator span {
             opacity: 1;
             animation-play-state: running;
@@ -603,7 +637,7 @@
             text-overflow: ellipsis;
         }
         #music-panel.is-switching .music-panel-record,
-        #music-panel.is-switching .now-playing-strip {
+        #music-panel.is-switching .track-list button.is-active {
             animation: trackPulse 0.34s ease-out;
         }
         @keyframes trackPulse {
@@ -1452,13 +1486,6 @@
                 <button type="button" class="hover-target" aria-label="下一首" title="下一首" id="music-next" onclick="nextTrack()">›</button>
                 <button type="button" class="hover-target" aria-label="顺序播放" title="顺序播放" id="music-mode" onclick="togglePlayMode()">↻</button>
             </div>
-            <div class="now-playing-strip" id="now-playing-strip" aria-live="polite">
-                <span class="now-playing-wave" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-                <span class="now-playing-copy">
-                    <span class="now-playing-label">NOW PLAYING</span>
-                    <span class="now-playing-title" id="now-playing-title">世界第一的公主殿下</span>
-                </span>
-            </div>
             <div class="track-list" id="track-list" aria-label="初音未来曲库"></div>
         </section>
     </div>
@@ -1476,6 +1503,10 @@
             </div>
             <div class="text-xs md:text-sm font-display tracking-widest text-gray-300 unveil-nav-item">EST. 2007</div>
         </header>
+        <a class="top-gallery-link hover-target unveil-nav-item" href="mangabill/index.html" aria-label="查看更多 MangaBill 突击相册">
+            <strong class="full-label">更多 MangaBill 突击相册</strong>
+            <strong class="compact-label">突击相册</strong>
+        </a>
 
         <!-- 首屏 Hero Section -->
         <section class="h-screen relative flex items-center justify-center overflow-hidden">
@@ -3163,8 +3194,6 @@
         var panelTitle = document.getElementById('music-panel-title');
         var panelMeta = document.getElementById('music-panel-meta');
         var musicStatus = document.getElementById('music-status');
-        var nowPlayingStrip = document.getElementById('now-playing-strip');
-        var nowPlayingTitle = document.getElementById('now-playing-title');
         var progress = document.getElementById('music-progress');
         var currentTimeLabel = document.getElementById('music-current-time');
         var durationLabel = document.getElementById('music-duration');
@@ -3614,7 +3643,6 @@
             }
             if (record) record.classList.toggle('playing', isPlaying);
             if (panelRecord) panelRecord.classList.toggle('playing', isPlaying);
-            if (nowPlayingStrip) nowPlayingStrip.classList.toggle('is-playing', isPlaying);
             if (miniPlayer) miniPlayer.setAttribute('aria-label', isPlaying ? '打开音乐播放器，当前正在播放' : '打开音乐播放器');
             if (isPlaying) {
                 startVisualizer();
@@ -3695,7 +3723,6 @@
             if (miniTrackTitle) miniTrackTitle.textContent = track.title;
             if (panelTitle) panelTitle.textContent = track.title;
             if (panelMeta) panelMeta.textContent = track.producer + ' / ' + track.vocal;
-            if (nowPlayingTitle) nowPlayingTitle.textContent = track.title;
             setRecordCover(track.coverSrc);
             if (panel) {
                 panel.classList.remove('is-switching');
@@ -3809,6 +3836,7 @@
             if (typeof dismissUnveilLayers === 'function') dismissUnveilLayers();
             panelOverlay.classList.add('is-open');
             panelOverlay.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('music-panel-open');
             runWhenIdle(function() {
                 if (isPlaying) return;
                 warmAudioCache(getBackgroundWarmupIndex(currentTrackIndex));
@@ -3819,6 +3847,7 @@
             if (!panelOverlay) return;
             panelOverlay.classList.remove('is-open');
             panelOverlay.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('music-panel-open');
         }
 
         if (panelOverlay) {
