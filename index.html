@@ -5,12 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>初音未来 Hatsune Miku - 世界第一的公主殿下</title>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="image" href="assets/0logo-512.webp" type="image/webp">
     <link rel="preload" as="image" href="assets/hero-mobile.webp" type="image/webp" media="(max-width: 767px)">
     <link rel="preload" as="image" href="assets/hero.webp" type="image/webp" media="(min-width: 768px)">
     <link rel="preload" as="image" href="assets/vocaloid-monetary-nexus-promo.avif" type="image/avif" fetchpriority="high">
+    <link rel="prefetch" as="image" href="assets/profile.webp" type="image/webp">
+    <link rel="prefetch" as="image" href="mangabill/generated/brand/logo-mark.webp" type="image/webp">
+    <link rel="prefetch" as="image" href="mangabill/generated/characters/elaina/thumb-01.webp" type="image/webp">
+    <link rel="prefetch" as="image" href="mangabill/generated/characters/frieren/thumb-01.webp" type="image/webp">
     <link rel="stylesheet" href="assets/tailwind.generated.css">
 
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -2209,12 +2214,50 @@
         }
         schedulePageViewTracking();
 
-        function preloadImage(src) {
+        const warmedImageSources = new Set();
+
+        function canWarmImages() {
+            const connection = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
+            if (!connection) return true;
+            if (connection.saveData) return false;
+            return !/2g/.test(connection.effectiveType || '');
+        }
+
+        function preloadImage(src, priority) {
+            if (!src || warmedImageSources.has(src)) return null;
+            warmedImageSources.add(src);
             const img = new Image();
             img.decoding = 'async';
+            img.loading = 'eager';
+            if ('fetchPriority' in img) img.fetchPriority = priority || 'low';
             img.src = src;
+            if (img.decode) img.decode().catch(function() {});
             return img;
         }
+
+        function warmImageSet(sources, priority) {
+            if (!canWarmImages()) return;
+            sources.filter(Boolean).forEach(function(src) {
+                preloadImage(src, priority || 'low');
+            });
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready
+                    .then(function(registration) {
+                        const worker = registration.active || registration.waiting || registration.installing;
+                        if (worker) worker.postMessage({ type: 'CACHE_IMAGES', sources: sources.filter(Boolean) });
+                    })
+                    .catch(function() {});
+            }
+        }
+
+        function registerImageCacheWorker() {
+            if (!('serviceWorker' in navigator)) return;
+            const localHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            if (location.protocol !== 'https:' && !localHost) return;
+            navigator.serviceWorker.register('sw.js').catch(function() {});
+        }
+
+        registerImageCacheWorker();
 
         function loadExternalScript(src) {
             return new Promise((resolve, reject) => {
@@ -2228,12 +2271,64 @@
         }
 
         function preloadNonCriticalAssets() {
-            if (window.innerWidth < 768 || (navigator.connection && navigator.connection.saveData)) return;
-            [
-                'assets/profile.webp', 'assets/gallery-1.png', 'assets/gallery-2.webp',
-                'assets/gallery-3.webp', 'assets/gallery-4.webp'
-            ].forEach(preloadImage);
+            const useMobileArchive = window.innerWidth < 720 || window.matchMedia('(pointer: coarse)').matches;
+            const archiveImages = typeof ARCHIVE_ITEMS === 'undefined'
+                ? []
+                : ARCHIVE_ITEMS.map(function(item) {
+                    return 'assets/' + (useMobileArchive && item.mobileFile ? item.mobileFile : item.file);
+                });
+            warmImageSet([
+                'assets/profile.webp',
+                'assets/gallery-1.png',
+                'assets/gallery-2.webp',
+                'assets/gallery-3.webp',
+                'assets/gallery-4.webp',
+                'assets/vocaloid-monetary-nexus-logo.png',
+                'assets/vocaloid-monetary-nexus-signatures.png',
+                'assets/0wechat.png',
+                'mangabill/generated/brand/logo-mark.webp',
+                'mangabill/generated/characters/elaina/thumb-01.webp',
+                'mangabill/generated/characters/frieren/thumb-01.webp',
+                'mangabill/generated/characters/violet/thumb-01.webp',
+                'mangabill/generated/characters/columbina/thumb-01.webp',
+                'mangabill/generated/characters/furina/thumb-01.webp',
+                'mangabill/generated/characters/fern/thumb-01.webp'
+            ].concat(archiveImages), 'low');
         }
+
+        function warmMangaBillImages() {
+            warmImageSet([
+                'mangabill/generated/brand/logo-mark.webp',
+                'mangabill/generated/brand/wechat.png',
+                'mangabill/generated/characters/elaina/thumb-01.webp',
+                'mangabill/generated/characters/kaori/thumb-01.webp',
+                'mangabill/generated/characters/bocchi/thumb-01.webp',
+                'mangabill/generated/characters/roxy/thumb-01.webp',
+                'mangabill/generated/characters/rin/thumb-01.webp',
+                'mangabill/generated/characters/frieren/thumb-01.webp',
+                'mangabill/generated/characters/furina/thumb-01.webp',
+                'mangabill/generated/characters/fern/thumb-01.webp',
+                'mangabill/generated/characters/columbina/thumb-01.webp',
+                'mangabill/generated/characters/violet/thumb-01.webp'
+            ], 'low');
+        }
+
+        function wireImageWarmupTriggers() {
+            document.querySelectorAll('a[href^="mangabill/"]').forEach(function(link) {
+                ['pointerenter', 'focus', 'touchstart'].forEach(function(eventName) {
+                    link.addEventListener(eventName, warmMangaBillImages, { once: true, passive: true });
+                });
+            });
+            runWhenIdle(function() {
+                warmImageSet([
+                    window.innerWidth < 768 ? 'assets/hero-mobile.webp' : 'assets/hero.webp',
+                    'assets/vocaloid-monetary-nexus-promo.avif',
+                    'assets/profile.webp'
+                ], 'high');
+            }, 700);
+        }
+
+        wireImageWarmupTriggers();
 
         let loaderFinished = false;
         let experienceBootstrapped = false;

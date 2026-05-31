@@ -251,6 +251,40 @@ if (
   fail('MangaBill should release sheet-open scroll lock when leaving a post');
 }
 
+const swPath = path.join(root, 'sw.js');
+const sw = fs.existsSync(swPath) ? fs.readFileSync(swPath, 'utf8') : '';
+const vercelConfig = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
+const netlifyConfig = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
+
+if (
+  html.includes("navigator.serviceWorker.register('sw.js')") &&
+  html.includes('function warmImageSet') &&
+  html.includes("worker.postMessage({ type: 'CACHE_IMAGES'") &&
+  html.includes('fetchPriority') &&
+  html.includes('rel="prefetch" as="image"') &&
+  sw.includes("CACHE_NAME = 'dele-miku-image-cache") &&
+  sw.includes("request.destination === 'image'") &&
+  sw.includes("event.data.type !== 'CACHE_IMAGES'")
+) {
+  pass('site warms and caches image assets without changing image files');
+} else {
+  fail('site image warmup and Service Worker image cache are incomplete');
+}
+
+if (
+  vercelConfig.includes('/sw.js') &&
+  vercelConfig.includes('no-cache, no-store, must-revalidate') &&
+  vercelConfig.includes('public, max-age=31536000, immutable') &&
+  vercelConfig.includes('/mangabill/generated/manifest.json') &&
+  netlifyConfig.includes('/sw.js') &&
+  netlifyConfig.includes('public, max-age=31536000, immutable') &&
+  netlifyConfig.includes('/mangabill/generated/lore/manifest.json')
+) {
+  pass('deployment config uses long-lived image caching with fresh manifests');
+} else {
+  fail('deployment image cache headers are incomplete');
+}
+
 if (
   !html.includes('音源无法播放') &&
   !html.includes('请检查') &&
