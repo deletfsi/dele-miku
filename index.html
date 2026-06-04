@@ -66,7 +66,7 @@
         #unveil-loader.intro-bill-active #unveil-percent {
             position: absolute;
             left: 50%;
-            bottom: 28px;
+            bottom: 54px;
             width: max-content;
             font-size: clamp(52px, 7vw, 88px) !important;
             transform: translateX(-50%);
@@ -76,7 +76,7 @@
         #unveil-loader.intro-bill-active > .text-sm {
             position: absolute;
             left: 50%;
-            bottom: 20px;
+            bottom: 18px;
             transform: translateX(-50%);
             opacity: 0.7;
         }
@@ -171,10 +171,10 @@
             transition: opacity 1.25s ease, transform 1.25s ease;
         }
         .intro-bill-stage.is-css-ready #intro-bill-front {
-            left: 18%;
+            left: calc(50% - 32%);
             top: calc(50% + 46px);
             opacity: 1;
-            transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+            transform: translate(-50%, -50%) rotate(-7deg) scale(1);
             transition:
                 opacity 0.96s ease,
                 left 1.45s cubic-bezier(.215,.61,.355,1),
@@ -182,10 +182,10 @@
                 transform 1.45s cubic-bezier(.215,.61,.355,1);
         }
         .intro-bill-stage.is-css-ready #intro-bill-back {
-            left: 82%;
+            left: calc(50% + 32%);
             top: calc(50% + 46px);
             opacity: 1;
-            transform: translate(-50%, -50%) rotate(7deg) scale(0.98);
+            transform: translate(-50%, -50%) rotate(7deg) scale(1);
             transition:
                 opacity 0.96s ease 0.24s,
                 left 1.45s cubic-bezier(.215,.61,.355,1) 0.24s,
@@ -197,12 +197,12 @@
                 transform: translateY(-72px) scale(0.82);
             }
             #unveil-loader.intro-bill-active #unveil-percent {
-                bottom: 42px;
+                bottom: 64px;
                 font-size: clamp(44px, 13vw, 56px) !important;
                 transform: translateX(-50%);
             }
             #unveil-loader.intro-bill-active > .text-sm {
-                bottom: 34px;
+                bottom: 24px;
                 transform: translateX(-50%);
             }
             .intro-bill-card {
@@ -219,14 +219,14 @@
                 font-size: 8px;
             }
             .intro-bill-stage.is-css-ready #intro-bill-front {
-                left: 24%;
+                left: calc(50% - 24%);
                 top: calc(50% + 24px);
-                transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+                transform: translate(-50%, -50%) rotate(-7deg) scale(1);
             }
             .intro-bill-stage.is-css-ready #intro-bill-back {
-                left: 61%;
+                left: calc(50% + 24%);
                 top: calc(50% + 24px);
-                transform: translate(-50%, -50%) rotate(7deg) scale(0.98);
+                transform: translate(-50%, -50%) rotate(7deg) scale(1);
             }
         }
         @media (prefers-reduced-motion: reduce) {
