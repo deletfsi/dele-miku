@@ -20,6 +20,14 @@
             --good: #78f0b2;
             --violet: #b9a5ff;
             --gold: #f7d08a;
+            --pink: #ff5fd7;
+            --orange: #ff9f43;
+            --cyan: #28f7ff;
+            --lime: #a6ff4d;
+            --aurora-1: rgba(40, 247, 255, 0.28);
+            --aurora-2: rgba(255, 95, 215, 0.2);
+            --aurora-3: rgba(247, 208, 138, 0.18);
+            --glass: rgba(6, 18, 29, 0.72);
             color-scheme: dark;
         }
 
@@ -30,9 +38,10 @@
             min-height: 100vh;
             overflow-x: hidden;
             background:
-                radial-gradient(circle at 18% 12%, rgba(57, 197, 187, 0.16), transparent 34rem),
-                radial-gradient(circle at 86% 6%, rgba(125, 207, 255, 0.12), transparent 28rem),
-                linear-gradient(180deg, #031019 0%, var(--bg) 46%, #020406 100%);
+                radial-gradient(circle at 14% 8%, rgba(40, 247, 255, 0.22), transparent 32rem),
+                radial-gradient(circle at 78% 4%, rgba(255, 95, 215, 0.18), transparent 30rem),
+                radial-gradient(circle at 50% 46%, rgba(247, 208, 138, 0.08), transparent 34rem),
+                linear-gradient(180deg, #03111f 0%, var(--bg) 48%, #020406 100%);
             color: var(--text);
             font-family: "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
         }
@@ -44,7 +53,8 @@
             pointer-events: none;
             background:
                 linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+                linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+                radial-gradient(circle at 60% 10%, rgba(40, 247, 255, 0.08), transparent 30rem);
             background-size: 48px 48px;
             mask-image: linear-gradient(180deg, rgba(0,0,0,0.7), transparent 82%);
         }
@@ -71,9 +81,9 @@
             border: 1px solid rgba(57, 197, 187, 0.24);
             border-radius: 22px;
             background:
-                linear-gradient(135deg, rgba(57, 197, 187, 0.16), rgba(125, 207, 255, 0.04) 45%, rgba(5, 18, 26, 0.86)),
+                linear-gradient(135deg, rgba(40, 247, 255, 0.2), rgba(255, 95, 215, 0.09) 42%, rgba(5, 18, 26, 0.86)),
                 rgba(5, 18, 26, 0.72);
-            box-shadow: 0 28px 100px rgba(0, 0, 0, 0.32);
+            box-shadow: 0 28px 100px rgba(0, 0, 0, 0.32), 0 0 80px rgba(40, 247, 255, 0.1);
             backdrop-filter: blur(18px);
         }
 
@@ -86,6 +96,21 @@
             height: 360px;
             border-radius: 999px;
             background: radial-gradient(circle, rgba(57, 197, 187, 0.24), transparent 64%);
+        }
+
+        .topbar::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            pointer-events: none;
+            border-radius: inherit;
+            background: linear-gradient(120deg, rgba(40, 247, 255, 0.55), transparent 32%, rgba(255, 95, 215, 0.34) 66%, transparent);
+            opacity: 0.38;
+            padding: 1px;
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
         }
 
         .brand {
@@ -108,9 +133,9 @@
         }
 
         h1 {
-            font-size: clamp(30px, 5vw, 68px);
+            font-size: 64px;
             line-height: 0.92;
-            letter-spacing: -0.03em;
+            letter-spacing: 0;
         }
 
         .brand p {
@@ -261,14 +286,21 @@
             border: 1px solid rgba(57, 197, 187, 0.26);
             border-radius: 999px;
             padding: 8px 12px;
-            background: rgba(57, 197, 187, 0.07);
+            background: rgba(40, 247, 255, 0.07);
             color: var(--text);
             cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+        }
+
+        .chip:hover {
+            border-color: rgba(40, 247, 255, 0.8);
+            box-shadow: 0 0 26px rgba(40, 247, 255, 0.14);
+            transform: translateY(-1px);
         }
 
         .chip.is-active {
-            background: rgba(57, 197, 187, 0.24);
-            border-color: var(--miku);
+            background: linear-gradient(135deg, rgba(40, 247, 255, 0.28), rgba(255, 95, 215, 0.16));
+            border-color: var(--cyan);
         }
 
         .cards {
@@ -281,8 +313,9 @@
         .card, .panel {
             border: 1px solid var(--line);
             border-radius: 16px;
-            background: var(--panel);
-            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.25);
+            background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012)), var(--glass);
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.25), 0 0 38px rgba(40, 247, 255, 0.055);
+            backdrop-filter: blur(18px);
         }
 
         .card {
@@ -291,7 +324,8 @@
             position: relative;
             overflow: hidden;
             background:
-                radial-gradient(circle at 100% 0%, rgba(57, 197, 187, 0.18), transparent 52%),
+                radial-gradient(circle at 100% 0%, rgba(40, 247, 255, 0.22), transparent 52%),
+                radial-gradient(circle at 0% 100%, rgba(255, 95, 215, 0.12), transparent 44%),
                 linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
                 var(--panel);
         }
@@ -302,7 +336,7 @@
             inset: auto 14px 12px 14px;
             height: 2px;
             border-radius: 999px;
-            background: linear-gradient(90deg, var(--miku), transparent);
+            background: linear-gradient(90deg, var(--cyan), var(--pink), transparent);
             opacity: 0.7;
         }
 
@@ -314,11 +348,15 @@
         }
 
         .metric-value {
-            font-size: clamp(28px, 4vw, 44px);
+            font-size: 42px;
             font-weight: 900;
-            letter-spacing: -0.04em;
+            letter-spacing: 0;
             margin-top: 12px;
             font-variant-numeric: tabular-nums;
+            background: linear-gradient(135deg, #ffffff 0%, var(--cyan) 42%, var(--pink) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .metric-note {
@@ -348,10 +386,58 @@
             overflow: hidden;
         }
 
-        canvas {
+        canvas, .chart-surface {
             display: block;
             width: 100%;
             height: 240px;
+        }
+
+        .chart-surface {
+            position: relative;
+            border-radius: 14px;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(40, 247, 255, 0.08), transparent 52%),
+                linear-gradient(180deg, rgba(255,255,255,0.026), transparent);
+            overflow: hidden;
+        }
+
+        .chart-surface.is-loading::after,
+        .chart-surface.is-empty::after,
+        .globe-stage.is-loading::after,
+        .globe-stage.is-empty::after {
+            content: attr(data-status);
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: rgba(2, 7, 11, 0.2);
+        }
+
+        .chart-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chart-toggle {
+            height: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.045);
+            color: var(--muted);
+            padding: 0 10px;
+            cursor: pointer;
+        }
+
+        .chart-toggle.is-active {
+            color: #001315;
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--cyan), var(--miku));
+            font-weight: 800;
         }
 
         .rank-list {
@@ -394,7 +480,49 @@
         .bar-fill {
             height: 100%;
             border-radius: 999px;
-            background: linear-gradient(90deg, var(--miku), var(--blue));
+            background: linear-gradient(90deg, var(--cyan), var(--pink), var(--gold));
+            box-shadow: 0 0 22px rgba(40, 247, 255, 0.22);
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .insight-card {
+            min-height: 96px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 14px;
+            background:
+                linear-gradient(135deg, rgba(40, 247, 255, 0.1), rgba(255, 95, 215, 0.045)),
+                rgba(255, 255, 255, 0.026);
+        }
+
+        .insight-card span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .insight-card strong {
+            display: block;
+            margin-top: 10px;
+            font-size: 30px;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .insight-card em {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            font-style: normal;
         }
 
         .geo-stack {
@@ -405,6 +533,97 @@
 
         .geo-stack > div:first-child {
             grid-row: span 2;
+        }
+
+        .globe-panel {
+            min-height: 540px;
+        }
+
+        .globe-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .globe-stage {
+            position: relative;
+            min-height: 470px;
+            border-radius: 18px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 48%, rgba(40, 247, 255, 0.12), transparent 34%),
+                linear-gradient(180deg, rgba(5, 22, 33, 0.84), rgba(2, 7, 11, 0.92));
+            border: 1px solid rgba(40, 247, 255, 0.22);
+        }
+
+        .globe-stage canvas {
+            outline: none;
+        }
+
+        .globe-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            cursor: grab;
+            opacity: 0;
+            transition: opacity 0.45s ease;
+        }
+
+        .globe-fallback {
+            position: absolute;
+            inset: 0;
+            min-height: 470px;
+            z-index: 0;
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.24s ease;
+        }
+
+        .globe-legend {
+            position: absolute;
+            left: 16px;
+            bottom: 16px;
+            z-index: 2;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .legend-chip {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 7px 10px;
+            background: rgba(2, 7, 11, 0.54);
+            color: var(--muted);
+            font-size: 12px;
+            backdrop-filter: blur(12px);
+        }
+
+        .geo-quality {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .quality-row {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.028);
+        }
+
+        .quality-row span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .quality-row strong {
+            display: block;
+            margin-top: 6px;
+            color: var(--text);
+            font-size: 22px;
+            font-variant-numeric: tabular-nums;
         }
 
         .duration-summary {
@@ -512,19 +731,26 @@
         @media (max-width: 1100px) {
             .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .insight-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .grid, .grid.thirds, .grid.feature { grid-template-columns: 1fr; }
+            .globe-layout { grid-template-columns: 1fr; }
             .geo-stack { grid-template-columns: 1fr; }
             .geo-stack > div:first-child { grid-row: auto; }
         }
 
         @media (max-width: 700px) {
             .page { width: min(100% - 20px, 1440px); padding-top: 18px; }
+            h1 { font-size: 42px; }
             .topbar { align-items: flex-start; flex-direction: column; }
             .filters { grid-template-columns: 1fr; }
             .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .insight-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .card { min-height: 100px; padding: 14px; }
+            .metric-value { font-size: 30px; }
+            .insight-card strong { font-size: 24px; }
             .duration-summary { grid-template-columns: 1fr; }
             .status { border-radius: 14px; align-items: flex-start; flex-wrap: wrap; text-align: left; }
+            .globe-stage, .globe-fallback { min-height: 360px; }
         }
     </style>
 </head>
@@ -669,19 +895,65 @@
             </article>
         </section>
 
+        <section class="insight-grid" aria-label="Derived analytics">
+            <article class="insight-card"><span>PV / Visitor</span><strong id="insight-pv-per-visitor">0</strong><em>人均浏览深度</em></article>
+            <article class="insight-card"><span>Mobile Ratio</span><strong id="insight-mobile-ratio">0%</strong><em>移动端占比</em></article>
+            <article class="insight-card"><span>Peak Hour</span><strong id="insight-peak-hour">--</strong><em>最高访问时段</em></article>
+            <article class="insight-card"><span>Geo Coverage</span><strong id="insight-countries">0</strong><em>覆盖国家 / 地区</em></article>
+            <article class="insight-card"><span>Top City Share</span><strong id="insight-top-city">0%</strong><em>第一城市集中度</em></article>
+            <article class="insight-card"><span>Session Stay</span><strong id="insight-session-stay">0s</strong><em>每会话平均停留</em></article>
+        </section>
+
+        <section class="panel globe-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Global Access Globe</h2>
+                    <h3>城市 / 国家级访问分布，可拖动、缩放查看</h3>
+                </div>
+                <div class="small-actions">
+                    <button class="mini-button" data-export="countries" type="button">导出 CSV</button>
+                </div>
+            </div>
+            <div class="globe-layout">
+                <div id="globe-stage" class="globe-stage is-loading" data-status="Loading globe">
+                    <div id="globe-canvas" class="globe-canvas"></div>
+                    <div id="globe-fallback" class="globe-fallback chart-surface"></div>
+                    <div class="globe-legend">
+                        <span class="legend-chip">点大小 = 访问量</span>
+                        <span class="legend-chip">颜色 = 访客 / 会话强度</span>
+                        <span class="legend-chip">城市缺失时用国家中心估算</span>
+                    </div>
+                </div>
+                <aside class="geo-quality" id="geo-quality">
+                    <div class="quality-row"><span>可定位城市点</span><strong id="geo-city-points">0</strong></div>
+                    <div class="quality-row"><span>国家级估算点</span><strong id="geo-country-points">0</strong></div>
+                    <div class="quality-row"><span>Unknown 地区记录</span><strong id="geo-unknown-points">0</strong></div>
+                    <div class="quality-row"><span>Unknown 地理比例</span><strong id="geo-unknown-ratio">0%</strong></div>
+                    <div class="quality-row"><span>地理覆盖国家</span><strong id="geo-country-coverage">0</strong></div>
+                </aside>
+            </div>
+        </section>
+
         <section class="grid">
             <article class="panel">
                 <div class="panel-header">
                     <h2>按日期趋势</h2>
                     <div class="small-actions">
+                        <div class="chart-toolbar" aria-label="趋势指标">
+                            <button class="chart-toggle is-active" type="button" data-trend="all">All</button>
+                            <button class="chart-toggle" type="button" data-trend="page_views">PV</button>
+                            <button class="chart-toggle" type="button" data-trend="visitors">Visitors</button>
+                            <button class="chart-toggle" type="button" data-trend="sessions">Sessions</button>
+                            <button class="chart-toggle" type="button" data-trend="qr_views">QR</button>
+                        </div>
                         <button class="mini-button" data-export="day_series" type="button">导出 CSV</button>
                     </div>
                 </div>
-                <canvas id="day-chart" width="900" height="280"></canvas>
+                <div id="day-chart" class="chart-surface is-loading" data-status="Loading chart"></div>
             </article>
             <article class="panel">
                 <h2>24 小时分布</h2>
-                <canvas id="hour-chart" width="520" height="280"></canvas>
+                <div id="hour-chart" class="chart-surface is-loading" data-status="Loading chart"></div>
             </article>
         </section>
 
@@ -715,7 +987,7 @@
                         <button class="mini-button" data-export="durations" type="button">导出 CSV</button>
                     </div>
                 </div>
-                <canvas id="duration-chart" width="760" height="280"></canvas>
+                <div id="duration-chart" class="chart-surface is-loading" data-status="Loading chart"></div>
                 <div class="duration-summary">
                     <div class="duration-chip"><span>平均停留</span><strong id="summary-avg-stay">0s</strong></div>
                     <div class="duration-chip"><span>中位停留</span><strong id="summary-median-stay">0s</strong></div>
@@ -727,14 +999,17 @@
         <section class="grid thirds">
             <article class="panel">
                 <h2>来源分布</h2>
+                <div id="source-chart" class="chart-surface is-loading" data-status="Loading chart"></div>
                 <div id="source-list" class="rank-list"></div>
             </article>
             <article class="panel">
                 <h2>设备分布</h2>
+                <div id="device-chart" class="chart-surface is-loading" data-status="Loading chart"></div>
                 <div id="device-list" class="rank-list"></div>
             </article>
             <article class="panel">
                 <h2>二维码 / Campaign</h2>
+                <div id="qr-chart" class="chart-surface is-loading" data-status="Loading chart"></div>
                 <div id="qr-list" class="rank-list"></div>
             </article>
         </section>
@@ -812,7 +1087,9 @@
     <script>
         const API_URL = 'https://auhhtzamzojyhqkbwzgs.supabase.co/functions/v1/miku-analytics-admin';
         const TOKEN_KEY = 'dele_miku_analytics_token';
-        const state = { token: sessionStorage.getItem(TOKEN_KEY), data: null, activeRange: '7d' };
+        const ECHARTS_URL = 'https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js';
+        const GLOBE_URL = 'https://cdn.jsdelivr.net/npm/globe.gl@2.33.2/dist/globe.gl.min.js';
+        const state = { token: sessionStorage.getItem(TOKEN_KEY), data: null, activeRange: '7d', trendMetric: 'all' };
 
         const $ = (selector) => document.querySelector(selector);
         const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -829,6 +1106,111 @@
             return minuteRest ? `${hours}h ${minuteRest}m` : `${hours}h`;
         };
         const rowCount = (row, preferred) => Number(row?.[preferred] ?? row?.page_views ?? row?.sessions ?? row?.count ?? 0);
+        const chartPalette = ['#28f7ff', '#ff5fd7', '#f7d08a', '#a6ff4d', '#7dcfff', '#ff9f43', '#b9a5ff', '#78f0b2'];
+        const chartInstances = {};
+        const scriptPromises = {};
+        let globeInstance = null;
+        let globeRenderId = 0;
+
+        const COUNTRY_CENTERS = {
+            china: [35.8617, 104.1954], cn: [35.8617, 104.1954],
+            'united states': [37.0902, -95.7129], usa: [37.0902, -95.7129], us: [37.0902, -95.7129],
+            japan: [36.2048, 138.2529], jp: [36.2048, 138.2529],
+            singapore: [1.3521, 103.8198], sg: [1.3521, 103.8198],
+            'hong kong': [22.3193, 114.1694], hk: [22.3193, 114.1694],
+            taiwan: [23.6978, 120.9605], tw: [23.6978, 120.9605],
+            'south korea': [35.9078, 127.7669], korea: [35.9078, 127.7669], kr: [35.9078, 127.7669],
+            'united kingdom': [55.3781, -3.4360], uk: [55.3781, -3.4360], gb: [55.3781, -3.4360],
+            france: [46.2276, 2.2137], fr: [46.2276, 2.2137],
+            germany: [51.1657, 10.4515], de: [51.1657, 10.4515],
+            canada: [56.1304, -106.3468], ca: [56.1304, -106.3468],
+            australia: [-25.2744, 133.7751], au: [-25.2744, 133.7751],
+            netherlands: [52.1326, 5.2913], nl: [52.1326, 5.2913],
+            thailand: [15.8700, 100.9925], th: [15.8700, 100.9925],
+            malaysia: [4.2105, 101.9758], my: [4.2105, 101.9758],
+            indonesia: [-0.7893, 113.9213], id: [-0.7893, 113.9213],
+            india: [20.5937, 78.9629], in: [20.5937, 78.9629],
+            brazil: [-14.2350, -51.9253], br: [-14.2350, -51.9253],
+            russia: [61.5240, 105.3188], ru: [61.5240, 105.3188]
+        };
+
+        const CITY_COORDS = {
+            beijing: [39.9042, 116.4074], shanghai: [31.2304, 121.4737], shenzhen: [22.5431, 114.0579],
+            guangzhou: [23.1291, 113.2644], hangzhou: [30.2741, 120.1551], chengdu: [30.5728, 104.0668],
+            wuhan: [30.5928, 114.3055], nanjing: [32.0603, 118.7969], tokyo: [35.6762, 139.6503],
+            osaka: [34.6937, 135.5023], seoul: [37.5665, 126.9780], singapore: [1.3521, 103.8198],
+            'hong kong': [22.3193, 114.1694], taipei: [25.0330, 121.5654], london: [51.5072, -0.1276],
+            paris: [48.8566, 2.3522], berlin: [52.5200, 13.4050], frankfurt: [50.1109, 8.6821],
+            amsterdam: [52.3676, 4.9041], 'new york': [40.7128, -74.0060], 'los angeles': [34.0522, -118.2437],
+            'san francisco': [37.7749, -122.4194], seattle: [47.6062, -122.3321], toronto: [43.6532, -79.3832],
+            vancouver: [49.2827, -123.1207], sydney: [-33.8688, 151.2093], melbourne: [-37.8136, 144.9631],
+            bangkok: [13.7563, 100.5018], jakarta: [-6.2088, 106.8456], 'kuala lumpur': [3.1390, 101.6869],
+            mumbai: [19.0760, 72.8777], delhi: [28.7041, 77.1025], moscow: [55.7558, 37.6173],
+            'sao paulo': [-23.5558, -46.6396]
+        };
+
+        function loadScriptOnce(src) {
+            if (scriptPromises[src]) return scriptPromises[src];
+            scriptPromises[src] = new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[src="${src}"]`);
+                if (existing?.dataset.loaded === '1') return resolve();
+                const script = existing || document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.dataset.analyticsLib = '1';
+                script.onload = () => {
+                    script.dataset.loaded = '1';
+                    resolve();
+                };
+                script.onerror = () => reject(new Error(`Failed to load ${src}`));
+                if (!existing) document.head.appendChild(script);
+            });
+            return scriptPromises[src];
+        }
+
+        function ensureECharts() {
+            if (window.echarts) return Promise.resolve(window.echarts);
+            return loadScriptOnce(ECHARTS_URL).then(() => window.echarts);
+        }
+
+        function ensureGlobe() {
+            if (window.Globe) return Promise.resolve(window.Globe);
+            return loadScriptOnce(GLOBE_URL).then(() => window.Globe);
+        }
+
+        function canUseWebGL() {
+            try {
+                const canvas = document.createElement('canvas');
+                return Boolean(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function normalizeKey(value) {
+            return String(value || '').trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+        }
+
+        function isUnknown(value) {
+            return !value || /unknown|none|null|undefined/i.test(String(value));
+        }
+
+        function getChart(id) {
+            const element = typeof id === 'string' ? $('#' + id) : id;
+            if (!element || !window.echarts) return null;
+            if (!chartInstances[element.id]) chartInstances[element.id] = window.echarts.init(element, null, { renderer: 'canvas' });
+            element.classList.remove('is-loading', 'is-empty');
+            element.dataset.status = '';
+            return chartInstances[element.id];
+        }
+
+        function setChartEmpty(id, message) {
+            const element = typeof id === 'string' ? $('#' + id) : id;
+            if (!element) return;
+            element.classList.remove('is-loading');
+            element.classList.add('is-empty');
+            element.dataset.status = message || 'No data';
+        }
 
         function toDateInput(date) {
             const offset = date.getTimezoneOffset();
@@ -955,9 +1337,152 @@
             }
         }
 
+        function getCoordinate(city, country) {
+            const cityKey = normalizeKey(city);
+            if (CITY_COORDS[cityKey]) return { coords: CITY_COORDS[cityKey], precision: 'city' };
+            const countryKey = normalizeKey(country);
+            if (COUNTRY_CENTERS[countryKey]) return { coords: COUNTRY_CENTERS[countryKey], precision: 'country' };
+            return null;
+        }
+
+        function addGeoPoint(map, point) {
+            if (!Number.isFinite(point.lat) || !Number.isFinite(point.lng)) return;
+            const key = `${point.precision}:${point.label}:${point.lat.toFixed(3)}:${point.lng.toFixed(3)}`;
+            const current = map.get(key) || { ...point, page_views: 0, visitors: 0, sessions: 0 };
+            current.page_views += Number(point.page_views || 0);
+            current.visitors += Number(point.visitors || 0);
+            current.sessions += Number(point.sessions || 0);
+            map.set(key, current);
+        }
+
+        function buildGeoPoints(data) {
+            const pointMap = new Map();
+            let unknown = 0;
+            const explicit = data.geo_points || data.geoPoints || [];
+            explicit.forEach((row) => {
+                const lat = Number(row.lat ?? row.latitude);
+                const lng = Number(row.lng ?? row.lon ?? row.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                    unknown++;
+                    return;
+                }
+                addGeoPoint(pointMap, {
+                    label: row.label || [row.city, row.region, row.country].filter(Boolean).join(' / ') || 'Unknown',
+                    country: row.country || '',
+                    region: row.region || '',
+                    city: row.city || '',
+                    lat,
+                    lng,
+                    page_views: rowCount(row, 'page_views') || 1,
+                    visitors: Number(row.visitors || 0),
+                    sessions: Number(row.sessions || 0),
+                    precision: row.precision || 'city',
+                    masked_ip: row.masked_ip || row.visitor_hash || ''
+                });
+            });
+
+            if (!pointMap.size) {
+                (data.recent || []).forEach((row) => {
+                    const city = row.city && !isUnknown(row.city) ? row.city : '';
+                    const country = row.country && !isUnknown(row.country) ? row.country : '';
+                    const coordinate = getCoordinate(city, country);
+                    if (!coordinate) {
+                        unknown++;
+                        return;
+                    }
+                    addGeoPoint(pointMap, {
+                        label: [city, row.region, country].filter((item) => item && !isUnknown(item)).join(' / ') || country || city,
+                        country,
+                        region: row.region || '',
+                        city,
+                        lat: coordinate.coords[0],
+                        lng: coordinate.coords[1],
+                        page_views: 1,
+                        visitors: 1,
+                        sessions: 1,
+                        precision: coordinate.precision
+                    });
+                });
+            }
+
+            if (!pointMap.size) {
+                (data.cities || []).forEach((row) => {
+                    const coordinate = getCoordinate(row.label, row.country);
+                    if (!coordinate) {
+                        unknown += rowCount(row, 'page_views');
+                        return;
+                    }
+                    addGeoPoint(pointMap, {
+                        label: row.label,
+                        country: row.country || '',
+                        city: row.label,
+                        lat: coordinate.coords[0],
+                        lng: coordinate.coords[1],
+                        page_views: rowCount(row, 'page_views'),
+                        visitors: Number(row.visitors || 0),
+                        sessions: Number(row.sessions || 0),
+                        precision: coordinate.precision
+                    });
+                });
+            }
+
+            (data.countries || []).forEach((row) => {
+                const key = normalizeKey(row.label);
+                const coords = COUNTRY_CENTERS[key];
+                if (!coords) return;
+                const hasCountryPoint = Array.from(pointMap.values()).some((point) => normalizeKey(point.country || point.label) === key);
+                if (hasCountryPoint) return;
+                addGeoPoint(pointMap, {
+                    label: row.label,
+                    country: row.label,
+                    lat: coords[0],
+                    lng: coords[1],
+                    page_views: rowCount(row, 'page_views'),
+                    visitors: Number(row.visitors || 0),
+                    sessions: Number(row.sessions || 0),
+                    precision: 'country'
+                });
+            });
+
+            const points = Array.from(pointMap.values()).sort((a, b) => b.page_views - a.page_views);
+            const countrySet = new Set(points.map((point) => normalizeKey(point.country || point.label)).filter(Boolean));
+            return {
+                points,
+                cityPoints: points.filter((point) => point.precision === 'city').length,
+                countryPoints: points.filter((point) => point.precision !== 'city').length,
+                unknown,
+                countries: countrySet.size,
+                maxViews: Math.max(1, ...points.map((point) => point.page_views))
+            };
+        }
+
+        function renderInsights(data, geoSummary) {
+            const totals = data.totals || {};
+            const pv = Number(totals.page_views || 0);
+            const visitors = Number(totals.visitors || 0);
+            const sessions = Number(totals.sessions || 0);
+            const topHour = (data.hour_distribution || []).slice().sort((a, b) => rowCount(b, 'page_views') - rowCount(a, 'page_views'))[0];
+            const topCity = (data.cities || [])[0];
+            $('#insight-pv-per-visitor').textContent = visitors ? (pv / visitors).toFixed(1) : '0';
+            $('#insight-mobile-ratio').textContent = pct(totals.mobile_views, pv);
+            $('#insight-peak-hour').textContent = topHour ? `${String(topHour.label).padStart(2, '0')}:00` : '--';
+            $('#insight-countries').textContent = fmt(geoSummary.countries);
+            $('#insight-top-city').textContent = topCity ? pct(rowCount(topCity, 'page_views'), pv) : '0%';
+            $('#insight-session-stay').textContent = sessions ? fmtDuration(Number(totals.avg_duration_ms || 0)) : '0s';
+        }
+
+        function renderGeoQuality(geoSummary) {
+            $('#geo-city-points').textContent = fmt(geoSummary.cityPoints);
+            $('#geo-country-points').textContent = fmt(geoSummary.countryPoints);
+            $('#geo-unknown-points').textContent = fmt(geoSummary.unknown);
+            $('#geo-unknown-ratio').textContent = pct(geoSummary.unknown, geoSummary.unknown + geoSummary.cityPoints + geoSummary.countryPoints);
+            $('#geo-country-coverage').textContent = fmt(geoSummary.countries);
+        }
+
         function render() {
             const data = state.data || {};
             const totals = data.totals || {};
+            const geoSummary = buildGeoPoints(data);
             const pv = Number(totals.page_views || 0);
             $('#metric-pv').textContent = fmt(totals.page_views);
             $('#metric-uv').textContent = fmt(totals.visitors);
@@ -973,10 +1498,11 @@
             $('#summary-median-stay').textContent = fmtDuration(totals.median_duration_ms);
             $('#summary-short-stays').textContent = fmt(totals.short_stays);
             $('#range-label').textContent = `${data.range?.start || ''} - ${data.range?.end || ''}`;
+            renderInsights(data, geoSummary);
+            renderGeoQuality(geoSummary);
 
-            drawLineChart($('#day-chart'), data.day_series || []);
-            drawHourChart($('#hour-chart'), data.hour_distribution || []);
-            drawDurationChart($('#duration-chart'), data.durations || []);
+            renderCharts(data, geoSummary);
+            renderGlobe(geoSummary);
             renderRank('#country-list', data.countries || []);
             renderRank('#region-list', data.regions || []);
             renderRank('#city-list', data.cities || []);
@@ -990,131 +1516,320 @@
             renderRecent(data.recent || []);
         }
 
-        function resizeCanvas(canvas) {
-            const ratio = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = Math.max(320, Math.floor(rect.width * ratio));
-            canvas.height = Math.floor(240 * ratio);
-            const ctx = canvas.getContext('2d');
-            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-            return { ctx, width: rect.width, height: 240 };
+        function baseChartOption() {
+            return {
+                backgroundColor: 'transparent',
+                color: chartPalette,
+                textStyle: { color: '#d8eef5', fontFamily: 'Inter, PingFang SC, Microsoft YaHei, sans-serif' },
+                tooltip: {
+                    trigger: 'axis',
+                    borderWidth: 0,
+                    backgroundColor: 'rgba(2, 7, 11, 0.9)',
+                    textStyle: { color: '#e8fbff' },
+                    extraCssText: 'box-shadow:0 18px 48px rgba(0,0,0,.35);backdrop-filter:blur(12px);border-radius:12px;'
+                },
+                grid: { left: 36, right: 18, top: 36, bottom: 34, containLabel: true },
+                xAxis: {
+                    axisLine: { lineStyle: { color: 'rgba(232,251,255,0.12)' } },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#8eabb7' }
+                },
+                yAxis: {
+                    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
+                    axisLabel: { color: '#8eabb7' }
+                }
+            };
         }
 
-        function drawLineChart(canvas, rows) {
-            const { ctx, width, height } = resizeCanvas(canvas);
-            ctx.clearRect(0, 0, width, height);
-            const pad = 32;
-            const max = Math.max(1, ...rows.map((row) => Number(row.page_views || 0)));
-            drawGrid(ctx, width, height, pad);
-            if (!rows.length) return drawEmpty(ctx, width, height);
-
-            const points = rows.map((row, index) => {
-                const x = pad + (rows.length === 1 ? 0 : (index / (rows.length - 1)) * (width - pad * 2));
-                const y = height - pad - (Number(row.page_views || 0) / max) * (height - pad * 2);
-                return { x, y, row };
-            });
-
-            ctx.strokeStyle = '#39c5bb';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
-            ctx.stroke();
-
-            ctx.fillStyle = '#39c5bb';
-            points.forEach((point) => {
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            ctx.fillStyle = '#8eabb7';
-            ctx.font = '11px Arial';
-            const first = points[0]?.row?.label || '';
-            const last = points[points.length - 1]?.row?.label || '';
-            ctx.fillText(first, pad, height - 8);
-            ctx.textAlign = 'right';
-            ctx.fillText(last, width - pad, height - 8);
-            ctx.textAlign = 'left';
+        function renderCharts(data, geoSummary) {
+            renderTrendChart(data.day_series || []);
+            renderHourChart(data.hour_distribution || []);
+            renderDurationChart(data.durations || []);
+            renderPieChart('source-chart', data.sources || [], '来源');
+            renderPieChart('device-chart', data.devices || [], '设备', true);
+            renderPieChart('qr-chart', [...(data.qr_codes || []), ...(data.campaigns || [])].slice(0, 10), 'QR / Campaign');
+            renderGlobeFallback(geoSummary);
         }
 
-        function drawHourChart(canvas, rows) {
-            const { ctx, width, height } = resizeCanvas(canvas);
-            ctx.clearRect(0, 0, width, height);
-            const pad = 28;
+        function renderTrendChart(rows) {
+            if (!rows.length) return setChartEmpty('day-chart', 'No trend data');
+            ensureECharts().then(() => {
+                const chart = getChart('day-chart');
+                if (!chart) return;
+                const metricMap = {
+                    page_views: ['PV', '#28f7ff'],
+                    visitors: ['Visitors', '#ff5fd7'],
+                    sessions: ['Sessions', '#f7d08a'],
+                    qr_views: ['QR Views', '#a6ff4d']
+                };
+                const metrics = state.trendMetric === 'all' ? Object.keys(metricMap) : [state.trendMetric];
+                const labels = rows.map((row) => row.label || row.day || '');
+                const option = baseChartOption();
+                option.legend = { top: 0, right: 0, textStyle: { color: '#8eabb7' } };
+                option.xAxis = { ...option.xAxis, type: 'category', boundaryGap: false, data: labels };
+                option.yAxis = { ...option.yAxis, type: 'value' };
+                option.series = metrics.map((metric, index) => {
+                    const color = metricMap[metric][1];
+                    return {
+                        name: metricMap[metric][0],
+                        type: 'line',
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 7,
+                        lineStyle: { width: 3, color },
+                        itemStyle: { color },
+                        areaStyle: {
+                            opacity: 0.26,
+                            color: new window.echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color },
+                                { offset: 1, color: 'rgba(2,7,11,0)' }
+                            ])
+                        },
+                        data: rows.map((row) => Number(row[metric] || 0)),
+                        z: 5 - index
+                    };
+                });
+                chart.setOption(option, true);
+            }).catch(() => setChartEmpty('day-chart', 'Chart library unavailable'));
+        }
+
+        function renderHourChart(rows) {
             const hours = Array.from({ length: 24 }, (_, i) => {
                 const match = rows.find((row) => Number(row.label) === i);
-                return { label: i, page_views: Number(match?.page_views || 0) };
+                return { label: String(i).padStart(2, '0') + ':00', value: Number(match?.page_views || 0) };
             });
-            const max = Math.max(1, ...hours.map((row) => row.page_views));
-            drawGrid(ctx, width, height, pad);
-            const gap = 3;
-            const barWidth = (width - pad * 2 - gap * 23) / 24;
-            hours.forEach((row, index) => {
-                const barHeight = (row.page_views / max) * (height - pad * 2);
-                const x = pad + index * (barWidth + gap);
-                const y = height - pad - barHeight;
-                ctx.fillStyle = row.page_views ? '#39c5bb' : 'rgba(255,255,255,0.08)';
-                ctx.fillRect(x, y, barWidth, barHeight || 2);
-            });
-            ctx.fillStyle = '#8eabb7';
-            ctx.font = '11px Arial';
-            ctx.fillText('00:00', pad, height - 8);
-            ctx.textAlign = 'right';
-            ctx.fillText('23:00', width - pad, height - 8);
-            ctx.textAlign = 'left';
+            ensureECharts().then(() => {
+                const chart = getChart('hour-chart');
+                if (!chart) return;
+                const option = baseChartOption();
+                option.tooltip = { ...option.tooltip, trigger: 'item' };
+                option.xAxis = { ...option.xAxis, type: 'category', data: hours.map((row) => row.label), axisLabel: { color: '#8eabb7', interval: 3 } };
+                option.yAxis = { ...option.yAxis, type: 'value' };
+                option.series = [{
+                    name: 'PV',
+                    type: 'bar',
+                    barWidth: '62%',
+                    itemStyle: {
+                        borderRadius: [8, 8, 0, 0],
+                        color: new window.echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#ff5fd7' },
+                            { offset: 0.55, color: '#28f7ff' },
+                            { offset: 1, color: '#0b3344' }
+                        ])
+                    },
+                    data: hours.map((row) => row.value)
+                }];
+                chart.setOption(option, true);
+            }).catch(() => setChartEmpty('hour-chart', 'Chart library unavailable'));
         }
 
-        function drawDurationChart(canvas, rows) {
-            const { ctx, width, height } = resizeCanvas(canvas);
-            ctx.clearRect(0, 0, width, height);
-            const pad = 34;
-            drawGrid(ctx, width, height, pad);
-            if (!rows.length) return drawEmpty(ctx, width, height);
-
-            const normalized = rows.slice(0, 8).map((row) => ({
-                label: row.label || 'unknown',
-                count: rowCount(row, 'sessions')
-            }));
-            const max = Math.max(1, ...normalized.map((row) => row.count));
-            const gap = 10;
-            const barWidth = Math.max(20, (width - pad * 2 - gap * (normalized.length - 1)) / normalized.length);
-            normalized.forEach((row, index) => {
-                const barHeight = (row.count / max) * (height - pad * 2);
-                const x = pad + index * (barWidth + gap);
-                const y = height - pad - barHeight;
-                const gradient = ctx.createLinearGradient(0, y, 0, height - pad);
-                gradient.addColorStop(0, '#7dcfff');
-                gradient.addColorStop(1, '#39c5bb');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(x, y, barWidth, Math.max(3, barHeight));
-                ctx.fillStyle = '#8eabb7';
-                ctx.font = '11px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(String(row.label).slice(0, 12), x + barWidth / 2, height - 8);
-                ctx.fillStyle = '#e8fbff';
-                ctx.fillText(fmt(row.count), x + barWidth / 2, Math.max(14, y - 8));
-            });
-            ctx.textAlign = 'left';
+        function renderDurationChart(rows) {
+            if (!rows.length) return setChartEmpty('duration-chart', 'No duration data');
+            const normalized = rows.slice(0, 8).map((row) => ({ label: row.label || 'unknown', count: rowCount(row, 'sessions') }));
+            ensureECharts().then(() => {
+                const chart = getChart('duration-chart');
+                if (!chart) return;
+                const option = baseChartOption();
+                option.tooltip = { ...option.tooltip, trigger: 'item' };
+                option.xAxis = { ...option.xAxis, type: 'category', data: normalized.map((row) => row.label), axisLabel: { color: '#8eabb7', rotate: normalized.length > 5 ? 18 : 0 } };
+                option.yAxis = { ...option.yAxis, type: 'value' };
+                option.series = [{
+                    name: 'Sessions',
+                    type: 'bar',
+                    barMaxWidth: 42,
+                    itemStyle: {
+                        borderRadius: [12, 12, 4, 4],
+                        color: new window.echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#f7d08a' },
+                            { offset: 0.45, color: '#ff5fd7' },
+                            { offset: 1, color: '#28f7ff' }
+                        ])
+                    },
+                    label: { show: true, position: 'top', color: '#e8fbff' },
+                    data: normalized.map((row) => row.count)
+                }];
+                chart.setOption(option, true);
+            }).catch(() => setChartEmpty('duration-chart', 'Chart library unavailable'));
         }
 
-        function drawGrid(ctx, width, height, pad) {
-            ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 4; i += 1) {
-                const y = pad + (i / 3) * (height - pad * 2);
-                ctx.beginPath();
-                ctx.moveTo(pad, y);
-                ctx.lineTo(width - pad, y);
-                ctx.stroke();
+        function renderPieChart(id, rows, title, rose) {
+            const normalized = rows.slice(0, 10).map((row) => ({ name: row.label || 'unknown', value: rowCount(row, 'page_views') })).filter((row) => row.value > 0);
+            if (!normalized.length) return setChartEmpty(id, 'No category data');
+            ensureECharts().then(() => {
+                const chart = getChart(id);
+                if (!chart) return;
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: chartPalette,
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(2, 7, 11, 0.92)',
+                        borderWidth: 0,
+                        textStyle: { color: '#e8fbff' }
+                    },
+                    title: {
+                        text: title,
+                        left: 'center',
+                        top: 8,
+                        textStyle: { color: '#8eabb7', fontSize: 12, fontWeight: 500 }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: rose ? ['18%', '72%'] : ['48%', '72%'],
+                        center: ['50%', '56%'],
+                        roseType: rose ? 'radius' : false,
+                        padAngle: 2,
+                        itemStyle: { borderColor: '#06121d', borderWidth: 2 },
+                        label: { color: '#d8eef5', fontSize: 11, formatter: '{b}\n{d}%' },
+                        labelLine: { lineStyle: { color: 'rgba(216,238,245,0.3)' } },
+                        data: normalized
+                    }]
+                }, true);
+            }).catch(() => setChartEmpty(id, 'Chart library unavailable'));
+        }
+
+        function renderGlobeFallback(geoSummary) {
+            const points = geoSummary.points || [];
+            if (!points.length) return setChartEmpty('globe-fallback', 'No geo data');
+            ensureECharts().then(() => {
+                const chart = getChart('globe-fallback');
+                if (!chart) return;
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(2, 7, 11, 0.92)',
+                        borderWidth: 0,
+                        textStyle: { color: '#e8fbff' },
+                        formatter: (params) => {
+                            const row = params.data.raw;
+                            return `${escapeHtml(row.label)}<br>PV ${fmt(row.page_views)} / Visitors ${fmt(row.visitors)} / Sessions ${fmt(row.sessions)}<br>${row.precision === 'city' ? '城市级定位' : '国家级估算'}`;
+                        }
+                    },
+                    grid: { left: 10, right: 10, top: 10, bottom: 10 },
+                    xAxis: { min: -180, max: 180, show: false },
+                    yAxis: { min: -70, max: 80, show: false },
+                    series: [{
+                        type: 'effectScatter',
+                        coordinateSystem: 'cartesian2d',
+                        symbolSize: (value) => Math.max(8, Math.min(42, Math.sqrt(value[2]) * 5)),
+                        showEffectOn: 'render',
+                        rippleEffect: { brushType: 'stroke', scale: 3.2, period: 3.8 },
+                        itemStyle: {
+                            color: (params) => chartPalette[params.dataIndex % chartPalette.length],
+                            opacity: 0.96,
+                            borderColor: 'rgba(255,255,255,0.72)',
+                            borderWidth: 1,
+                            shadowBlur: 28,
+                            shadowColor: 'rgba(40,247,255,0.75)'
+                        },
+                        data: points.map((point) => ({ value: [point.lng, point.lat, point.page_views], raw: point }))
+                    }]
+                }, true);
+                const stage = $('#globe-stage');
+                if (stage && !document.querySelector('#globe-canvas canvas')) {
+                    stage.classList.remove('is-loading', 'is-empty');
+                    stage.dataset.status = '';
+                }
+            }).catch(() => setChartEmpty('globe-fallback', 'Geo fallback unavailable'));
+        }
+
+        function renderGlobe(geoSummary) {
+            const stage = $('#globe-stage');
+            const target = $('#globe-canvas');
+            if (!stage || !target) return;
+            const renderId = ++globeRenderId;
+            const points = geoSummary.points || [];
+            if (!points.length) {
+                stage.classList.remove('is-loading');
+                stage.classList.add('is-empty');
+                stage.dataset.status = 'No geo data';
+                target.style.pointerEvents = 'none';
+                target.style.opacity = '0';
+                $('#globe-fallback').style.opacity = '1';
+                return;
             }
-        }
-
-        function drawEmpty(ctx, width, height) {
-            ctx.fillStyle = '#8eabb7';
-            ctx.font = '14px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('当前范围暂无数据', width / 2, height / 2);
-            ctx.textAlign = 'left';
+            if (!canUseWebGL()) {
+                stage.classList.remove('is-loading', 'is-empty');
+                stage.dataset.status = '';
+                target.style.pointerEvents = 'none';
+                target.style.opacity = '0';
+                $('#globe-fallback').style.opacity = '1';
+                $('#globe-fallback').style.pointerEvents = 'auto';
+                return;
+            }
+            stage.classList.add('is-loading');
+            stage.classList.remove('is-empty');
+            stage.dataset.status = 'Loading globe';
+            if (!globeInstance) target.style.opacity = '0';
+            target.style.pointerEvents = 'none';
+            $('#globe-fallback').style.opacity = '1';
+            $('#globe-fallback').style.pointerEvents = 'auto';
+            ensureGlobe().then((Globe) => {
+                if (renderId !== globeRenderId || !Globe) return;
+                try {
+                    stage.classList.remove('is-loading', 'is-empty');
+                    stage.dataset.status = '';
+                    const fallback = $('#globe-fallback');
+                    const revealGlobe = () => {
+                        if (renderId !== globeRenderId) return;
+                        target.style.opacity = '1';
+                        target.style.pointerEvents = 'auto';
+                        fallback.style.opacity = '0';
+                        fallback.style.pointerEvents = 'none';
+                    };
+                    if (!globeInstance) {
+                        globeInstance = Globe()(target)
+                            .backgroundColor('rgba(0,0,0,0)')
+                            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+                            .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                            .showAtmosphere(true)
+                            .atmosphereColor('#28f7ff')
+                            .atmosphereAltitude(0.18)
+                            .pointLabel((point) => {
+                                const ip = point.masked_ip ? `<br>Visitor ${escapeHtml(point.masked_ip)}` : '';
+                                return `<b>${escapeHtml(point.label)}</b><br>PV ${fmt(point.page_views)} / Visitors ${fmt(point.visitors)} / Sessions ${fmt(point.sessions)}<br>${point.precision === 'city' ? '城市级定位' : '国家级估算'}${ip}`;
+                            })
+                            .onPointHover((point) => {
+                                target.style.cursor = point ? 'pointer' : 'grab';
+                            });
+                        globeInstance.controls().autoRotate = true;
+                        globeInstance.controls().autoRotateSpeed = 0.42;
+                        globeInstance.controls().enableDamping = true;
+                        if (typeof globeInstance.onGlobeReady === 'function') {
+                            globeInstance.onGlobeReady(revealGlobe);
+                        } else {
+                            window.setTimeout(revealGlobe, 2600);
+                        }
+                    }
+                    const max = geoSummary.maxViews || 1;
+                    globeInstance
+                        .width(target.clientWidth)
+                        .height(target.clientHeight)
+                        .pointsData(points)
+                        .pointLat('lat')
+                        .pointLng('lng')
+                        .pointAltitude((point) => 0.025 + Math.sqrt(point.page_views / max) * 0.16)
+                        .pointRadius((point) => 0.16 + Math.sqrt(point.page_views / max) * 0.38)
+                        .pointColor((point, index) => point.precision === 'city' ? chartPalette[index % chartPalette.length] : 'rgba(247,208,138,0.9)')
+                        .pointsMerge(false);
+                    if (target.style.opacity === '1') revealGlobe();
+                } catch (error) {
+                    stage.classList.remove('is-loading');
+                    stage.dataset.status = '';
+                    target.style.pointerEvents = 'none';
+                    target.style.opacity = '0';
+                    $('#globe-fallback').style.opacity = '1';
+                    $('#globe-fallback').style.pointerEvents = 'auto';
+                }
+            }).catch(() => {
+                stage.classList.remove('is-loading');
+                stage.dataset.status = '';
+                target.style.pointerEvents = 'none';
+                target.style.opacity = '0';
+                $('#globe-fallback').style.opacity = '1';
+                $('#globe-fallback').style.pointerEvents = 'auto';
+            });
         }
 
         function renderRank(selector, rows, preferredCount) {
@@ -1187,6 +1902,14 @@
             URL.revokeObjectURL(url);
         }
 
+        function resizeVisuals() {
+            Object.values(chartInstances).forEach((chart) => chart?.resize?.());
+            const target = $('#globe-canvas');
+            if (globeInstance && target) {
+                globeInstance.width(target.clientWidth).height(target.clientHeight);
+            }
+        }
+
         $('#login-form').addEventListener('submit', (event) => {
             event.preventDefault();
             login($('#password').value);
@@ -1208,10 +1931,17 @@
         $('#path-filter').addEventListener('keydown', (event) => {
             if (event.key === 'Enter') loadReport();
         });
+        $$('.chart-toggle').forEach((button) => {
+            button.addEventListener('click', () => {
+                state.trendMetric = button.dataset.trend || 'all';
+                $$('.chart-toggle').forEach((item) => item.classList.toggle('is-active', item === button));
+                if (state.data) renderTrendChart(state.data.day_series || []);
+            });
+        });
         $$('[data-export]').forEach((button) => {
             button.addEventListener('click', () => exportCsv(button.dataset.export));
         });
-        window.addEventListener('resize', () => state.data && render());
+        window.addEventListener('resize', resizeVisuals);
 
         setRange('7d');
         if (state.token) {

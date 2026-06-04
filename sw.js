@@ -1,16 +1,9 @@
-const CACHE_NAME = 'dele-miku-image-cache-v20260601-1';
+const CACHE_NAME = 'dele-miku-image-cache-v20260604-1';
 const IMAGE_PATH_RE = /\.(?:avif|webp|png|jpe?g|gif|svg)$/i;
 const CORE_IMAGES = [
   '/assets/0logo-512.webp',
   '/assets/hero-mobile.webp',
-  '/assets/hero.webp',
-  '/assets/vocaloid-monetary-nexus-promo.avif',
-  '/assets/profile.webp',
-  '/mangabill/generated/brand/logo-mark.webp',
-  '/mangabill/generated/characters/elaina/thumb-01.webp',
-  '/mangabill/generated/characters/frieren/thumb-01.webp',
-  '/mangabill/generated/characters/violet/thumb-01.webp',
-  '/mangabill/generated/characters/columbina/thumb-01.webp'
+  '/assets/hero.webp'
 ];
 
 async function cacheImage(url) {

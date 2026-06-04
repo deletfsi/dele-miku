@@ -259,16 +259,24 @@ const netlifyConfig = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
 if (
   html.includes("navigator.serviceWorker.register('sw.js')") &&
   html.includes('function warmImageSet') &&
+  html.includes('function canWarmLargeImageBatches') &&
+  html.includes('function runAfterDelayWhenIdle') &&
+  html.includes('function initDeferredPictures') &&
+  html.includes('class="js-deferred-picture"') &&
+  html.includes('data-srcset="assets/vocaloid-monetary-nexus-promo.avif"') &&
+  html.includes('runAfterDelayWhenIdle(preloadNonCriticalAssets, 1400, 1800);') &&
   html.includes("worker.postMessage({ type: 'CACHE_IMAGES'") &&
   html.includes('fetchPriority') &&
-  html.includes('rel="prefetch" as="image"') &&
+  !html.includes('rel="preload" as="image" href="assets/vocaloid-monetary-nexus-promo.avif"') &&
+  !html.includes('rel="prefetch" as="image" href="assets/profile.webp"') &&
   sw.includes("CACHE_NAME = 'dele-miku-image-cache") &&
   sw.includes("request.destination === 'image'") &&
-  sw.includes("event.data.type !== 'CACHE_IMAGES'")
+  sw.includes("event.data.type !== 'CACHE_IMAGES'") &&
+  !sw.includes("'/assets/vocaloid-monetary-nexus-promo.avif'")
 ) {
-  pass('site warms and caches image assets without changing image files');
+  pass('site defers image warmup and caches assets without changing image files');
 } else {
-  fail('site image warmup and Service Worker image cache are incomplete');
+  fail('site image warmup should be delayed and Service Worker image cache should stay complete');
 }
 
 if (
@@ -314,9 +322,14 @@ if (
 }
 
 if (
-  html.includes('<audio id="bgm" preload="auto">') &&
+  html.includes('<audio id="bgm" preload="metadata">') &&
+  html.includes('<source data-src="assets/bgm.mp3" type="audio/mpeg">') &&
+  html.includes('function deferAudioElementSource') &&
+  html.includes('setTrack(0, true, false);') &&
+  html.includes('if (!bgm.currentSrc || bgm.dataset.sourceKey !== src) setAudioElementSource(track);') &&
   html.includes('primeAudioPrefetchLinks(getBackgroundWarmupIndex(0), audioPrefetchLinkLimit);') &&
   html.includes('warmAudioCache(getBackgroundWarmupIndex(0));') &&
+  html.includes('}, 7000, 2500);') &&
   html.includes('audioBlobUrls') &&
   html.includes('audioWarmupControllers') &&
   html.includes('audioWarmupConcurrency') &&
@@ -328,9 +341,9 @@ if (
   html.includes('audioWarmupQueue = nextQueue.concat(audioWarmupQueue)') &&
   !html.includes('scheduleWarmNextAudio(2600)')
 ) {
-  pass('player eagerly preloads playlist audio beyond the default track');
+  pass('player defers background audio warmup beyond the first startup path');
 } else {
-  fail('player should keep warming the full playlist, including while audio is playing');
+  fail('player should defer background audio warmup while preserving cache fallback behavior');
 }
 
 if (
