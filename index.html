@@ -37,6 +37,200 @@
             position: fixed; inset: 0; z-index: 9999;
             background-color: #fafafa;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
+            isolation: isolate;
+            overflow: hidden;
+        }
+        #unveil-loader::before {
+            content: "";
+            position: absolute;
+            inset: -18%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 50% 42%, rgba(57, 197, 187, 0.16), transparent 32%),
+                radial-gradient(circle at 24% 72%, rgba(244, 189, 25, 0.12), transparent 26%),
+                linear-gradient(180deg, #ffffff 0%, #f6fbfa 48%, #eef8f6 100%);
+            transform: translateZ(0);
+        }
+        #intro-logo-container,
+        #unveil-percent,
+        #unveil-loader > .text-sm {
+            position: relative;
+            z-index: 3;
+            transition: transform 0.9s cubic-bezier(.215,.61,.355,1), opacity 0.9s ease;
+            will-change: transform, opacity;
+        }
+        #unveil-loader.intro-bill-active #intro-logo-container {
+            transform: translateY(-86px) scale(0.88);
+            opacity: 0.94;
+        }
+        #unveil-loader.intro-bill-active #unveil-percent {
+            position: absolute;
+            left: 50%;
+            bottom: 28px;
+            width: max-content;
+            font-size: clamp(52px, 7vw, 88px) !important;
+            transform: translateX(-50%);
+            transform-origin: center;
+            opacity: 0.78;
+        }
+        #unveil-loader.intro-bill-active > .text-sm {
+            position: absolute;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            opacity: 0.7;
+        }
+        .intro-bill-stage {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            pointer-events: none;
+            opacity: 0;
+            perspective: 1600px;
+        }
+        .intro-bill-stage.is-ready { opacity: 1; }
+        .intro-bill-orbit {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(78vw, 840px);
+            height: min(42vw, 360px);
+            transform: translate(-50%, -50%);
+            transform-style: preserve-3d;
+        }
+        .intro-bill-card {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: clamp(190px, 28vw, 360px);
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.74);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow:
+                0 28px 90px rgba(7, 22, 28, 0.18),
+                0 1px 0 rgba(255, 255, 255, 0.92) inset;
+            opacity: 0;
+            transform-origin: 50% 50%;
+            transform-style: preserve-3d;
+            will-change: transform, opacity;
+        }
+        .intro-bill-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.025);
+        }
+        .intro-bill-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background:
+                linear-gradient(115deg, rgba(255, 255, 255, 0.16), transparent 34%, transparent 62%, rgba(57, 197, 187, 0.12)),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 52%, rgba(2, 4, 6, 0.12));
+            opacity: 0.22;
+            pointer-events: none;
+        }
+        .intro-bill-label {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            z-index: 3;
+            padding: 5px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.44);
+            border-radius: 999px;
+            background: rgba(5, 16, 22, 0.48);
+            color: #f9fffe;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+        .intro-bill-sheen {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(86vw, 920px);
+            height: min(48vw, 410px);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(57,197,187,0.18) 0%, rgba(57,197,187,0.08) 31%, transparent 68%);
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.72);
+            will-change: transform, opacity;
+        }
+        .intro-bill-stage.is-css-ready .intro-bill-sheen {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            transition: opacity 1.25s ease, transform 1.25s ease;
+        }
+        .intro-bill-stage.is-css-ready #intro-bill-front {
+            left: 18%;
+            top: calc(50% + 46px);
+            opacity: 1;
+            transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+            transition:
+                opacity 0.96s ease,
+                left 1.45s cubic-bezier(.215,.61,.355,1),
+                top 1.45s cubic-bezier(.215,.61,.355,1),
+                transform 1.45s cubic-bezier(.215,.61,.355,1);
+        }
+        .intro-bill-stage.is-css-ready #intro-bill-back {
+            left: 82%;
+            top: calc(50% + 46px);
+            opacity: 1;
+            transform: translate(-50%, -50%) rotate(7deg) scale(0.98);
+            transition:
+                opacity 0.96s ease 0.24s,
+                left 1.45s cubic-bezier(.215,.61,.355,1) 0.24s,
+                top 1.45s cubic-bezier(.215,.61,.355,1) 0.24s,
+                transform 1.45s cubic-bezier(.215,.61,.355,1) 0.24s;
+        }
+        @media (max-width: 767px) {
+            #unveil-loader.intro-bill-active #intro-logo-container {
+                transform: translateY(-72px) scale(0.82);
+            }
+            #unveil-loader.intro-bill-active #unveil-percent {
+                bottom: 42px;
+                font-size: clamp(44px, 13vw, 56px) !important;
+                transform: translateX(-50%);
+            }
+            #unveil-loader.intro-bill-active > .text-sm {
+                bottom: 34px;
+                transform: translateX(-50%);
+            }
+            .intro-bill-card {
+                width: clamp(136px, 40vw, 188px);
+                border-radius: 10px;
+            }
+            .intro-bill-orbit {
+                width: 92vw;
+                height: 54vw;
+            }
+            .intro-bill-label {
+                left: 8px;
+                top: 8px;
+                font-size: 8px;
+            }
+            .intro-bill-stage.is-css-ready #intro-bill-front {
+                left: 24%;
+                top: calc(50% + 24px);
+                transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+            }
+            .intro-bill-stage.is-css-ready #intro-bill-back {
+                left: 61%;
+                top: calc(50% + 24px);
+                transform: translate(-50%, -50%) rotate(7deg) scale(0.98);
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .intro-bill-stage { display: none; }
         }
         #unveil-mask {
             position: fixed; inset: 0; z-index: 9998;
@@ -1408,6 +1602,19 @@
     <!-- 阶段 0 & 1 & 2: UNVEIL 风格纯白加载层与百分比 -->
     <!-- ============================================================== -->
     <div id="unveil-loader">
+        <div id="intro-bill-stage" class="intro-bill-stage" aria-hidden="true">
+            <div class="intro-bill-sheen"></div>
+            <div class="intro-bill-orbit">
+                <figure id="intro-bill-front" class="intro-bill-card">
+                    <img data-src="assets/vocaloid-monetary-nexus-front-teaser.jpg" alt="" decoding="async">
+                    <figcaption class="intro-bill-label">Front</figcaption>
+                </figure>
+                <figure id="intro-bill-back" class="intro-bill-card">
+                    <img data-src="assets/vocaloid-monetary-nexus-back-teaser.jpg" alt="" decoding="async">
+                    <figcaption class="intro-bill-label">Back</figcaption>
+                </figure>
+            </div>
+        </div>
         <div id="intro-logo-container" class="relative mb-8">
           <img src="assets/0logo-512.webp" alt="Logo" id="intro-logo-img" class="w-32 md:w-56 h-auto rounded-xl shadow-[0_0_40px_rgba(57,197,187,0.2)] opacity-0 object-contain" width="512" height="486" decoding="async" fetchpriority="high">
              <div id="intro-logo-glow" class="absolute inset-0 bg-miku blur-3xl opacity-0 pointer-events-none"></div>
@@ -2375,6 +2582,62 @@
             showAudioPrompt();
         }
 
+        function shouldUseIntroBillPreview() {
+            const stage = document.getElementById('intro-bill-stage');
+            if (!stage) return false;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!connection) return true;
+            if (connection.saveData) return false;
+            return !/slow-2g|2g/.test(connection.effectiveType || '');
+        }
+
+        function preloadIntroBillPreview(timeoutMs) {
+            if (!shouldUseIntroBillPreview()) return Promise.resolve(false);
+            const stage = document.getElementById('intro-bill-stage');
+            const cards = Array.from(stage.querySelectorAll('.intro-bill-card img[data-src]'));
+            if (!cards.length) return Promise.resolve(false);
+
+            return new Promise((resolve) => {
+                let finished = false;
+                let loaded = 0;
+                const finish = (isReady) => {
+                    if (finished) return;
+                    finished = true;
+                    window.clearTimeout(timer);
+                    resolve(Boolean(isReady));
+                };
+                const timer = window.setTimeout(() => finish(false), timeoutMs || 850);
+
+                cards.forEach((target) => {
+                    const src = target.dataset.src;
+                    const img = new Image();
+                    img.decoding = 'async';
+                    img.fetchPriority = 'low';
+                    img.onload = () => {
+                        target.src = src;
+                        target.removeAttribute('data-src');
+                        loaded++;
+                        if (loaded === cards.length) finish(true);
+                    };
+                    img.onerror = () => finish(false);
+                    img.src = src;
+                });
+            });
+        }
+
+        function playIntroBillPreview() {
+            const stage = document.getElementById('intro-bill-stage');
+            const front = document.getElementById('intro-bill-front');
+            const back = document.getElementById('intro-bill-back');
+            if (!stage || !front || !back || loaderFinished || stage.dataset.played === '1') return;
+            stage.dataset.played = '1';
+            const loader = document.getElementById('unveil-loader');
+            if (loader) loader.classList.add('intro-bill-active');
+            stage.classList.add('is-ready');
+            stage.classList.add('is-css-ready');
+        }
+
         function initUnveilLoader() {
             const images = [
                 'assets/0logo-512.webp',
@@ -2384,6 +2647,9 @@
             let loaded = 0;
             let displayProgress = 0;
             let currentProgress = 0;
+            let introBillPreviewStarted = false;
+            let introBillPreviewStartedAt = 0;
+            const loaderStartedAt = performance.now();
             const percentEl = document.getElementById('unveil-percent');
 
             if (window.gsap) {
@@ -2392,6 +2658,14 @@
             } else {
                 document.getElementById('intro-logo-img').style.opacity = '1';
             }
+
+            preloadIntroBillPreview(850).then((isReady) => {
+                if (isReady) {
+                    introBillPreviewStarted = true;
+                    introBillPreviewStartedAt = performance.now();
+                    playIntroBillPreview();
+                }
+            });
 
             if (images.length === 0) currentProgress = 100;
 
@@ -2412,6 +2686,14 @@
                 percentEl.innerText = Math.round(displayProgress) + '%';
 
                 if (Math.round(displayProgress) >= 100) {
+                    const elapsed = performance.now() - loaderStartedAt;
+                    const minimumVisibleMs = introBillPreviewStarted
+                        ? Math.min(5400, Math.max(4800, introBillPreviewStartedAt - loaderStartedAt + 4200))
+                        : 900;
+                    if (elapsed < minimumVisibleMs) {
+                        requestAnimationFrame(updateLoader);
+                        return;
+                    }
                     percentEl.innerText = '100%';
                     finishUnveilLoading();
                 } else {
@@ -2445,7 +2727,7 @@
             const x = targetRect.left - startRect.left;
             const y = targetRect.top - startRect.top;
 
-            tl.to([introGlow, '#unveil-percent', '#unveil-loader > .text-sm'], { opacity: 0, duration: 0.4 });
+            tl.to([introGlow, '#unveil-percent', '#unveil-loader > .text-sm', '#intro-bill-stage'], { opacity: 0, duration: 0.4 });
 
             tl.to(introLogo, {
                 x: x, y: y, scale: scale,
