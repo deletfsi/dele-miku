@@ -293,6 +293,30 @@ if (
   fail('deployment image cache headers are incomplete');
 }
 
+const vercelJson = JSON.parse(vercelConfig);
+const stableRoutes = [
+  ['/mangabill/xuanchuan', '/mangabill/index.html'],
+  ['/mangabill/xuanchuan/', '/mangabill/index.html'],
+  ['/mangabill/miku', '/index.html'],
+  ['/mangabill/miku/', '/index.html'],
+  ['/mangabill/analytics', '/analytics.html'],
+  ['/mangabill/analytics/', '/analytics.html']
+];
+const hasVercelStableRoutes = stableRoutes.every(([source, destination]) => (
+  vercelJson.rewrites || []
+).some((route) => route.source === source && route.destination === destination));
+const hasNetlifyStableRoutes = stableRoutes.every(([source, destination]) => (
+  netlifyConfig.includes(`from = "${source}"`) &&
+  netlifyConfig.includes(`to = "${destination}"`) &&
+  netlifyConfig.includes('status = 200')
+));
+
+if (hasVercelStableRoutes && hasNetlifyStableRoutes) {
+  pass('deployment config exposes stable MangaBill, Miku, and analytics routes');
+} else {
+  fail('deployment config should expose /mangabill/xuanchuan, /mangabill/miku, and /mangabill/analytics');
+}
+
 if (
   !html.includes('音源无法播放') &&
   !html.includes('请检查') &&

@@ -62,6 +62,30 @@
   ],
   "rewrites": [
     {
+      "source": "/mangabill/xuanchuan",
+      "destination": "/mangabill/index.html"
+    },
+    {
+      "source": "/mangabill/xuanchuan/",
+      "destination": "/mangabill/index.html"
+    },
+    {
+      "source": "/mangabill/miku",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mangabill/miku/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mangabill/analytics",
+      "destination": "/analytics.html"
+    },
+    {
+      "source": "/mangabill/analytics/",
+      "destination": "/analytics.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

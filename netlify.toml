@@ -2,6 +2,36 @@
   publish = "."
   command = ""
 
+[[redirects]]
+  from = "/mangabill/xuanchuan"
+  to = "/mangabill/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mangabill/xuanchuan/"
+  to = "/mangabill/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mangabill/miku"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mangabill/miku/"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mangabill/analytics"
+  to = "/analytics.html"
+  status = 200
+
+[[redirects]]
+  from = "/mangabill/analytics/"
+  to = "/analytics.html"
+  status = 200
+
 [[headers]]
   for = "/sw.js"
   [headers.values]
