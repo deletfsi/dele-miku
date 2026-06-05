@@ -4,6 +4,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const strictAssets = process.argv.includes('--strict-assets');
 const indexPath = path.join(root, 'index.html');
+const analyticsPath = path.join(root, 'analytics.html');
 
 function fail(message) {
   console.error(`FAIL ${message}`);
@@ -72,6 +73,7 @@ function existingSourceFor(track) {
 }
 
 const html = fs.readFileSync(indexPath, 'utf8');
+const analyticsHtml = fs.readFileSync(analyticsPath, 'utf8');
 const tracks = extractTracks(html);
 const requiredFunctions = [
   'openMusicPanel',
@@ -315,6 +317,19 @@ if (hasVercelStableRoutes && hasNetlifyStableRoutes) {
   pass('deployment config exposes stable MangaBill, Miku, and analytics routes');
 } else {
   fail('deployment config should expose /mangabill/xuanchuan, /mangabill/miku, and /mangabill/analytics');
+}
+
+if (
+  analyticsHtml.includes('dele_miku_analytics_theme') &&
+  analyticsHtml.includes('document.documentElement.dataset.theme') &&
+  analyticsHtml.includes('html[data-theme="light"]') &&
+  analyticsHtml.includes('data-theme-toggle') &&
+  analyticsHtml.includes('function applyTheme') &&
+  analyticsHtml.includes('function chartThemeColors')
+) {
+  pass('analytics dashboard defaults to light mode with a dark mode toggle');
+} else {
+  fail('analytics dashboard should default to light mode and include a dark mode toggle');
 }
 
 if (

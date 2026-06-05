@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>Manga Bill Analytics</title>
+    <script>
+        document.documentElement.dataset.theme = localStorage.getItem('dele_miku_analytics_theme') === 'dark' ? 'dark' : 'light';
+    </script>
     <style>
         :root {
             --bg: #02070b;
@@ -728,6 +731,123 @@
 
         .hidden { display: none !important; }
 
+        html[data-theme="light"] {
+            --bg: #f6f8fb;
+            --panel: rgba(255, 255, 255, 0.88);
+            --panel-strong: rgba(255, 255, 255, 0.96);
+            --line: rgba(18, 33, 43, 0.12);
+            --text: #12212b;
+            --muted: #637381;
+            --miku: #0aaea7;
+            --blue: #127cc4;
+            --warn: #9a6500;
+            --danger: #d23f57;
+            --good: #13a36f;
+            --violet: #6b5bd2;
+            --gold: #b17816;
+            --pink: #df3bad;
+            --orange: #d76f17;
+            --cyan: #00a8c7;
+            --lime: #4c9f16;
+            --glass: rgba(255, 255, 255, 0.84);
+            color-scheme: light;
+        }
+
+        html[data-theme="light"] body {
+            background:
+                linear-gradient(180deg, #ffffff 0%, #fbfcfd 54%, #f3f6f8 100%);
+        }
+
+        html[data-theme="light"] body::before {
+            background:
+                linear-gradient(rgba(14, 44, 57, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14, 44, 57, 0.035) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.34), transparent 78%);
+        }
+
+        html[data-theme="light"] .topbar {
+            border-color: rgba(0, 168, 199, 0.18);
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.96), rgba(240,251,252,0.9) 50%, rgba(255,246,252,0.92)),
+                #ffffff;
+            box-shadow: 0 24px 70px rgba(18, 33, 43, 0.12), 0 0 0 1px rgba(255,255,255,0.82) inset;
+        }
+
+        html[data-theme="light"] .topbar::after {
+            background: radial-gradient(circle, rgba(0, 168, 199, 0.14), transparent 64%);
+        }
+
+        html[data-theme="light"] .status,
+        html[data-theme="light"] .login-card,
+        html[data-theme="light"] .filters,
+        html[data-theme="light"] .card,
+        html[data-theme="light"] .panel {
+            border-color: rgba(18, 33, 43, 0.12);
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 20px 60px rgba(18, 33, 43, 0.09);
+        }
+
+        html[data-theme="light"] .login-card {
+            background: #ffffff;
+            box-shadow: 0 28px 80px rgba(18, 33, 43, 0.12);
+        }
+
+        html[data-theme="light"] .card {
+            background:
+                radial-gradient(circle at 100% 0%, rgba(0,168,199,0.13), transparent 52%),
+                radial-gradient(circle at 0% 100%, rgba(223,59,173,0.08), transparent 44%),
+                #ffffff;
+        }
+
+        html[data-theme="light"] input,
+        html[data-theme="light"] select,
+        html[data-theme="light"] .chip,
+        html[data-theme="light"] .mini-button,
+        html[data-theme="light"] .chart-toggle,
+        html[data-theme="light"] .rank-row,
+        html[data-theme="light"] .duration-chip,
+        html[data-theme="light"] .quality-row {
+            background: rgba(255, 255, 255, 0.78);
+            border-color: rgba(18, 33, 43, 0.14);
+            color: var(--text);
+        }
+
+        html[data-theme="light"] option {
+            background: #ffffff;
+            color: var(--text);
+        }
+
+        html[data-theme="light"] .chart-surface,
+        html[data-theme="light"] .globe-stage {
+            background:
+                radial-gradient(circle at 50% 0%, rgba(0,168,199,0.08), transparent 52%),
+                linear-gradient(180deg, rgba(248,252,254,0.98), rgba(255,255,255,0.76));
+        }
+
+        html[data-theme="light"] th {
+            background: rgba(18, 33, 43, 0.04);
+        }
+
+        html[data-theme="light"] td {
+            color: #273944;
+        }
+
+        html[data-theme="light"] .metric-value {
+            background: linear-gradient(135deg, #142631 0%, var(--cyan) 44%, var(--pink) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .theme-toggle {
+            min-width: 54px;
+        }
+
+        .login-theme-toggle {
+            float: right;
+            margin-top: -6px;
+        }
+
         @media (max-width: 1100px) {
             .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -757,6 +877,7 @@
 <body>
     <main id="login" class="login-shell">
         <section class="login-card">
+            <button class="mini-button theme-toggle login-theme-toggle" type="button" data-theme-toggle aria-pressed="false">深色</button>
             <div class="eyebrow">Internal dashboard</div>
             <h1>Manga Bill Analytics</h1>
             <p>后台统计页。公开网页不会显示任何统计状态，数据只在验证后读取。</p>
@@ -779,6 +900,7 @@
             <div class="status">
                 <span class="dot"></span>
                 <span id="range-label">等待数据</span>
+                <button class="mini-button theme-toggle" type="button" data-theme-toggle aria-pressed="false">深色</button>
                 <button id="logout" class="mini-button" type="button">退出</button>
             </div>
         </header>
@@ -1087,6 +1209,7 @@
     <script>
         const API_URL = 'https://auhhtzamzojyhqkbwzgs.supabase.co/functions/v1/miku-analytics-admin';
         const TOKEN_KEY = 'dele_miku_analytics_token';
+        const THEME_KEY = 'dele_miku_analytics_theme';
         const ECHARTS_URL = 'https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js';
         const GLOBE_URL = 'https://cdn.jsdelivr.net/npm/globe.gl@2.33.2/dist/globe.gl.min.js';
         const state = { token: sessionStorage.getItem(TOKEN_KEY), data: null, activeRange: '7d', trendMetric: 'all' };
@@ -1111,6 +1234,35 @@
         const scriptPromises = {};
         let globeInstance = null;
         let globeRenderId = 0;
+
+        function currentTheme() {
+            return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+        }
+
+        function chartThemeColors() {
+            const dark = currentTheme() === 'dark';
+            return {
+                text: dark ? '#d8eef5' : '#22313b',
+                muted: dark ? '#8eabb7' : '#637381',
+                grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(18,33,43,0.09)',
+                axis: dark ? 'rgba(232,251,255,0.12)' : 'rgba(18,33,43,0.16)',
+                tooltipBg: dark ? 'rgba(2, 7, 11, 0.9)' : 'rgba(255,255,255,0.96)',
+                tooltipText: dark ? '#e8fbff' : '#12212b',
+                itemBorder: dark ? '#06121d' : '#ffffff',
+                chartFade: dark ? 'rgba(2,7,11,0)' : 'rgba(255,255,255,0)'
+            };
+        }
+
+        function applyTheme(theme) {
+            const next = theme === 'dark' ? 'dark' : 'light';
+            document.documentElement.dataset.theme = next;
+            localStorage.setItem(THEME_KEY, next);
+            $$('[data-theme-toggle]').forEach((button) => {
+                button.textContent = next === 'dark' ? '浅色' : '深色';
+                button.setAttribute('aria-pressed', String(next === 'dark'));
+            });
+            if (state.data) render();
+        }
 
         const COUNTRY_CENTERS = {
             china: [35.8617, 104.1954], cn: [35.8617, 104.1954],
@@ -1517,26 +1669,27 @@
         }
 
         function baseChartOption() {
+            const colors = chartThemeColors();
             return {
                 backgroundColor: 'transparent',
                 color: chartPalette,
-                textStyle: { color: '#d8eef5', fontFamily: 'Inter, PingFang SC, Microsoft YaHei, sans-serif' },
+                textStyle: { color: colors.text, fontFamily: 'Inter, PingFang SC, Microsoft YaHei, sans-serif' },
                 tooltip: {
                     trigger: 'axis',
                     borderWidth: 0,
-                    backgroundColor: 'rgba(2, 7, 11, 0.9)',
-                    textStyle: { color: '#e8fbff' },
+                    backgroundColor: colors.tooltipBg,
+                    textStyle: { color: colors.tooltipText },
                     extraCssText: 'box-shadow:0 18px 48px rgba(0,0,0,.35);backdrop-filter:blur(12px);border-radius:12px;'
                 },
                 grid: { left: 36, right: 18, top: 36, bottom: 34, containLabel: true },
                 xAxis: {
-                    axisLine: { lineStyle: { color: 'rgba(232,251,255,0.12)' } },
+                    axisLine: { lineStyle: { color: colors.axis } },
                     axisTick: { show: false },
-                    axisLabel: { color: '#8eabb7' }
+                    axisLabel: { color: colors.muted }
                 },
                 yAxis: {
-                    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
-                    axisLabel: { color: '#8eabb7' }
+                    splitLine: { lineStyle: { color: colors.grid } },
+                    axisLabel: { color: colors.muted }
                 }
             };
         }
@@ -1565,7 +1718,8 @@
                 const metrics = state.trendMetric === 'all' ? Object.keys(metricMap) : [state.trendMetric];
                 const labels = rows.map((row) => row.label || row.day || '');
                 const option = baseChartOption();
-                option.legend = { top: 0, right: 0, textStyle: { color: '#8eabb7' } };
+                const colors = chartThemeColors();
+                option.legend = { top: 0, right: 0, textStyle: { color: colors.muted } };
                 option.xAxis = { ...option.xAxis, type: 'category', boundaryGap: false, data: labels };
                 option.yAxis = { ...option.yAxis, type: 'value' };
                 option.series = metrics.map((metric, index) => {
@@ -1582,7 +1736,7 @@
                             opacity: 0.26,
                             color: new window.echarts.graphic.LinearGradient(0, 0, 0, 1, [
                                 { offset: 0, color },
-                                { offset: 1, color: 'rgba(2,7,11,0)' }
+                                { offset: 1, color: colors.chartFade }
                             ])
                         },
                         data: rows.map((row) => Number(row[metric] || 0)),
@@ -1602,8 +1756,9 @@
                 const chart = getChart('hour-chart');
                 if (!chart) return;
                 const option = baseChartOption();
+                const colors = chartThemeColors();
                 option.tooltip = { ...option.tooltip, trigger: 'item' };
-                option.xAxis = { ...option.xAxis, type: 'category', data: hours.map((row) => row.label), axisLabel: { color: '#8eabb7', interval: 3 } };
+                option.xAxis = { ...option.xAxis, type: 'category', data: hours.map((row) => row.label), axisLabel: { color: colors.muted, interval: 3 } };
                 option.yAxis = { ...option.yAxis, type: 'value' };
                 option.series = [{
                     name: 'PV',
@@ -1630,8 +1785,9 @@
                 const chart = getChart('duration-chart');
                 if (!chart) return;
                 const option = baseChartOption();
+                const colors = chartThemeColors();
                 option.tooltip = { ...option.tooltip, trigger: 'item' };
-                option.xAxis = { ...option.xAxis, type: 'category', data: normalized.map((row) => row.label), axisLabel: { color: '#8eabb7', rotate: normalized.length > 5 ? 18 : 0 } };
+                option.xAxis = { ...option.xAxis, type: 'category', data: normalized.map((row) => row.label), axisLabel: { color: colors.muted, rotate: normalized.length > 5 ? 18 : 0 } };
                 option.yAxis = { ...option.yAxis, type: 'value' };
                 option.series = [{
                     name: 'Sessions',
@@ -1645,7 +1801,7 @@
                             { offset: 1, color: '#28f7ff' }
                         ])
                     },
-                    label: { show: true, position: 'top', color: '#e8fbff' },
+                    label: { show: true, position: 'top', color: colors.text },
                     data: normalized.map((row) => row.count)
                 }];
                 chart.setOption(option, true);
@@ -1658,20 +1814,21 @@
             ensureECharts().then(() => {
                 const chart = getChart(id);
                 if (!chart) return;
+                const colors = chartThemeColors();
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: chartPalette,
                     tooltip: {
                         trigger: 'item',
-                        backgroundColor: 'rgba(2, 7, 11, 0.92)',
+                        backgroundColor: colors.tooltipBg,
                         borderWidth: 0,
-                        textStyle: { color: '#e8fbff' }
+                        textStyle: { color: colors.tooltipText }
                     },
                     title: {
                         text: title,
                         left: 'center',
                         top: 8,
-                        textStyle: { color: '#8eabb7', fontSize: 12, fontWeight: 500 }
+                        textStyle: { color: colors.muted, fontSize: 12, fontWeight: 500 }
                     },
                     series: [{
                         type: 'pie',
@@ -1679,9 +1836,9 @@
                         center: ['50%', '56%'],
                         roseType: rose ? 'radius' : false,
                         padAngle: 2,
-                        itemStyle: { borderColor: '#06121d', borderWidth: 2 },
-                        label: { color: '#d8eef5', fontSize: 11, formatter: '{b}\n{d}%' },
-                        labelLine: { lineStyle: { color: 'rgba(216,238,245,0.3)' } },
+                        itemStyle: { borderColor: colors.itemBorder, borderWidth: 2 },
+                        label: { color: colors.text, fontSize: 11, formatter: '{b}\n{d}%' },
+                        labelLine: { lineStyle: { color: colors.axis } },
                         data: normalized
                     }]
                 }, true);
@@ -1694,13 +1851,14 @@
             ensureECharts().then(() => {
                 const chart = getChart('globe-fallback');
                 if (!chart) return;
+                const colors = chartThemeColors();
                 chart.setOption({
                     backgroundColor: 'transparent',
                     tooltip: {
                         trigger: 'item',
-                        backgroundColor: 'rgba(2, 7, 11, 0.92)',
+                        backgroundColor: colors.tooltipBg,
                         borderWidth: 0,
-                        textStyle: { color: '#e8fbff' },
+                        textStyle: { color: colors.tooltipText },
                         formatter: (params) => {
                             const row = params.data.raw;
                             return `${escapeHtml(row.label)}<br>PV ${fmt(row.page_views)} / Visitors ${fmt(row.visitors)} / Sessions ${fmt(row.sessions)}<br>${row.precision === 'city' ? '城市级定位' : '国家级估算'}`;
@@ -1718,7 +1876,7 @@
                         itemStyle: {
                             color: (params) => chartPalette[params.dataIndex % chartPalette.length],
                             opacity: 0.96,
-                            borderColor: 'rgba(255,255,255,0.72)',
+                            borderColor: colors.itemBorder,
                             borderWidth: 1,
                             shadowBlur: 28,
                             shadowColor: 'rgba(40,247,255,0.75)'
@@ -1909,6 +2067,13 @@
                 globeInstance.width(target.clientWidth).height(target.clientHeight);
             }
         }
+
+        applyTheme(currentTheme());
+        $$('[data-theme-toggle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+            });
+        });
 
         $('#login-form').addEventListener('submit', (event) => {
             event.preventDefault();
