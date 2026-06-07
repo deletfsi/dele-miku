@@ -62,7 +62,7 @@ function extractTracks(html) {
 }
 
 function fileExists(relPath) {
-  const fullPath = path.join(root, relPath.replace(/\//g, path.sep));
+  const fullPath = path.join(root, relPath.replace(/^\/+/, '').replace(/\//g, path.sep));
   return fs.existsSync(fullPath) && fs.statSync(fullPath).size > 0;
 }
 
@@ -87,13 +87,13 @@ const requiredFunctions = [
 if (tracks.length === 1) pass('playlist is single-track mode');
 else fail(`playlist should only contain 世界第一的公主殿下, found ${tracks.length} tracks`);
 
-if (tracks[0] && tracks[0].id === 'world-is-mine' && tracks[0].audioSources?.[0] === 'assets/bgm.mp3') {
-  pass('single track is 世界第一的公主殿下 from assets/bgm.mp3');
+if (tracks[0] && tracks[0].id === 'world-is-mine' && tracks[0].audioSources?.[0] === '/assets/bgm.mp3') {
+  pass('single track is 世界第一的公主殿下 from /assets/bgm.mp3');
 } else {
-  fail('single track is not configured as 世界第一的公主殿下 from assets/bgm.mp3');
+  fail('single track is not configured as 世界第一的公主殿下 from /assets/bgm.mp3');
 }
 
-if (!tracks.some((track) => (track.audioSources || []).some((src) => src.startsWith('assets/audio/')))) {
+if (!tracks.some((track) => (track.audioSources || []).some((src) => src.startsWith('/assets/audio/')))) {
   pass('playlist does not include secondary audio directory tracks');
 } else {
   fail('playlist should not include any assets/audio tracks');
@@ -185,10 +185,10 @@ if (!html.includes('music-source-link') && !html.includes('music-source-row') &&
 }
 
 if (
-  html.includes('href="mangabill/index.html"') &&
+  html.includes('href="/mangabill/index.html"') &&
   html.includes('点此查看更多 MangaBill') &&
-  html.includes('mangabill/generated/brand/logo-mark.webp') &&
-  html.includes('mangabill/generated/characters/elaina/thumb-01.webp')
+  html.includes('/mangabill/generated/brand/logo-mark.webp') &&
+  html.includes('/mangabill/generated/characters/elaina/thumb-01.webp')
 ) {
   pass('footer exposes a prominent MangaBill gallery link');
 } else {
@@ -259,18 +259,18 @@ const vercelConfig = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
 const netlifyConfig = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
 
 if (
-  html.includes("navigator.serviceWorker.register('sw.js')") &&
+  html.includes("navigator.serviceWorker.register('/sw.js')") &&
   html.includes('function warmImageSet') &&
   html.includes('function canWarmLargeImageBatches') &&
   html.includes('function runAfterDelayWhenIdle') &&
   html.includes('function initDeferredPictures') &&
   html.includes('class="js-deferred-picture"') &&
-  html.includes('data-srcset="assets/vocaloid-monetary-nexus-promo.avif"') &&
+  html.includes('data-srcset="/assets/vocaloid-monetary-nexus-promo.avif"') &&
   html.includes('runAfterDelayWhenIdle(preloadNonCriticalAssets, 1400, 1800);') &&
   html.includes("worker.postMessage({ type: 'CACHE_IMAGES'") &&
   html.includes('fetchPriority') &&
-  !html.includes('rel="preload" as="image" href="assets/vocaloid-monetary-nexus-promo.avif"') &&
-  !html.includes('rel="prefetch" as="image" href="assets/profile.webp"') &&
+  !html.includes('rel="preload" as="image" href="/assets/vocaloid-monetary-nexus-promo.avif"') &&
+  !html.includes('rel="prefetch" as="image" href="/assets/profile.webp"') &&
   sw.includes("CACHE_NAME = 'dele-miku-image-cache") &&
   sw.includes("request.destination === 'image'") &&
   sw.includes("event.data.type !== 'CACHE_IMAGES'") &&
@@ -319,6 +319,20 @@ if (hasVercelStableRoutes && hasNetlifyStableRoutes) {
   fail('deployment config should expose /mangabill/xuanchuan, /mangabill/miku, and /mangabill/analytics');
 }
 
+const relativeMikuRouteRefs = [
+  /(?:href|src|srcset|data-src|data-srcset)="assets\//,
+  /(?:href|src)="mangabill\//,
+  /url\((['"]?)assets\//,
+  /['"]assets\//,
+  /navigator\.serviceWorker\.register\('sw\.js'\)/
+];
+
+if (!relativeMikuRouteRefs.some((pattern) => pattern.test(html))) {
+  pass('Miku page uses root-absolute assets so /mangabill/miku works like /index.html');
+} else {
+  fail('Miku page should not use relative assets that break under /mangabill/miku');
+}
+
 if (
   analyticsHtml.includes('dele_miku_analytics_theme') &&
   analyticsHtml.includes('document.documentElement.dataset.theme') &&
@@ -362,7 +376,7 @@ if (
 
 if (
   html.includes('<audio id="bgm" preload="metadata">') &&
-  html.includes('<source data-src="assets/bgm.mp3" type="audio/mpeg">') &&
+  html.includes('<source data-src="/assets/bgm.mp3" type="audio/mpeg">') &&
   html.includes('function deferAudioElementSource') &&
   html.includes('setTrack(0, true, false);') &&
   html.includes('if (!bgm.currentSrc || bgm.dataset.sourceKey !== src) setAudioElementSource(track);') &&
